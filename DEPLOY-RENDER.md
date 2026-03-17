@@ -47,8 +47,8 @@ Guarde essa URL; você vai usá-la como `DATABASE_URL` no serviço da API.
    | **Branch** | `main` |
    | **Root Directory** | `backend` ⚠️ **Importante:** o código do backend está na pasta `backend/` |
    | **Runtime** | `Node` |
-   | **Build Command** | `npm install && npx prisma generate` |
-   | **Start Command** | `npm run start:render` |
+   | **Build Command** | `npm install && npx prisma generate && npm run build` |
+   | **Start Command** | `npx prisma migrate deploy && npm run start:prod` |
 
 4. **Plan:** escolha **Free**.
 
@@ -117,10 +117,10 @@ Depois disso, o front em produção passará a usar a API hospedada no Render.
 
 | Etapa | Comando |
 |--------|--------|
-| **Build** | `npm install && npx prisma generate` |
-| **Start** | `npm run start:render` (roda migrate + build + start no backend) |
+| **Build** | `npm install && npx prisma generate && npm run build` |
+| **Start** | `npx prisma migrate deploy && npm run start:prod` |
 
-O script `start:render` faz migrate, build e sobe o app no mesmo passo, assim a pasta `dist/` existe na hora de rodar (o Render não preserva o `dist` do build na etapa de start).
+O `.gitignore` da raiz não lista `backend/dist/`, para o Render incluir `dist` no artefato; `backend/.gitignore` tem `dist/` para não versionar no Git.
 
 ## Resumo das variáveis
 

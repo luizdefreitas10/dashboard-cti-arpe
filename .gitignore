@@ -12,7 +12,7 @@ backend/node_modules/
 frontend/.next/
 frontend/out/
 frontend/build/
-backend/dist/
+# backend/dist não listado aqui: Render precisa incluir no deploy; backend/.gitignore evita commit
 *.tsbuildinfo
 next-env.d.ts
 
