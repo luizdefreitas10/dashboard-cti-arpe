@@ -15,9 +15,12 @@ async function bootstrap() {
     credentials: true,
   })
 
-  const port = process.env.PORT ?? 3333
-  await app.listen(port)
-  console.log(`🚀 Backend CTI rodando em: http://localhost:${port} (use porta 3334 — 3333 em uso por outro projeto)`)
+  const port = Number(process.env.PORT) || 3333
+  await app.listen(port, '0.0.0.0')
+  console.log(`🚀 Backend CTI rodando em http://0.0.0.0:${port}`)
 }
 
-bootstrap()
+bootstrap().catch((err) => {
+  console.error('Falha ao subir a aplicação:', err)
+  process.exit(1)
+})
