@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { Suspense, useEffect, useState, useCallback } from 'react'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { useReactTable, getCoreRowModel, flexRender, ColumnDef, getPaginationRowModel } from '@tanstack/react-table'
 import BensService, { Bem, BemFilters } from '@/services/models/bens'
@@ -35,7 +35,7 @@ const columns: ColumnDef<Bem>[] = [
   },
 ]
 
-export default function TabelaBensPage() {
+function TabelaBensContent() {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -188,5 +188,22 @@ export default function TabelaBensPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+function TabelaBensFallback() {
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="h-12 bg-[var(--color-bg-card)] rounded-[var(--radius-lg)] animate-pulse" />
+      <div className="h-96 bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] animate-pulse" />
+    </div>
+  )
+}
+
+export default function TabelaBensPage() {
+  return (
+    <Suspense fallback={<TabelaBensFallback />}>
+      <TabelaBensContent />
+    </Suspense>
   )
 }

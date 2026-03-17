@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { Suspense, useEffect, useState, useCallback } from 'react'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { useReactTable, getCoreRowModel, flexRender, ColumnDef, getPaginationRowModel } from '@tanstack/react-table'
 import AtividadesService, { Atividade, AtividadeFilters } from '@/services/models/atividades'
@@ -41,7 +41,7 @@ const columns: ColumnDef<Atividade>[] = [
   { accessorKey: 'observacao', header: 'Observação', cell: ({ getValue }) => <span className="text-[var(--color-text-subtle)] text-xs truncate max-w-[140px] inline-block" title={String(getValue() ?? '')}>{String(getValue() ?? '—')}</span> },
 ]
 
-export default function TabelaAtividadesPage() {
+function TabelaAtividadesContent() {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -292,5 +292,22 @@ export default function TabelaAtividadesPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+function TabelaAtividadesFallback() {
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="h-12 bg-[var(--color-bg-card)] rounded-[var(--radius-lg)] animate-pulse" />
+      <div className="h-96 bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] animate-pulse" />
+    </div>
+  )
+}
+
+export default function TabelaAtividadesPage() {
+  return (
+    <Suspense fallback={<TabelaAtividadesFallback />}>
+      <TabelaAtividadesContent />
+    </Suspense>
   )
 }
