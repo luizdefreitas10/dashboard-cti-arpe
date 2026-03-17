@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: dashboard_cti_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: dashboard_cti
+    ports:
+      - "5433:5432"
+    volumes:
+      - dashboard_cti_data:/var/lib/postgresql/data
+
+volumes:
+  dashboard_cti_data:

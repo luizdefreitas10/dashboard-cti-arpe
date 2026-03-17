@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Atividade {
+  id          String    @id @default(cuid())
+  categoria   String
+  nome        String
+  diaSemana   String?
+  data        DateTime?
+  horario     String?
+  responsavel String?
+  solicitante String?
+  setor       String?
+  prioridade  String?
+  estado      String?
+  observacao  String?
+  createdAt   DateTime  @default(now())
+
+  @@map("atividades")
+}
+
+model Bem {
+  id                  String  @id @default(cuid())
+  tombamento          String  @unique
+  tipoHardware        String?
+  modelo              String?
+  usuario             String?
+  setor               String?
+  finalidadePrincipal String?
+  sistemaOperacional  String?
+  criticidade         String?
+
+  @@map("bens")
+}
+
+model Software {
+  id         String  @id @default(cuid())
+  nome       String
+  versao     String?
+  finalidade String?
+
+  @@map("softwares")
+}
+
+model Ramal {
+  id        String  @id @default(cuid())
+  setor     String
+  digital   Int     @default(0)
+  analogico Int     @default(0)
+  total     Int     @default(0)
+  descricao String?
+
+  @@map("ramais")
+}
+
+model Celular {
+  id     String @id @default(cuid())
+  modelo String
+  setor  String
+  imei   String @unique
+
+  @@map("celulares")
+}
