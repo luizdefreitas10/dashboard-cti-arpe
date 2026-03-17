@@ -2,6 +2,8 @@
 
 Este guia explica como subir o **backend** (NestJS + Prisma + PostgreSQL) no [Render](https://render.com) de forma gratuita.
 
+**Workspace do projeto:** Luizo-Workspace (no dashboard do Render, use este nome para identificar o workspace onde estão os serviços deste projeto).
+
 ---
 
 ## O que você vai precisar
@@ -146,3 +148,16 @@ Se preferir rodar seed localmente apontando para o banco de produção, use a **
 ---
 
 Se algo falhar, confira os **Logs** do Web Service e do PostgreSQL no Render; a maioria dos erros aparece ali (build, migrate ou conexão).
+
+---
+
+## Renomear o workspace para Luizo-Workspace
+
+Se o seu workspace no Render ainda tiver outro nome (ex.: "Luizinho") e você quiser deixá-lo como **Luizo-Workspace**:
+
+1. Acesse **https://dashboard.render.com** e faça login.
+2. No canto superior esquerdo, clique no **nome do workspace** (dropdown).
+3. Clique em **Workspace Settings** (ou **Account Settings**).
+4. Em **Workspace Name** (ou **Team Name**), altere para `Luizo-Workspace` e salve.
+
+Assim o workspace fica alinhado ao nome usado neste projeto.
