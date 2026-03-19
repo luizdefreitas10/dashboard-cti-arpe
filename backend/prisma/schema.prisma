@@ -67,3 +67,21 @@ model Celular {
 
   @@map("celulares")
 }
+
+/// Dashboards Power BI publicados pela CTI (carga via planilha em /importar)
+model PowerBiReport {
+  id          String   @id @default(cuid())
+  nome        String
+  link        String   @unique
+  descricao   String?
+  autores     String?
+  /// concluido | em_andamento
+  status      String   @default("concluido")
+  /// Nome do arquivo em /public/power-bi/ ou URL absoluta (https://...)
+  imagem      String?
+  ordem       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("power_bi_reports")
+}

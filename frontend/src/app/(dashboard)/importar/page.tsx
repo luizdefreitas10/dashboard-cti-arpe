@@ -15,13 +15,16 @@ interface UploadState {
 export default function ImportarPage() {
   const [atividades, setAtividades] = useState<UploadState>({ status: 'idle' })
   const [bens, setBens] = useState<UploadState>({ status: 'idle' })
+  const [powerBi, setPowerBi] = useState<UploadState>({ status: 'idle' })
   const atividadesRef = useRef<HTMLInputElement>(null)
   const bensRef = useRef<HTMLInputElement>(null)
+  const powerBiRef = useRef<HTMLInputElement>(null)
 
   const handleUpload = async (
     file: File,
     endpoint: string,
     setState: (s: UploadState) => void,
+    onSuccess?: () => void,
   ) => {
     setState({ status: 'uploading' })
     try {
@@ -41,6 +44,7 @@ export default function ImportarPage() {
       const data = await res.json()
       setState({ status: 'success', message: data.message ?? 'Importado com sucesso!' })
       toast.success('Importação concluída!')
+      onSuccess?.()
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Erro desconhecido'
       setState({ status: 'error', message })
@@ -51,7 +55,7 @@ export default function ImportarPage() {
   return (
     <div className="max-w-2xl flex flex-col gap-6">
       <p className="text-sm text-[var(--color-text-muted)]">
-        Faça upload das planilhas para atualizar os dados do dashboard. Os dados anteriores serão substituídos.
+        Faça upload das planilhas para atualizar os dados do dashboard. Os dados anteriores daquela importação serão substituídos.
       </p>
 
       {[
@@ -72,6 +76,19 @@ export default function ImportarPage() {
           setState: setBens,
           ref: bensRef,
           accept: '.xlsx,.csv',
+        },
+        {
+          label: 'Catálogo Power BI (links)',
+          description:
+            'Arquivo: Links Dashboards.xlsx — colunas NOME, LINK, DESCRIÇÃO, AUTORES. Opcionais: STATUS (Concluído / Em andamento), IMAGEM (arquivo em /public/power-bi/ ou URL). Substitui toda a lista.',
+          endpoint: '/upload/power-bi',
+          state: powerBi,
+          setState: setPowerBi,
+          ref: powerBiRef,
+          accept: '.xlsx,.csv',
+          onSuccess: () => {
+            window.location.href = '/power-bi'
+          },
         },
       ].map((item) => (
         <div
@@ -101,7 +118,7 @@ export default function ImportarPage() {
                   className="hidden"
                   onChange={(e) => {
                     const file = e.target.files?.[0]
-                    if (file) handleUpload(file, item.endpoint, item.setState)
+                    if (file) handleUpload(file, item.endpoint, item.setState, item.onSuccess)
                   }}
                 />
                 <button

@@ -95,7 +95,7 @@ export default async function DashboardAtividadesPage() {
 
       {/* Linha 1 — Atividades por mês + Categorias */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ChartCard title="Atividades por Mês">
+        <ChartCard title="Atividades por Mês" className="flex flex-col justify-center items-center">
           <AtividadesPorMesChart data={stats.porMes} />
         </ChartCard>
         <ChartCard title="Distribuição por Categoria">

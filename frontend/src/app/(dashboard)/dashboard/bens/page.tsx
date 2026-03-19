@@ -70,7 +70,7 @@ export default async function DashboardBensPage() {
         <ChartCard title="Distribuição por Tipo de Hardware">
           <BensPorTipoChart data={stats.porTipo} />
         </ChartCard>
-        <ChartCard title="Bens por Setor (Top 12)">
+        <ChartCard title="Bens por Setor (Top 12)" className='flex flex-col justify-center items-center'>
           <BensPorSetorChart data={stats.porSetor} />
         </ChartCard>
       </div>
@@ -80,7 +80,7 @@ export default async function DashboardBensPage() {
         <ChartCard title="Distribuição por Fabricante">
           <ModeloChart data={stats.porModelo} />
         </ChartCard>
-        <ChartCard title="Sistema Operacional">
+        <ChartCard title="Sistema Operacional" className='flex flex-col justify-center items-center'>
           <SoDistribuicaoChart data={stats.porSO} />
         </ChartCard>
       </div>

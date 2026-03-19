@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useEffect, useState, useCallback } from 'react'
+import { Suspense, useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { useReactTable, getCoreRowModel, flexRender, ColumnDef, getPaginationRowModel } from '@tanstack/react-table'
 import AtividadesService, { Atividade, AtividadeFilters } from '@/services/models/atividades'
@@ -45,12 +45,17 @@ function TabelaAtividadesContent() {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const service = useMemo(() => AtividadesService(), [])
 
   const [data, setData] = useState<Atividade[]>([])
   const [total, setTotal] = useState(0)
   const [totalPages, setTotalPages] = useState(1)
   const [loading, setLoading] = useState(true)
+  const [isInitialLoading, setIsInitialLoading] = useState(true)
+  const [exporting, setExporting] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
+  const [searchInput, setSearchInput] = useState('')
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const page = Number(searchParams.get('page') ?? 1)
   const size = Number(searchParams.get('size') ?? 25)
@@ -65,9 +70,17 @@ function TabelaAtividadesContent() {
   const setParam = useCallback((key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString())
     if (value) params.set(key, value); else params.delete(key)
-    params.set('page', '1')
-    router.push(`${pathname}?${params.toString()}`)
+    // Só volta para a página 1 ao mudar filtros/busca/tamanho — não ao mudar a própria página
+    if (key !== 'page') params.set('page', '1')
+    router.replace(`${pathname}?${params.toString()}`)
   }, [searchParams, router, pathname])
+
+  const setParamDebounced = useCallback((key: string, value: string, delay = 350) => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      setParam(key, value)
+    }, delay)
+  }, [setParam])
 
   const clearFilters = () => {
     router.push(pathname)
@@ -85,8 +98,7 @@ function TabelaAtividadesContent() {
       if (dataInicio) filters.dataInicio = dataInicio
       if (dataFim) filters.dataFim = dataFim
 
-      const { findMany } = AtividadesService()
-      const result = await findMany(filters)
+      const result = await service.findMany(filters)
       setData(result.atividades)
       setTotal(result.total)
       setTotalPages(result.totalPages)
@@ -94,21 +106,49 @@ function TabelaAtividadesContent() {
       toast.error('Erro ao carregar atividades')
     } finally {
       setLoading(false)
+      if (isInitialLoading) setIsInitialLoading(false)
     }
-  }, [page, size, busca, categoria, responsavel, setor, prioridade, dataInicio, dataFim])
+  }, [page, size, busca, categoria, responsavel, setor, prioridade, dataInicio, dataFim, service, isInitialLoading])
 
   useEffect(() => { fetchData() }, [fetchData])
+  useEffect(() => { setSearchInput(busca) }, [busca])
+  useEffect(() => () => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+  }, [])
 
   const table = useReactTable({ data, columns, getCoreRowModel: getCoreRowModel(), getPaginationRowModel: getPaginationRowModel(), manualPagination: true, pageCount: totalPages })
 
   const hasFilters = busca || categoria || responsavel || setor || prioridade || dataInicio || dataFim
 
   const handleExport = async () => {
+    if (exporting) return
+    setExporting(true)
     toast.loading('Exportando...', { id: 'export' })
     try {
-      const { findMany } = AtividadesService()
-      const all = await findMany({ page: 1, size: 9999, busca, categoria, responsavel, setor, prioridade })
-      const rows = all.atividades.map((a) => ({
+      const exportPageSize = 100
+      const baseFilters: AtividadeFilters = {}
+      if (busca) baseFilters.busca = busca
+      if (categoria) baseFilters.categoria = categoria
+      if (responsavel) baseFilters.responsavel = responsavel
+      if (setor) baseFilters.setor = setor
+      if (prioridade) baseFilters.prioridade = prioridade
+      if (dataInicio) baseFilters.dataInicio = dataInicio
+      if (dataFim) baseFilters.dataFim = dataFim
+
+      const firstPage = await service.findMany({ ...baseFilters, page: 1, size: exportPageSize })
+      const totalToExport = firstPage.total
+      const pages = Math.max(1, Math.ceil(totalToExport / exportPageSize))
+
+      let allAtividades = [...firstPage.atividades]
+      if (pages > 1) {
+        const pageRequests = Array.from({ length: pages - 1 }, (_, idx) =>
+          service.findMany({ ...baseFilters, page: idx + 2, size: exportPageSize }),
+        )
+        const responses = await Promise.all(pageRequests)
+        allAtividades = allAtividades.concat(...responses.flatMap((r) => r.atividades))
+      }
+
+      const rows = allAtividades.map((a) => ({
         Categoria: a.categoria,
         Atividade: a.nome,
         Data: formatDate(a.data),
@@ -119,10 +159,16 @@ function TabelaAtividadesContent() {
         Estado: a.estado ?? '',
         Observação: a.observacao ?? '',
       }))
+      if (!rows.length) {
+        toast('Nenhum registro para exportar', { id: 'export' })
+        return
+      }
       exportToCSV('atividades-cti', rows)
       toast.success('Exportado com sucesso!', { id: 'export' })
     } catch {
       toast.error('Erro ao exportar', { id: 'export' })
+    } finally {
+      setExporting(false)
     }
   }
 
@@ -135,8 +181,11 @@ function TabelaAtividadesContent() {
           <input
             type="text"
             placeholder="Buscar atividade, solicitante..."
-            value={busca}
-            onChange={(e) => setParam('busca', e.target.value)}
+            value={searchInput}
+            onChange={(e) => {
+              setSearchInput(e.target.value)
+              setParamDebounced('busca', e.target.value)
+            }}
             className="w-full pl-9 pr-3 py-2 text-sm bg-[var(--color-bg-input)] border border-[var(--color-border)] rounded-[var(--radius-md)] text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus:outline-none focus:border-[var(--color-primary)]"
           />
         </div>
@@ -160,8 +209,8 @@ function TabelaAtividadesContent() {
         )}
         <div className="ml-auto flex items-center gap-2">
           <span className="text-sm text-[var(--color-text-muted)]">{formatNumber(total)} registros</span>
-          <button onClick={handleExport} className="flex items-center gap-2 px-3 py-2 text-sm rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-card)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] cursor-pointer transition-colors">
-            <Download size={14} /> CSV
+          <button onClick={handleExport} disabled={exporting} className="flex items-center gap-2 px-3 py-2 text-sm rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-card)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] cursor-pointer transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
+            <Download size={14} /> {exporting ? 'Exportando...' : 'CSV'}
           </button>
         </div>
       </div>
@@ -227,7 +276,7 @@ function TabelaAtividadesContent() {
               ))}
             </thead>
             <tbody>
-              {loading ? (
+              {isInitialLoading && loading ? (
                 Array.from({ length: 8 }).map((_, i) => (
                   <tr key={i} className="border-b border-[var(--color-border)] animate-pulse">
                     {columns.map((_, j) => (
@@ -257,6 +306,11 @@ function TabelaAtividadesContent() {
             </tbody>
           </table>
         </div>
+        {!isInitialLoading && loading && (
+          <div className="px-4 py-2 text-xs text-[var(--color-text-subtle)] border-t border-[var(--color-border)]">
+            Atualizando resultados...
+          </div>
+        )}
 
         {/* Paginação */}
         <div className="flex items-center justify-between px-4 py-3 border-t border-[var(--color-border)]">

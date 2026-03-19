@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useEffect, useState, useCallback } from 'react'
+import { Suspense, useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { useReactTable, getCoreRowModel, flexRender, ColumnDef, getPaginationRowModel } from '@tanstack/react-table'
 import BensService, { Bem, BemFilters } from '@/services/models/bens'
@@ -39,12 +39,17 @@ function TabelaBensContent() {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const service = useMemo(() => BensService(), [])
 
   const [data, setData] = useState<Bem[]>([])
   const [total, setTotal] = useState(0)
   const [totalPages, setTotalPages] = useState(1)
   const [loading, setLoading] = useState(true)
+  const [isInitialLoading, setIsInitialLoading] = useState(true)
+  const [exporting, setExporting] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
+  const [searchInput, setSearchInput] = useState('')
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const page = Number(searchParams.get('page') ?? 1)
   const size = Number(searchParams.get('size') ?? 25)
@@ -57,9 +62,16 @@ function TabelaBensContent() {
   const setParam = useCallback((key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString())
     if (value) params.set(key, value); else params.delete(key)
-    params.set('page', '1')
-    router.push(`${pathname}?${params.toString()}`)
+    if (key !== 'page') params.set('page', '1')
+    router.replace(`${pathname}?${params.toString()}`)
   }, [searchParams, router, pathname])
+
+  const setParamDebounced = useCallback((key: string, value: string, delay = 350) => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      setParam(key, value)
+    }, delay)
+  }, [setParam])
 
   const hasFilters = busca || tipoHardware || setor || modelo || sistemaOperacional
 
@@ -73,8 +85,7 @@ function TabelaBensContent() {
       if (modelo) filters.modelo = modelo
       if (sistemaOperacional) filters.sistemaOperacional = sistemaOperacional
 
-      const { findMany } = BensService()
-      const result = await findMany(filters)
+      const result = await service.findMany(filters)
       setData(result.bens)
       setTotal(result.total)
       setTotalPages(result.totalPages)
@@ -82,27 +93,59 @@ function TabelaBensContent() {
       toast.error('Erro ao carregar bens')
     } finally {
       setLoading(false)
+      if (isInitialLoading) setIsInitialLoading(false)
     }
-  }, [page, size, busca, tipoHardware, setor, modelo, sistemaOperacional])
+  }, [page, size, busca, tipoHardware, setor, modelo, sistemaOperacional, service, isInitialLoading])
 
   useEffect(() => { fetchData() }, [fetchData])
+  useEffect(() => { setSearchInput(busca) }, [busca])
+  useEffect(() => () => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+  }, [])
 
   const table = useReactTable({ data, columns, getCoreRowModel: getCoreRowModel(), getPaginationRowModel: getPaginationRowModel(), manualPagination: true, pageCount: totalPages })
 
   const handleExport = async () => {
+    if (exporting) return
+    setExporting(true)
     toast.loading('Exportando...', { id: 'export' })
     try {
-      const { findMany } = BensService()
-      const all = await findMany({ page: 1, size: 9999 })
-      const rows = all.bens.map((b) => ({
+      const exportPageSize = 100
+      const baseFilters: BemFilters = {}
+      if (busca) baseFilters.busca = busca
+      if (tipoHardware) baseFilters.tipoHardware = tipoHardware
+      if (setor) baseFilters.setor = setor
+      if (modelo) baseFilters.modelo = modelo
+      if (sistemaOperacional) baseFilters.sistemaOperacional = sistemaOperacional
+
+      const firstPage = await service.findMany({ ...baseFilters, page: 1, size: exportPageSize })
+      const totalToExport = firstPage.total
+      const pages = Math.max(1, Math.ceil(totalToExport / exportPageSize))
+
+      let allBens = [...firstPage.bens]
+      if (pages > 1) {
+        const pageRequests = Array.from({ length: pages - 1 }, (_, idx) =>
+          service.findMany({ ...baseFilters, page: idx + 2, size: exportPageSize }),
+        )
+        const responses = await Promise.all(pageRequests)
+        allBens = allBens.concat(...responses.flatMap((r) => r.bens))
+      }
+
+      const rows = allBens.map((b) => ({
         Tombamento: b.tombamento, Tipo: b.tipoHardware ?? '', Modelo: b.modelo ?? '',
         Usuário: b.usuario ?? '', Setor: b.setor ?? '', Finalidade: b.finalidadePrincipal ?? '',
         'Sistema Operacional': b.sistemaOperacional ?? '', Criticidade: b.criticidade ?? '',
       }))
+      if (!rows.length) {
+        toast('Nenhum registro para exportar', { id: 'export' })
+        return
+      }
       exportToCSV('bens-cti', rows)
       toast.success('Exportado!', { id: 'export' })
     } catch {
       toast.error('Erro ao exportar', { id: 'export' })
+    } finally {
+      setExporting(false)
     }
   }
 
@@ -111,7 +154,7 @@ function TabelaBensContent() {
       <div className="flex items-center gap-3 flex-wrap">
         <div className="relative flex-1 min-w-[200px] max-w-sm">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-subtle)]" />
-          <input type="text" placeholder="Buscar tombamento, usuário..." value={busca} onChange={(e) => setParam('busca', e.target.value)} className="w-full pl-9 pr-3 py-2 text-sm bg-[var(--color-bg-input)] border border-[var(--color-border)] rounded-[var(--radius-md)] text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus:outline-none focus:border-[var(--color-primary)]" />
+          <input type="text" placeholder="Buscar tombamento, usuário..." value={searchInput} onChange={(e) => { setSearchInput(e.target.value); setParamDebounced('busca', e.target.value) }} className="w-full pl-9 pr-3 py-2 text-sm bg-[var(--color-bg-input)] border border-[var(--color-border)] rounded-[var(--radius-md)] text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus:outline-none focus:border-[var(--color-primary)]" />
         </div>
         <button onClick={() => setShowFilters((v) => !v)} className={cn('flex items-center gap-2 px-3 py-2 text-sm rounded-[var(--radius-md)] border transition-colors cursor-pointer', showFilters ? 'bg-[var(--color-primary)]/10 border-[var(--color-primary)] text-[var(--color-primary)]' : 'bg-[var(--color-bg-card)] border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-text)]')}>
           <Filter size={14} /> Filtros {hasFilters && <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-primary)]" />}
@@ -119,7 +162,7 @@ function TabelaBensContent() {
         {hasFilters && <button onClick={() => router.push(pathname)} className="flex items-center gap-1 px-3 py-2 text-sm rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-card)] text-[var(--color-text-muted)] hover:text-red-400 cursor-pointer transition-colors"><X size={14} /> Limpar</button>}
         <div className="ml-auto flex items-center gap-2">
           <span className="text-sm text-[var(--color-text-muted)]">{formatNumber(total)} registros</span>
-          <button onClick={handleExport} className="flex items-center gap-2 px-3 py-2 text-sm rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-card)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] cursor-pointer transition-colors"><Download size={14} /> CSV</button>
+          <button onClick={handleExport} disabled={exporting} className="flex items-center gap-2 px-3 py-2 text-sm rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-card)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] cursor-pointer transition-colors disabled:opacity-60 disabled:cursor-not-allowed"><Download size={14} /> {exporting ? 'Exportando...' : 'CSV'}</button>
         </div>
       </div>
 
@@ -157,7 +200,7 @@ function TabelaBensContent() {
               ))}
             </thead>
             <tbody>
-              {loading ? Array.from({ length: 8 }).map((_, i) => (
+              {isInitialLoading && loading ? Array.from({ length: 8 }).map((_, i) => (
                 <tr key={i} className="border-b border-[var(--color-border)] animate-pulse">
                   {columns.map((_, j) => <td key={j} className="px-4 py-3"><div className="h-4 bg-[var(--color-bg-hover)] rounded w-20" /></td>)}
                 </tr>
@@ -171,6 +214,11 @@ function TabelaBensContent() {
             </tbody>
           </table>
         </div>
+        {!isInitialLoading && loading && (
+          <div className="px-4 py-2 text-xs text-[var(--color-text-subtle)] border-t border-[var(--color-border)]">
+            Atualizando resultados...
+          </div>
+        )}
         <div className="flex items-center justify-between px-4 py-3 border-t border-[var(--color-border)]">
           <div className="flex items-center gap-2 text-sm text-[var(--color-text-muted)]">
             <span>Por página:</span>

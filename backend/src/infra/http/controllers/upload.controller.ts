@@ -13,6 +13,46 @@ function cleanStr(val: unknown): string | null {
   return s === '' || s === '-' ? null : s
 }
 
+function normHeaderKey(k: string): string {
+  return String(k)
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .replace(/\s+/g, '')
+}
+
+function rowNormalized(row: Record<string, unknown>): Record<string, unknown> {
+  const o: Record<string, unknown> = {}
+  for (const [k, v] of Object.entries(row)) {
+    o[normHeaderKey(k)] = v
+  }
+  return o
+}
+
+function parsePowerBiStatus(raw: unknown, imagem: string | null): 'concluido' | 'em_andamento' {
+  if (raw != null && String(raw).trim() !== '') {
+    const s = String(raw)
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/\p{M}/gu, '')
+    if (
+      s.includes('andamento') ||
+      s.includes('pendente') ||
+      s.includes('desenvolv') ||
+      s.includes('10%') ||
+      s.includes('parcial') ||
+      s.includes('rascunho')
+    ) {
+      return 'em_andamento'
+    }
+    return 'concluido'
+  }
+  // STATUS vazio: se IMAGEM vazia → em andamento; se IMAGEM preenchida → concluído
+  return !imagem || imagem.trim() === '' ? 'em_andamento' : 'concluido'
+}
+
 function parseDate(val: unknown): Date | null {
   if (!val) return null
   if (val instanceof Date) return val
@@ -131,6 +171,85 @@ export class UploadController {
     return {
       message: `Bens importados: ${totals.bens} equipamentos, ${totals.softwares} softwares, ${totals.ramais} ramais, ${totals.celulares} celulares`,
       totals,
+    }
+  }
+
+  @Post('power-bi')
+  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
+  async uploadPowerBi(@UploadedFile() file: Express.Multer.File) {
+    if (!file) throw new BadRequestException('Nenhum arquivo enviado')
+
+    const wb = XLSX.read(file.buffer, { type: 'buffer' })
+    const sheetName =
+      wb.SheetNames.includes('Planilha1') ? 'Planilha1'
+      : wb.SheetNames.find((s) => /planilha|sheet1|links|dashboards/i.test(s)) ?? wb.SheetNames[0]
+    if (!sheetName) throw new BadRequestException('Planilha sem abas')
+
+    const ws = wb.Sheets[sheetName]
+    const rawRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws, { defval: null })
+
+    const seenLinks = new Set<string>()
+    const data: {
+      id: string
+      nome: string
+      link: string
+      descricao: string | null
+      autores: string | null
+      status: 'concluido' | 'em_andamento'
+      imagem: string | null
+      ordem: number
+    }[] = []
+
+    let ordem = 0
+    for (const raw of rawRows) {
+      const r = rowNormalized(raw)
+      const nome = cleanStr(r.nome)
+      let link = cleanStr(r.link)
+      if (!nome) continue
+      if (nome.toLowerCase() === 'nome') continue
+      if (!link) link = '(EM ANDAMENTO)'
+      // Link "(EM ANDAMENTO)" ou sem URL válida = dashboard em desenvolvimento
+      const isPlaceholder =
+        !/^https?:\/\//i.test(link) ||
+        /em\s*andamento|em\s*produção|pendente/i.test(link)
+      const finalLink = isPlaceholder
+        ? `https://em-andamento.local/#${encodeURIComponent(nome)}`
+        : link
+      if (seenLinks.has(finalLink)) continue
+      seenLinks.add(finalLink)
+
+      const descricao = cleanStr(r.descricao)
+      const autores = cleanStr(r.autores)
+      const imagem = cleanStr(r.imagem)
+      const status = isPlaceholder ? 'em_andamento' : parsePowerBiStatus(r.status, imagem)
+
+      data.push({
+        id: randomUUID(),
+        nome,
+        link: finalLink,
+        descricao,
+        autores,
+        status,
+        imagem,
+        ordem: ordem++,
+      })
+    }
+
+    if (data.length === 0) {
+      throw new BadRequestException(
+        'Nenhuma linha válida encontrada. Use colunas NOME e LINK (URL). Opcionais: DESCRIÇÃO, AUTORES, STATUS, IMAGEM.',
+      )
+    }
+
+    await this.prisma.$transaction([this.prisma.powerBiReport.deleteMany(), this.prisma.powerBiReport.createMany({ data })])
+
+    const concluidosCount = data.filter((d) => d.status === 'concluido').length
+    const emAndamentoCount = data.filter((d) => d.status === 'em_andamento').length
+    return {
+      message: `${data.length} dashboard(s) importado(s): ${concluidosCount} concluído(s), ${emAndamentoCount} em andamento`,
+      total: data.length,
+      concluidos: concluidosCount,
+      emAndamento: emAndamentoCount,
     }
   }
 }

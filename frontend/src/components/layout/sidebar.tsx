@@ -51,7 +51,6 @@ const navItems: NavItem[] = [
     label: 'Power BI',
     href: '/power-bi',
     icon: <ExternalLink size={16} />,
-    disabled: true,
   },
 ]
 
