@@ -129,6 +129,7 @@ npm run dev
 | POST | /upload/solucoes-digitais | Upload planilha soluções digitais CTI |
 | GET | /power-bi | Lista dashboards Power BI |
 | GET | /solucoes-digitais | Lista soluções digitais |
+| GET | /health | Status da API (keep-alive / monitoramento) |
 
 ---
 

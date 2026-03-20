@@ -97,9 +97,37 @@ Guarde essa URL; você vai usá-la como `DATABASE_URL` no serviço da API.
 - No Web Service, em **Environment**, defina `CORS_ORIGIN` com a URL exata do front (ex.: `https://dashboard-cti-arpe.vercel.app`), **sem barra no final**.
 - Redeploy o Web Service após alterar variáveis.
 
-### Cold start (primeira requisição lenta)
+### Cold start (primeira visita muito lenta — ~30s a 1 min)
 
-- No plano Free o serviço “dorme” após ~15 min sem acesso; a primeira requisição depois disso pode levar 30–60 s. É esperado.
+No **plano Free**, o Web Service **hiberna** após ~**15 minutos** sem tráfego. A **primeira** requisição depois disso precisa **subir de novo** o container Node + Nest + Prisma — por isso dashboards, tabelas, Power BI e Soluções Digitais podem ficar **muito tempo** em loading na **primeira** pessoa que acessa depois do sono.
+
+**O código do projeto já ajuda um pouco:**
+
+- `GET /health` — endpoint leve (sem bater no banco), ideal para monitoramento.
+- O **middleware** do Next.js dispara um ping a `/health` em paralelo ao carregar rotas do app (não elimina o cold start sozinho, mas inicia o “acordar” cedo).
+- As **Server Actions** dos dashboards de Atividades e Bens chamam `pingApiHealth()` antes das consultas pesadas quando a página é renderizada no servidor.
+
+**Para uso real com link público (recomendado):**
+
+1. Cadastre um monitor **gratuito** (ex.: [UptimeRobot](https://uptimerobot.com), [Cron-Job.org](https://cron-job.org)) para fazer **HTTP GET** na URL da sua API a cada **10–14 minutos**, por exemplo:  
+   `https://SEU-SERVICO.onrender.com/health`  
+   Assim o serviço quase não hiberna e as telas respondem **rápido** para qualquer visitante.
+
+2. Ou faça **upgrade** do Web Service no Render (plano pago) para **não hibernar**.
+
+### Keep-alive via GitHub Actions (já no repositório)
+
+Foi adicionado o workflow `.github/workflows/keep-api-awake.yml`, que faz **GET** na URL que você configurar **a cada 10 minutos**.
+
+1. No GitHub: abra o repositório → **Settings** → **Secrets and variables** → **Actions** → **New repository secret**.
+2. **Name:** `RENDER_HEALTH_URL`  
+3. **Secret:** a URL completa do health da sua API, por exemplo:  
+   `https://SEU-SERVICO.onrender.com/health`
+4. Salve. O próximo agendamento (ou um run manual) passará a pingar a API.
+
+Para testar na hora: **Actions** → **Keep API awake (ping /health)** → **Run workflow**.
+
+> O GitHub Actions é gratuito dentro dos limites da conta; o cron usa **UTC**.
 
 ---
 

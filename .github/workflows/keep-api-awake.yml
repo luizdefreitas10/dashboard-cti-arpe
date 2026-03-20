@@ -1,0 +1,25 @@
+# Mantém a API no Render “acordada” (evita hibernação do plano free).
+# Configure o secret RENDER_HEALTH_URL no GitHub (Settings → Secrets → Actions).
+# Valor exemplo: https://dashboard-cti-api.onrender.com/health
+name: Keep API awake (ping /health)
+
+on:
+  schedule:
+    # A cada 10 minutos (UTC). Ajuste se quiser outro intervalo.
+    - cron: '*/10 * * * *'
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping health endpoint
+        env:
+          URL: ${{ secrets.RENDER_HEALTH_URL }}
+        run: |
+          if [ -z "$URL" ]; then
+            echo "::notice::Secret RENDER_HEALTH_URL não definido. Adicione em Repo → Settings → Secrets and variables → Actions."
+            exit 0
+          fi
+          echo "GET $URL"
+          curl -fsS -m 120 --retry 2 --retry-delay 5 "$URL" -o /dev/null -w "HTTP %{http_code}\n"
