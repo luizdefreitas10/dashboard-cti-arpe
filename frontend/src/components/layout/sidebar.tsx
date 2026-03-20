@@ -43,14 +43,14 @@ const navItems: NavItem[] = [
     ],
   },
   {
-    label: 'Importar Dados',
-    href: '/importar',
-    icon: <Upload size={16} />,
-  },
-  {
     label: 'Power BI',
     href: '/power-bi',
     icon: <ExternalLink size={16} />,
+  },
+  {
+    label: 'Importar Dados',
+    href: '/importar',
+    icon: <Upload size={16} />,
   },
 ]
 
