@@ -143,7 +143,7 @@ function SolucaoCard({ item }: { item: SolucaoDigital }) {
         ImageBlock
       )}
 
-      <div className="p-4 flex flex-col gap-3 flex-1 min-w-0">
+      <div className="p-5 flex flex-col gap-5 flex-1 min-w-0">
         <div>
           <h3 className="text-sm font-semibold text-[var(--color-text)] leading-snug">{display(item.nome)}</h3>
           <p
@@ -165,18 +165,18 @@ function SolucaoCard({ item }: { item: SolucaoDigital }) {
           )}
         </div>
 
-        <dl className="grid gap-2 text-xs">
+        <dl className="grid gap-4 text-xs">
           <div className="flex gap-2">
             <dt className="shrink-0 text-[var(--color-text-subtle)] flex items-center gap-1">
               <Building2 size={12} /> Setor
             </dt>
             <dd className="text-[var(--color-text)] min-w-0">{display(item.setor)}</dd>
           </div>
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-2">
             <dt className="text-[var(--color-text-subtle)] flex items-center gap-1">
               <Code2 size={12} /> Stack
             </dt>
-            <dd className="flex flex-wrap gap-1">
+            <dd className="flex flex-wrap gap-1.5">
               {stacks.length ? (
                 stacks.map((t, idx) => (
                   <span
@@ -191,11 +191,11 @@ function SolucaoCard({ item }: { item: SolucaoDigital }) {
               )}
             </dd>
           </div>
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-2">
             <dt className="text-[var(--color-text-subtle)] flex items-center gap-1">
               <Users size={12} /> Responsáveis
             </dt>
-            <dd className="flex flex-wrap gap-1">
+            <dd className="flex flex-wrap gap-1.5">
               {responsaveis.length ? (
                 responsaveis.map((n, idx) => (
                   <span
@@ -219,16 +219,16 @@ function SolucaoCard({ item }: { item: SolucaoDigital }) {
         </dl>
 
         {item.observacoes?.trim() ? (
-          <p className="text-[11px] text-[var(--color-text-subtle)] border-t border-[var(--color-border)] pt-2 leading-relaxed">
+          <p className="text-[11px] text-[var(--color-text-subtle)] border-t border-[var(--color-border)] pt-4 mt-1 leading-relaxed">
             <span className="font-semibold text-[var(--color-text-muted)]">Observações: </span>
             {item.observacoes}
           </p>
         ) : null}
 
-        <div className="space-y-2 border-t border-[var(--color-border)] pt-3 mt-auto">
-          <div className="flex items-start gap-2">
+        <div className="space-y-5 border-t border-[var(--color-border)] pt-5 mt-auto">
+          <div className="flex items-start gap-3">
             <Globe size={14} className="shrink-0 mt-0.5 text-[var(--color-text-subtle)]" />
-            <div className="min-w-0 flex-1">
+            <div className="min-w-0 flex-1 space-y-1.5">
               <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-subtle)]">
                 Produção
               </p>
@@ -243,15 +243,15 @@ function SolucaoCard({ item }: { item: SolucaoDigital }) {
                   <ExternalLink size={12} />
                 </a>
               ) : (
-                <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">
+                <p className="text-xs text-amber-600 dark:text-amber-400">
                   Link de produção não disponível
                 </p>
               )}
             </div>
           </div>
-          <div className="flex items-start gap-2">
+          <div className="flex items-start gap-3">
             <Github size={14} className="shrink-0 mt-0.5 text-[var(--color-text-subtle)]" />
-            <div className="min-w-0 flex-1">
+            <div className="min-w-0 flex-1 space-y-1.5">
               <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-subtle)]">
                 Repositório
               </p>
@@ -266,25 +266,29 @@ function SolucaoCard({ item }: { item: SolucaoDigital }) {
                   <ExternalLink size={12} />
                 </a>
               ) : (
-                <p className="text-xs text-[var(--color-text-muted)] mt-0.5">Repositório não disponível</p>
+                <p className="text-xs text-[var(--color-text-muted)]">Repositório não disponível</p>
               )}
             </div>
           </div>
-          {hasProd ? (
-            <a
-              href={item.urlProducao!}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 w-full py-2.5 rounded-[var(--radius-md)] text-sm font-medium bg-[var(--color-primary)] text-white hover:opacity-95 transition-opacity"
-            >
-              <ExternalLink size={16} />
-              Abrir em produção
-            </a>
-          ) : emAndamento ? (
-            <p className="text-[11px] text-center text-[var(--color-text-muted)] py-2 px-2 rounded-md bg-amber-500/10 border border-amber-500/25">
-              Solução ainda não disponível para uso.
-            </p>
-          ) : null}
+          {(hasProd || emAndamento) && (
+            <div className="pt-6 mt-2">
+              {hasProd ? (
+                <a
+                  href={item.urlProducao!}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 w-full py-3 rounded-[var(--radius-md)] text-sm font-medium bg-[var(--color-primary)] text-white hover:opacity-95 transition-opacity"
+                >
+                  <ExternalLink size={16} />
+                  Abrir em produção
+                </a>
+              ) : (
+                <p className="text-[11px] text-center text-[var(--color-text-muted)] py-3 px-3 rounded-md bg-amber-500/10 border border-amber-500/25">
+                  Solução ainda não disponível para uso.
+                </p>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </article>
@@ -373,12 +377,7 @@ export default function SolucoesDigitaisPage() {
     <div className="flex flex-col gap-6 min-w-0">
       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
         <p className="text-sm text-[var(--color-text-muted)] max-w-2xl order-2 lg:order-1">
-          Automações e soluções web desenvolvidas pela CTI. Dados atualizados pela planilha{' '}
-          <strong>SOLUCOES-DIGITAIS-CTI.xlsx</strong> em{' '}
-          <Link href="/importar" className="text-[var(--color-primary)] hover:underline">
-            Importar Dados
-          </Link>
-          . Imagens em <code className="text-xs bg-[var(--color-bg-hover)] px-1 rounded">/public/solucoes-digitais/</code>.
+          Automações e soluções web desenvolvidas pela CTI.
         </p>
         <div className="flex flex-wrap items-center gap-x-2 gap-y-2 shrink-0 order-1 lg:order-2 text-sm">
           <span className="font-semibold text-[var(--color-text)]">{stats.total}</span>
