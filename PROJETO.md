@@ -169,7 +169,8 @@ model Celular {
 /tabelas/softwares        → Tabela de softwares inventariados
 /tabelas/ramais           → Tabela de ramais por setor
 /importar                 → Upload de novas planilhas
-/power-bi                 → Placeholder (fase futura)
+/power-bi                 → Catálogo de dashboards Power BI (carga via planilha)
+/solucoes-digitais        → Automações e soluções web CTI (carga via SOLUCOES-DIGITAIS-CTI.xlsx)
 ```
 
 ---

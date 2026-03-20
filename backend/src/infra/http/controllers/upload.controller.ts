@@ -60,8 +60,56 @@ function parseDate(val: unknown): Date | null {
     const d = XLSX.SSF.parse_date_code(val)
     if (d) return new Date(d.y, d.m - 1, d.d)
   }
-  const d = new Date(String(val))
+  const s = String(val).trim()
+  const br = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
+  if (br) {
+    const [, dd, mm, yyyy] = br
+    const d = new Date(Number(yyyy), Number(mm) - 1, Number(dd))
+    return isNaN(d.getTime()) ? null : d
+  }
+  const d = new Date(s)
   return isNaN(d.getTime()) ? null : d
+}
+
+function cleanHttpUrl(s: string | null): string | null {
+  if (!s) return null
+  const t = s.trim()
+  if (!/^https?:\/\//i.test(t)) return null
+  return t
+}
+
+function parseTipoSolucao(raw: unknown): 'automacao' | 'solucao_web' | null {
+  const s =
+    cleanStr(raw)?.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '') ?? ''
+  if (!s) return null
+  if (s.includes('solucaoweb') || (s.includes('solucao') && s.includes('web'))) {
+    return 'solucao_web'
+  }
+  if (s.includes('automacao')) return 'automacao'
+  return null
+}
+
+/** Parse coluna OBSERVACOES: status + URL de produção opcional */
+function parseObservacoesSolucao(raw: unknown): {
+  statusProjeto: 'concluida' | 'em_andamento'
+  urlProducao: string | null
+} {
+  const t = cleanStr(raw)
+  if (!t) return { statusProjeto: 'em_andamento', urlProducao: null }
+  const n = t.trim()
+  if (/^em\s*andamento/i.test(n)) {
+    return { statusProjeto: 'em_andamento', urlProducao: null }
+  }
+  const urlMatch = n.match(/^conclu[ií]da\s*[-–—]\s*(https?:\/\/\S+)/i)
+  if (urlMatch) {
+    let url = urlMatch[1].trim().replace(/[),.;]+$/g, '')
+    url = cleanHttpUrl(url) ?? url
+    return { statusProjeto: 'concluida', urlProducao: url }
+  }
+  if (/^conclu[ií]da\b/i.test(n)) {
+    return { statusProjeto: 'concluida', urlProducao: null }
+  }
+  return { statusProjeto: 'em_andamento', urlProducao: null }
 }
 
 @Controller('upload')
@@ -250,6 +298,86 @@ export class UploadController {
       total: data.length,
       concluidos: concluidosCount,
       emAndamento: emAndamentoCount,
+    }
+  }
+
+  @Post('solucoes-digitais')
+  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
+  async uploadSolucoesDigitais(@UploadedFile() file: Express.Multer.File) {
+    if (!file) throw new BadRequestException('Nenhum arquivo enviado')
+
+    const wb = XLSX.read(file.buffer, { type: 'buffer', cellDates: true })
+    const sheetName =
+      wb.SheetNames.find((s) => /solucoes|digitais|cti/i.test(s)) ?? wb.SheetNames[0]
+    if (!sheetName) throw new BadRequestException('Planilha sem abas')
+
+    const ws = wb.Sheets[sheetName]
+    const rawRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws, { defval: null })
+
+    type RowOut = {
+      id: string
+      tipo: string
+      nome: string
+      descricao: string | null
+      setor: string | null
+      stack: string | null
+      urlRepositorio: string | null
+      imagem: string | null
+      responsavel: string | null
+      dataInicio: Date | null
+      observacoes: string | null
+      statusProjeto: string
+      urlProducao: string | null
+      ordem: number
+    }
+
+    const data: RowOut[] = []
+    let ordem = 0
+
+    for (const raw of rawRows) {
+      const r = rowNormalized(raw)
+      const nome = cleanStr(r.nome)
+      const tipo = parseTipoSolucao(r.tipo)
+      if (!nome) continue
+      if (nome.toLowerCase() === 'nome') continue
+      if (!tipo) continue
+
+      const { statusProjeto, urlProducao: urlProdParsed } = parseObservacoesSolucao(r.observacoes)
+      const urlRepo = cleanHttpUrl(cleanStr(r.link))
+
+      data.push({
+        id: randomUUID(),
+        tipo,
+        nome,
+        descricao: cleanStr(r.descricao),
+        setor: cleanStr(r.setor),
+        stack: cleanStr(r.stack),
+        urlRepositorio: urlRepo,
+        imagem: cleanStr(r.imagem),
+        responsavel: cleanStr(r.responsavel),
+        dataInicio: parseDate(r.datadeinicio ?? r.datadeinício),
+        observacoes: cleanStr(r.observacoes),
+        statusProjeto,
+        urlProducao: urlProdParsed,
+        ordem: ordem++,
+      })
+    }
+
+    await this.prisma.$transaction([
+      this.prisma.solucaoDigital.deleteMany(),
+      this.prisma.solucaoDigital.createMany({ data }),
+    ])
+
+    const concl = data.filter((d) => d.statusProjeto === 'concluida').length
+    const and = data.filter((d) => d.statusProjeto === 'em_andamento').length
+    return {
+      message:
+        data.length === 0
+          ? 'Nenhuma solução importada — base limpa. Verifique colunas TIPO e NOME.'
+          : `${data.length} solução(ões) importada(s): ${concl} concluída(s), ${and} em andamento`,
+      total: data.length,
+      concluidas: concl,
+      emAndamento: and,
     }
   }
 }

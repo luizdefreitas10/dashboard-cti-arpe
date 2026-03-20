@@ -37,6 +37,10 @@ const TITLES: Record<string, { title: string; subtitle: string }> = {
     title: 'Power BI',
     subtitle: 'Dashboards externos da CTI',
   },
+  '/solucoes-digitais': {
+    title: 'Soluções Digitais',
+    subtitle: 'Automações e soluções web desenvolvidas pela CTI',
+  },
 }
 
 export function Header({

@@ -85,3 +85,31 @@ model PowerBiReport {
 
   @@map("power_bi_reports")
 }
+
+/// Soluções digitais CTI — carga via planilha SOLUCOES-DIGITAIS-CTI.xlsx em /importar
+model SolucaoDigital {
+  id             String    @id @default(cuid())
+  /// automacao | solucao_web
+  tipo           String
+  nome           String
+  descricao      String?
+  setor          String?
+  stack          String?
+  /// Coluna LINK (GitHub)
+  urlRepositorio String?
+  /// Nome arquivo em /public/solucoes-digitais/ ou URL https
+  imagem         String?
+  responsavel    String?
+  dataInicio     DateTime?
+  /// Texto bruto da coluna OBSERVACOES
+  observacoes    String?
+  /// concluida | em_andamento (parse OBSERVACOES)
+  statusProjeto  String
+  /// URL extraída de "Concluída - https://..."
+  urlProducao    String?
+  ordem          Int       @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@map("solucoes_digitais")
+}

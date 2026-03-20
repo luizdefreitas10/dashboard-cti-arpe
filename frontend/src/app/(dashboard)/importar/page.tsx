@@ -16,9 +16,11 @@ export default function ImportarPage() {
   const [atividades, setAtividades] = useState<UploadState>({ status: 'idle' })
   const [bens, setBens] = useState<UploadState>({ status: 'idle' })
   const [powerBi, setPowerBi] = useState<UploadState>({ status: 'idle' })
+  const [solucoesDigitais, setSolucoesDigitais] = useState<UploadState>({ status: 'idle' })
   const atividadesRef = useRef<HTMLInputElement>(null)
   const bensRef = useRef<HTMLInputElement>(null)
   const powerBiRef = useRef<HTMLInputElement>(null)
+  const solucoesDigitaisRef = useRef<HTMLInputElement>(null)
 
   const handleUpload = async (
     file: File,
@@ -88,6 +90,19 @@ export default function ImportarPage() {
           accept: '.xlsx,.csv',
           onSuccess: () => {
             window.location.href = '/power-bi'
+          },
+        },
+        {
+          label: 'Soluções Digitais',
+          description:
+            'Arquivo: SOLUCOES-DIGITAIS-CTI.xlsx — colunas TIPO, NOME, DESCRICAO, SETOR, STACK, LINK (GitHub, opcional), IMAGEM (arquivo em /public/solucoes-digitais/ ou URL), RESPONSAVEL, DATA DE INICIO, OBSERVACOES (status + URL de produção quando Concluída - https://...). Substitui toda a lista.',
+          endpoint: '/upload/solucoes-digitais',
+          state: solucoesDigitais,
+          setState: setSolucoesDigitais,
+          ref: solucoesDigitaisRef,
+          accept: '.xlsx,.csv',
+          onSuccess: () => {
+            window.location.href = '/solucoes-digitais'
           },
         },
       ].map((item) => (

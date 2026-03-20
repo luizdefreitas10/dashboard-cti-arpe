@@ -7,6 +7,7 @@ import {
   TableProperties,
   Upload,
   ExternalLink,
+  Layers,
   Activity,
   Server,
   ChevronDown,
@@ -46,6 +47,11 @@ const navItems: NavItem[] = [
     label: 'Power BI',
     href: '/power-bi',
     icon: <ExternalLink size={16} />,
+  },
+  {
+    label: 'Soluções Digitais',
+    href: '/solucoes-digitais',
+    icon: <Layers size={16} />,
   },
   {
     label: 'Importar Dados',

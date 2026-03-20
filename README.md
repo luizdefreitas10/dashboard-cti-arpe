@@ -125,6 +125,10 @@ npm run dev
 | GET | /bens/celulares | Lista de celulares |
 | POST | /upload/atividades | Upload de planilha de atividades |
 | POST | /upload/bens | Upload de planilha de bens |
+| POST | /upload/power-bi | Upload planilha de links Power BI |
+| POST | /upload/solucoes-digitais | Upload planilha soluções digitais CTI |
+| GET | /power-bi | Lista dashboards Power BI |
+| GET | /solucoes-digitais | Lista soluções digitais |
 
 ---
 
@@ -139,4 +143,5 @@ npm run dev
 | /tabelas/softwares | Lista de softwares inventariados |
 | /tabelas/ramais | Ramais telefônicos por setor |
 | /importar | Upload de planilhas |
-| /power-bi | Em breve |
+| /power-bi | Catálogo Power BI |
+| /solucoes-digitais | Automações e soluções web |
