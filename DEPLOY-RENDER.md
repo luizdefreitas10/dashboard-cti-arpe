@@ -129,6 +129,23 @@ Para testar na hora: **Actions** → **Keep API awake (ping /health)** → **Run
 
 > O GitHub Actions é gratuito dentro dos limites da conta; o cron usa **UTC**.
 
+#### O ping no `/health` mantém **todas** as rotas da API rápidas?
+
+**Na prática, sim — para o Web Service (NestJS).** No Render você tem **um** processo Node rodando **uma** aplicação Nest. Todas as rotas (`/atividades`, `/bens`, `/power-bi`, `/upload/...`, `/solucoes-digitais`, etc.) são atendidas pelo **mesmo** serviço. Quando o GitHub Actions chama `GET /health`, o Render **liga ou mantém ligado** esse **serviço inteiro**. Não existe “só a rota /health acordada” e o resto dormindo: acordou o container, **qualquer** endpoint da API fica disponível no mesmo ritmo (após o processo estar no ar).
+
+**Efeito para quem usa o site:** se o keep-alive rodar de forma estável (ex.: a cada 10 min &lt; 15 min de limite de hibernação), **você e outras pessoas** tendem a ver **carregamento rápido** em **todas** as telas que chamam essa API, porque o backend já não está hibernado.
+
+**Ressalvas importantes:**
+
+| Tema | Detalhe |
+|------|--------|
+| **PostgreSQL free no Render** | O **banco** também pode hibernar ou demorar na **primeira** conexão após ficar ocioso. O `/health` **não** consulta o banco; então, em cenários raros, a API pode responder “ok” e a **primeira** query pesada ainda esperar o PG acordar. Se notar atraso só na primeira query após muito tempo parado, o gargalo pode ser o **banco**, não o Nest. |
+| **Cron do GitHub** | O agendamento é **aproximado** (UTC) e pode atrasar alguns minutos. Falhas pontuais no Actions podem deixar um intervalo &gt; 15 min **sem** ping — aí a API pode dormir de novo até o próximo acesso ou o próximo run. |
+| **Velocidade “rápida”** | Significa **sem espera de cold start do Web Service** (dezenas de segundos a &gt;1 min). O tempo normal de cada rota (consulta ao banco, volume de dados, rede) continua existindo — só não soma aquele minuto extra de “acordar o servidor”. |
+| **Frontend (Vercel)** | É outro serviço; o keep-alive é só da **API** no Render. |
+
+**Resumo:** para o que você descreveu (várias pessoas, várias rotas do dashboard), **o Actions pingando `/health` costuma ser suficiente** para manter a **API** acordada e as telas **não** ficarem ~1 minuto só esperando o backend subir — desde que o workflow rode com regularidade e, se necessário, você monitore falhas no Actions ou considere upgrade / segundo monitor (ex.: UptimeRobot em paralelo).
+
 ---
 
 ## Parte 4 — Configurar o frontend na Vercel
