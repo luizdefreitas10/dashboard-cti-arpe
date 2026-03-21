@@ -3,15 +3,17 @@ import { getAtividadesStats } from './actions'
 import { KpiCard } from '@/components/dashboard/kpi-card'
 import { DashboardPeriodFilter } from '@/components/dashboard/dashboard-period-filter'
 import { DataFreshnessBanner } from '@/components/dashboard/data-freshness-banner'
-import { AtividadesPorMesChart } from '@/components/charts/atividades-por-mes'
-import { DistribuicaoCategoriasChart } from '@/components/charts/distribuicao-categorias'
-import { TopSetoresChart } from '@/components/charts/top-setores'
-import { ProdutividadeResponsavelChart } from '@/components/charts/produtividade-responsavel'
-import { PrioridadePorMesChart } from '@/components/charts/prioridade-por-mes'
-import { EvolucaoTemporalChart } from '@/components/charts/evolucao-temporal'
+import {
+  AtividadesPorMesChart,
+  DistribuicaoCategoriasChart,
+  TopSetoresChart,
+  ProdutividadeResponsavelChart,
+  PrioridadePorMesChart,
+  EvolucaoTemporalChart,
+  AtividadesPorAnoChart,
+  TopNomesAtividadesChart,
+} from '@/components/charts/charts-dynamic'
 import { HeatmapDiasChart } from '@/components/charts/heatmap-dias'
-import { AtividadesPorAnoChart } from '@/components/charts/atividades-por-ano'
-import { TopNomesAtividadesChart } from '@/components/charts/top-nomes-atividades'
 import { pivotPrioridadePorMes, aggregateHeatmapDiaSemanaMes } from '@/lib/atividades-stats-helpers'
 import { Activity, Users, Building2, TrendingUp } from 'lucide-react'
 import Link from 'next/link'

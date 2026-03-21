@@ -199,12 +199,14 @@ model Celular {
   - `dataMinimaAtividade` / `dataMaximaAtividade` — cobertura temporal global.
   - `anosComDados` — anos distintos para o seletor de período.
 - **`GET /bens/stats`**: campo `bensComCriticidadeRegistrada` (bens com criticidade preenchida, exclui vazio e `-`).
+- **`GET /bens`** (lista paginada): query opcional `criticidade` (contém, case-insensitive) e `comCriticidade=true` (apenas bens com criticidade preenchida, mesma regra do KPI).
 
 ### Frontend
 
 - Página **`/dashboard`** com visão executiva (atividades, bens, soluções digitais, Power BI, % Win11 vs Win10 quando aplicável, alerta de criticidade, tabela resumida de importações).
 - Gráficos de **prioridade por mês** e **heatmap** alimentados pelos novos campos da API.
 - Novo gráfico **top nomes de atividade** e **volume por ano**.
+- Tabela **`/tabelas/bens`**: filtros por criticidade (`Com criticidade registrada` + texto parcial) e link da visão geral com `?comCriticidade=true`.
 - Tabela **`/tabelas/celulares`** com export CSV e opção de revelar IMEI.
 - Página **Importar**: bloco “Histórico de importações” com refresh após cada upload.
 

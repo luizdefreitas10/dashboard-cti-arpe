@@ -21,7 +21,8 @@ export function ProdutividadeResponsavelChart({ data }: Props) {
   const top8 = data.slice(0, 8)
 
   return (
-    <ResponsiveContainer width="100%" height={260}>
+    <div className="h-[260px] w-full min-w-0">
+      <ResponsiveContainer width="100%" height="100%">
       <BarChart data={top8} layout="vertical" margin={{ top: 0, right: 16, left: 8, bottom: 0 }}>
         <XAxis type="number" tick={{ fill: 'var(--color-text-subtle)', fontSize: 11 }} axisLine={false} tickLine={false} />
         <YAxis
@@ -40,5 +41,6 @@ export function ProdutividadeResponsavelChart({ data }: Props) {
         </Bar>
       </BarChart>
     </ResponsiveContainer>
+    </div>
   )
 }

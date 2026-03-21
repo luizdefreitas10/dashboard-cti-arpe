@@ -10,7 +10,8 @@ interface Props {
 
 export function PrioridadePorMesChart({ data }: Props) {
   return (
-    <ResponsiveContainer width="100%" height={280}>
+    <div className="h-[280px] w-full min-w-0">
+      <ResponsiveContainer width="100%" height="100%">
       <BarChart data={data} margin={{ top: 8, right: 8, left: -10, bottom: 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
         <XAxis
@@ -45,5 +46,6 @@ export function PrioridadePorMesChart({ data }: Props) {
         ) : null}
       </BarChart>
     </ResponsiveContainer>
+    </div>
   )
 }

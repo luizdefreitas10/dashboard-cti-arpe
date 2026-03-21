@@ -12,7 +12,8 @@ export function AtividadesPorAnoChart({ data }: Props) {
   }
 
   return (
-    <ResponsiveContainer width="100%" height={260}>
+    <div className="h-[260px] w-full min-w-0">
+      <ResponsiveContainer width="100%" height="100%">
       <BarChart data={data} margin={{ top: 8, right: 8, left: -10, bottom: 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
         <XAxis
@@ -36,5 +37,6 @@ export function AtividadesPorAnoChart({ data }: Props) {
         <Bar dataKey="total" fill="var(--color-primary)" radius={[4, 4, 0, 0]} name="Atividades" />
       </BarChart>
     </ResponsiveContainer>
+    </div>
   )
 }

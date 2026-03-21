@@ -15,22 +15,30 @@ export function KpiCard({ title, value, icon, color = 'var(--color-primary)', su
   return (
     <div
       className={cn(
-        'bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-6 flex flex-col gap-4',
+        'min-w-0 bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 sm:p-5 md:p-6 flex flex-col gap-3 sm:gap-4',
         className,
       )}
     >
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-[var(--color-text-muted)] font-medium">{title}</p>
+      <div className="flex items-start justify-between gap-2 min-w-0">
+        <p className="text-sm text-[var(--color-text-muted)] font-medium min-w-0 flex-1 [overflow-wrap:anywhere] text-pretty">
+          {title}
+        </p>
         <div
-          className="w-9 h-9 rounded-[var(--radius-md)] flex items-center justify-center"
+          className="w-9 h-9 shrink-0 rounded-[var(--radius-md)] flex items-center justify-center"
           style={{ backgroundColor: `${color}18` }}
         >
           <span style={{ color }}>{icon}</span>
         </div>
       </div>
-      <div>
-        <p className="text-3xl font-bold text-[var(--color-text)] tabular-nums">{numericValue}</p>
-        {subtitle && <p className="text-xs text-[var(--color-text-subtle)] mt-1">{subtitle}</p>}
+      <div className="min-w-0">
+        <p className="text-2xl sm:text-3xl font-bold text-[var(--color-text)] tabular-nums [overflow-wrap:anywhere] break-words">
+          {numericValue}
+        </p>
+        {subtitle && (
+          <p className="text-xs text-[var(--color-text-subtle)] mt-1 [overflow-wrap:anywhere] text-pretty leading-snug">
+            {subtitle}
+          </p>
+        )}
       </div>
     </div>
   )

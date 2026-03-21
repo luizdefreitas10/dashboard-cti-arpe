@@ -1,10 +1,12 @@
 import { getBensStats } from './actions'
 import { KpiCard } from '@/components/dashboard/kpi-card'
-import { BensPorTipoChart } from '@/components/charts/bens-por-tipo'
-import { BensPorSetorChart } from '@/components/charts/bens-por-setor'
-import { SoDistribuicaoChart } from '@/components/charts/so-distribuicao'
-import { RamaisPorSetorChart } from '@/components/charts/ramais-por-setor'
-import { ModeloChart } from '@/components/charts/modelo-chart'
+import {
+  BensPorTipoChart,
+  BensPorSetorChart,
+  SoDistribuicaoChart,
+  RamaisPorSetorChart,
+  ModeloChart,
+} from '@/components/charts/charts-dynamic'
 import { Monitor, Cpu, Phone, Smartphone, AlertTriangle } from 'lucide-react'
 import Link from 'next/link'
 import { formatNumber } from '@/lib/utils'
@@ -73,7 +75,7 @@ export default async function DashboardBensPage() {
           <p className="text-sm text-[var(--color-text-muted)]">
             <strong className="text-[var(--color-text)]">{criticidade}</strong> bens com criticidade registrada no
             inventário —{' '}
-            <Link href="/tabelas/bens" className="text-[var(--color-primary)] hover:underline font-medium">
+            <Link href="/tabelas/bens?comCriticidade=true" className="text-[var(--color-primary)] hover:underline font-medium">
               revisar na tabela
             </Link>
             .

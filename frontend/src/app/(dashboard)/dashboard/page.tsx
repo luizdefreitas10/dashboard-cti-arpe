@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { getExecutiveOverview } from './actions'
 import { KpiCard } from '@/components/dashboard/kpi-card'
-import { AtividadesPorAnoChart } from '@/components/charts/atividades-por-ano'
+import { AtividadesPorAnoChart } from '@/components/charts/charts-dynamic'
 import { DataFreshnessBanner } from '@/components/dashboard/data-freshness-banner'
 import {
   Activity,
@@ -11,6 +11,10 @@ import {
   AlertTriangle,
   Smartphone,
   Phone,
+  ArrowUpRight,
+  BarChart3,
+  TableProperties,
+  Upload,
 } from 'lucide-react'
 import { formatNumber, formatDate } from '@/lib/utils'
 
@@ -29,8 +33,8 @@ export default async function VisaoGeralDashboardPage() {
 
   if (data.isError || !data.statsAtividades || !data.statsBens) {
     return (
-      <div className="flex items-center justify-center min-h-[40vh]">
-        <p className="text-[var(--color-text-muted)] text-sm">
+      <div className="flex w-full min-w-0 max-w-full items-center justify-center min-h-[40vh] px-1">
+        <p className="text-[var(--color-text-muted)] text-sm text-center [overflow-wrap:anywhere] text-pretty max-w-md">
           Não foi possível carregar a visão geral. Verifique o backend e tente novamente.
         </p>
       </div>
@@ -43,9 +47,9 @@ export default async function VisaoGeralDashboardPage() {
   const criticidade = b.bensComCriticidadeRegistrada ?? 0
 
   return (
-    <div className="flex flex-col gap-8 max-w-6xl">
-      <div>
-        <p className="text-sm text-[var(--color-text-muted)] leading-relaxed">
+    <div className="flex w-full min-w-0 max-w-full flex-col gap-6 sm:gap-8">
+      <div className="min-w-0">
+        <p className="text-sm text-[var(--color-text-muted)] leading-relaxed [overflow-wrap:anywhere] text-pretty">
           Visão executiva da <strong className="text-[var(--color-text)]">Coordenadoria de TI</strong>: indicadores
           cruzados de atividades, patrimônio, soluções e importações recentes. Use os atalhos para aprofundar em cada
           módulo.
@@ -55,7 +59,7 @@ export default async function VisaoGeralDashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 min-w-0 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
         <KpiCard
           title="Atividades (total)"
           value={formatNumber(a.total)}
@@ -86,7 +90,7 @@ export default async function VisaoGeralDashboardPage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 min-w-0 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <KpiCard
           title="Maior demanda (setor)"
           value={topSetor?.setor ?? '—'}
@@ -124,7 +128,7 @@ export default async function VisaoGeralDashboardPage() {
       </div>
 
       {data.pctWin11 != null ? (
-        <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-4 py-3 text-sm text-[var(--color-text-muted)]">
+        <div className="min-w-0 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-3 py-3 sm:px-4 text-sm text-[var(--color-text-muted)] [overflow-wrap:anywhere] text-pretty leading-relaxed">
           <span className="font-medium text-[var(--color-text)]">Windows 11</span> representa aproximadamente{' '}
           <strong>{data.pctWin11}%</strong> dos bens com Windows 10 ou 11 informados no inventário (exclui registros
           vazios ou &quot;-&quot;).
@@ -132,12 +136,12 @@ export default async function VisaoGeralDashboardPage() {
       ) : null}
 
       {criticidade > 0 ? (
-        <div className="flex items-start gap-3 rounded-[var(--radius-lg)] border border-amber-500/25 bg-amber-500/5 px-4 py-3">
+        <div className="flex min-w-0 items-start gap-2.5 sm:gap-3 rounded-[var(--radius-lg)] border border-amber-500/25 bg-amber-500/5 px-3 py-3 sm:px-4">
           <AlertTriangle className="text-amber-400 shrink-0 mt-0.5" size={18} />
-          <p className="text-sm text-[var(--color-text-muted)]">
+          <p className="min-w-0 text-sm text-[var(--color-text-muted)] [overflow-wrap:anywhere] text-pretty leading-relaxed">
             <strong className="text-[var(--color-text)]">{criticidade}</strong> bens com campo{' '}
             <em>criticidade</em> preenchido — revise na{' '}
-            <Link href="/tabelas/bens" className="text-[var(--color-primary)] hover:underline">
+            <Link href="/tabelas/bens?comCriticidade=true" className="text-[var(--color-primary)] hover:underline">
               tabela de bens
             </Link>
             .
@@ -145,43 +149,145 @@ export default async function VisaoGeralDashboardPage() {
         </div>
       ) : null}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-6">
-          <p className="text-sm font-semibold text-[var(--color-text)] mb-4">Volume de atividades por ano</p>
-          <AtividadesPorAnoChart data={a.porAno ?? []} />
+      <div className="grid grid-cols-1 min-w-0 lg:grid-cols-2 gap-4 sm:gap-6">
+        <div className="min-w-0 overflow-hidden bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 sm:p-6">
+          <p className="text-sm font-semibold text-[var(--color-text)] mb-3 sm:mb-4 [overflow-wrap:anywhere]">
+            Volume de atividades por ano
+          </p>
+          <div className="min-w-0 w-full">
+            <AtividadesPorAnoChart data={a.porAno ?? []} />
+          </div>
         </div>
-        <div className="bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-6 flex flex-col gap-3">
-          <p className="text-sm font-semibold text-[var(--color-text)]">Atalhos</p>
-          <ul className="flex flex-col gap-2 text-sm">
-            {[
-              { href: '/dashboard/atividades', label: 'Dashboard de atividades (gráficos detalhados)' },
-              { href: '/dashboard/bens', label: 'Dashboard de bens e telefonia' },
-              { href: '/tabelas/atividades', label: 'Tabela de atividades' },
-              { href: '/tabelas/celulares', label: 'Tabela de celulares' },
-              { href: '/importar', label: 'Importar planilhas' },
-              { href: '/power-bi', label: 'Catálogo Power BI' },
-              { href: '/solucoes-digitais', label: 'Soluções digitais CTI' },
-            ].map((l) => (
-              <li key={l.href}>
-                <Link href={l.href} className="text-[var(--color-primary)] hover:underline">
-                  {l.label}
-                </Link>
-              </li>
-            ))}
+        <div className="min-w-0 bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 sm:p-6 flex flex-col gap-3 sm:gap-4">
+          <div>
+            <p className="text-sm font-semibold text-[var(--color-text)]">Atalhos</p>
+            <p className="text-xs text-[var(--color-text-subtle)] mt-1 leading-relaxed">
+              Acesso rápido aos módulos do painel
+            </p>
+          </div>
+          <ul className="flex flex-col gap-2">
+            {(
+              [
+                {
+                  href: '/dashboard/atividades',
+                  title: 'Dashboard de atividades',
+                  hint: 'Gráficos e indicadores detalhados',
+                  icon: BarChart3,
+                  accent: 'text-sky-400 bg-sky-500/10 border-sky-500/20',
+                },
+                {
+                  href: '/dashboard/bens',
+                  title: 'Dashboard de bens',
+                  hint: 'Patrimônio e telefonia',
+                  icon: Server,
+                  accent: 'text-violet-400 bg-violet-500/10 border-violet-500/20',
+                },
+                {
+                  href: '/tabelas/atividades',
+                  title: 'Tabela de atividades',
+                  hint: 'Listagem com filtros',
+                  icon: TableProperties,
+                  accent: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
+                },
+                {
+                  href: '/tabelas/celulares',
+                  title: 'Tabela de celulares',
+                  hint: 'Inventário corporativo',
+                  icon: Smartphone,
+                  accent: 'text-orange-400 bg-orange-500/10 border-orange-500/20',
+                },
+                {
+                  href: '/importar',
+                  title: 'Importar planilhas',
+                  hint: 'Atualizar dados da CTI',
+                  icon: Upload,
+                  accent: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
+                },
+                {
+                  href: '/power-bi',
+                  title: 'Catálogo Power BI',
+                  hint: 'Relatórios e dashboards externos',
+                  icon: ExternalLink,
+                  accent: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20',
+                },
+                {
+                  href: '/solucoes-digitais',
+                  title: 'Soluções digitais CTI',
+                  hint: 'Automações e projetos web',
+                  icon: Layers,
+                  accent: 'text-teal-400 bg-teal-500/10 border-teal-500/20',
+                },
+              ] as const
+            ).map((item) => {
+              const Icon = item.icon
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className="group flex min-h-[44px] items-center gap-2 sm:gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)]/40 px-2.5 py-2.5 sm:px-3 sm:py-2.5 transition-all duration-200 hover:border-[var(--color-primary)]/35 hover:bg-[var(--color-bg-hover)]/80 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]/40 focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--color-bg-card)] touch-manipulation active:bg-[var(--color-bg-hover)]/60"
+                  >
+                    <span
+                      className={`flex size-8 sm:size-9 shrink-0 items-center justify-center rounded-lg border ${item.accent}`}
+                      aria-hidden
+                    >
+                      <Icon className="size-[17px] sm:size-[18px]" strokeWidth={1.75} />
+                    </span>
+                    <span className="min-w-0 flex-1 text-left">
+                      <span className="block text-sm font-medium text-[var(--color-text)] group-hover:text-[var(--color-primary)] transition-colors [overflow-wrap:anywhere] leading-snug">
+                        {item.title}
+                      </span>
+                      <span className="block text-[11px] text-[var(--color-text-subtle)] mt-0.5 leading-snug [overflow-wrap:anywhere]">
+                        {item.hint}
+                      </span>
+                    </span>
+                    <ArrowUpRight
+                      size={18}
+                      className="size-[18px] shrink-0 text-[var(--color-text-subtle)] opacity-70 transition-all duration-200 group-hover:text-[var(--color-primary)] group-hover:opacity-100 group-hover:translate-x-px group-hover:-translate-y-px"
+                      aria-hidden
+                    />
+                  </Link>
+                </li>
+              )
+            })}
           </ul>
         </div>
       </div>
 
       {data.importLogs.length > 0 ? (
-        <section className="border border-[var(--color-border)] rounded-[var(--radius-lg)] overflow-hidden bg-[var(--color-bg-card)]">
-          <div className="px-4 py-3 border-b border-[var(--color-border)]">
+        <section className="min-w-0 border border-[var(--color-border)] rounded-[var(--radius-lg)] overflow-hidden bg-[var(--color-bg-card)]">
+          <div className="px-3 py-3 sm:px-4 border-b border-[var(--color-border)]">
             <h2 className="text-sm font-semibold text-[var(--color-text)]">Últimas importações</h2>
-            <p className="text-xs text-[var(--color-text-subtle)] mt-0.5">
+            <p className="text-xs text-[var(--color-text-subtle)] mt-0.5 [overflow-wrap:anywhere] leading-relaxed">
               Auditoria automática após cada upload bem-sucedido.
             </p>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+          {/* Mobile (ex.: iPhone SE): cartões empilhados — evita tabela larga e scroll horizontal */}
+          <ul className="sm:hidden divide-y divide-[var(--color-border)]">
+            {data.importLogs.map((log) => (
+              <li key={log.id} className="px-3 py-3 space-y-1.5">
+                <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5">
+                  <time
+                    className="text-xs text-[var(--color-text-muted)] tabular-nums"
+                    dateTime={log.createdAt}
+                  >
+                    {formatDate(log.createdAt)}
+                  </time>
+                  <span className="text-xs font-medium tabular-nums text-[var(--color-text-subtle)]">
+                    {log.rowsCount ?? '—'} linhas
+                  </span>
+                </div>
+                <p className="text-sm font-medium text-[var(--color-text)]">{tipoImportLabel(log.tipo)}</p>
+                <p
+                  className="text-xs text-[var(--color-text-muted)] break-all [overflow-wrap:anywhere]"
+                  title={log.filename ?? ''}
+                >
+                  {log.filename ?? '—'}
+                </p>
+              </li>
+            ))}
+          </ul>
+          <div className="hidden sm:block overflow-x-auto">
+            <table className="w-full min-w-[520px] text-sm">
               <thead>
                 <tr className="border-b border-[var(--color-border)] text-left text-xs text-[var(--color-text-subtle)] uppercase">
                   <th className="px-4 py-2 font-medium">Quando</th>

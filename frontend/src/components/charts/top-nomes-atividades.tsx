@@ -15,7 +15,8 @@ export function TopNomesAtividadesChart({ data, enableDrillDown }: Props) {
   const top = data.slice(0, 12)
 
   return (
-    <ResponsiveContainer width="100%" height={320}>
+    <div className="h-[320px] w-full min-w-0">
+      <ResponsiveContainer width="100%" height="100%">
       <BarChart
         data={top}
         layout="vertical"
@@ -59,5 +60,6 @@ export function TopNomesAtividadesChart({ data, enableDrillDown }: Props) {
         </Bar>
       </BarChart>
     </ResponsiveContainer>
+    </div>
   )
 }

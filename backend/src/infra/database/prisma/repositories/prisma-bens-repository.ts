@@ -11,6 +11,7 @@ import { Bem } from '@/domain/bens/enterprise/entities/bem'
 import { Software } from '@/domain/bens/enterprise/entities/software'
 import { Ramal } from '@/domain/bens/enterprise/entities/ramal'
 import { Celular } from '@/domain/bens/enterprise/entities/celular'
+import type { Prisma } from '@prisma/client'
 
 @Injectable()
 export class PrismaBensRepository implements BensRepository {
@@ -137,19 +138,44 @@ export class PrismaBensRepository implements BensRepository {
     ])
   }
 
-  private buildWhere(filters: Partial<BemFilters>) {
-    const where: Record<string, unknown> = {}
-    if (filters.tipoHardware) where.tipoHardware = { contains: filters.tipoHardware, mode: 'insensitive' }
-    if (filters.setor) where.setor = { contains: filters.setor, mode: 'insensitive' }
-    if (filters.modelo) where.modelo = { contains: filters.modelo, mode: 'insensitive' }
-    if (filters.sistemaOperacional) where.sistemaOperacional = { contains: filters.sistemaOperacional, mode: 'insensitive' }
-    if (filters.busca) {
-      where.OR = [
-        { tombamento: { contains: filters.busca, mode: 'insensitive' } },
-        { usuario: { contains: filters.busca, mode: 'insensitive' } },
-        { modelo: { contains: filters.busca, mode: 'insensitive' } },
-      ]
+  private buildWhere(filters: Partial<BemFilters>): Prisma.BemWhereInput {
+    const and: Prisma.BemWhereInput[] = []
+
+    if (filters.tipoHardware) {
+      and.push({ tipoHardware: { contains: filters.tipoHardware, mode: 'insensitive' } })
     }
-    return where
+    if (filters.setor) {
+      and.push({ setor: { contains: filters.setor, mode: 'insensitive' } })
+    }
+    if (filters.modelo) {
+      and.push({ modelo: { contains: filters.modelo, mode: 'insensitive' } })
+    }
+    if (filters.sistemaOperacional) {
+      and.push({ sistemaOperacional: { contains: filters.sistemaOperacional, mode: 'insensitive' } })
+    }
+    if (filters.busca) {
+      and.push({
+        OR: [
+          { tombamento: { contains: filters.busca, mode: 'insensitive' } },
+          { usuario: { contains: filters.busca, mode: 'insensitive' } },
+          { modelo: { contains: filters.busca, mode: 'insensitive' } },
+        ],
+      })
+    }
+    if (filters.comCriticidade) {
+      and.push(
+        { criticidade: { not: null } },
+        { NOT: { criticidade: '' } },
+        { NOT: { criticidade: '-' } },
+      )
+    }
+    const crit = filters.criticidade?.trim()
+    if (crit) {
+      and.push({ criticidade: { contains: crit, mode: 'insensitive' } })
+    }
+
+    if (and.length === 0) return {}
+    if (and.length === 1) return and[0]!
+    return { AND: and }
   }
 }

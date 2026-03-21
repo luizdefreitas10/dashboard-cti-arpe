@@ -14,7 +14,7 @@ export function DataFreshnessBanner({ dataMinima, dataMaxima, filtroAno, classNa
   return (
     <div
       role="status"
-      className={`text-xs text-[var(--color-text-subtle)] border border-[var(--color-border)]/80 rounded-[var(--radius-md)] px-3 py-2 bg-[var(--color-bg-card)]/60 ${className}`}
+      className={`text-xs text-[var(--color-text-subtle)] border border-[var(--color-border)]/80 rounded-[var(--radius-md)] px-3 py-2 bg-[var(--color-bg-card)]/60 [overflow-wrap:anywhere] text-pretty leading-relaxed ${className}`}
     >
       {filtroAno ? (
         <span>

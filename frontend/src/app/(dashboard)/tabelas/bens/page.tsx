@@ -58,6 +58,8 @@ function TabelaBensContent() {
   const setor = searchParams.get('setor') ?? ''
   const modelo = searchParams.get('modelo') ?? ''
   const sistemaOperacional = searchParams.get('sistemaOperacional') ?? ''
+  const criticidade = searchParams.get('criticidade') ?? ''
+  const comCriticidade = searchParams.get('comCriticidade') === 'true' || searchParams.get('comCriticidade') === '1'
 
   const setParam = useCallback((key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString())
@@ -73,7 +75,7 @@ function TabelaBensContent() {
     }, delay)
   }, [setParam])
 
-  const hasFilters = busca || tipoHardware || setor || modelo || sistemaOperacional
+  const hasFilters = busca || tipoHardware || setor || modelo || sistemaOperacional || criticidade || comCriticidade
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -84,6 +86,8 @@ function TabelaBensContent() {
       if (setor) filters.setor = setor
       if (modelo) filters.modelo = modelo
       if (sistemaOperacional) filters.sistemaOperacional = sistemaOperacional
+      if (criticidade) filters.criticidade = criticidade
+      if (comCriticidade) filters.comCriticidade = true
 
       const result = await service.findMany(filters)
       setData(result.bens)
@@ -95,7 +99,7 @@ function TabelaBensContent() {
       setLoading(false)
       if (isInitialLoading) setIsInitialLoading(false)
     }
-  }, [page, size, busca, tipoHardware, setor, modelo, sistemaOperacional, service, isInitialLoading])
+  }, [page, size, busca, tipoHardware, setor, modelo, sistemaOperacional, criticidade, comCriticidade, service, isInitialLoading])
 
   useEffect(() => { fetchData() }, [fetchData])
   useEffect(() => { setSearchInput(busca) }, [busca])
@@ -117,6 +121,8 @@ function TabelaBensContent() {
       if (setor) baseFilters.setor = setor
       if (modelo) baseFilters.modelo = modelo
       if (sistemaOperacional) baseFilters.sistemaOperacional = sistemaOperacional
+      if (criticidade) baseFilters.criticidade = criticidade
+      if (comCriticidade) baseFilters.comCriticidade = true
 
       const firstPage = await service.findMany({ ...baseFilters, page: 1, size: exportPageSize })
       const totalToExport = firstPage.total
@@ -167,7 +173,7 @@ function TabelaBensContent() {
       </div>
 
       {showFilters && (
-        <div className="bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
           {[
             { label: 'Tipo de Hardware', key: 'tipoHardware', val: tipoHardware, options: ['Monitor', 'Computador Desktop', 'Microcomputador', 'Notebook', 'Notebook Novo', 'Notebook Antigo', 'Switch', 'Tablet', 'Câmera'] },
             { label: 'Sistema Operacional', key: 'sistemaOperacional', val: sistemaOperacional, options: ['Windows 10 Pro', 'Windows 11'] },
@@ -186,6 +192,37 @@ function TabelaBensContent() {
               <input type="text" placeholder={`Filtrar ${label.toLowerCase()}...`} value={val} onChange={(e) => setParam(key, e.target.value)} className="px-2 py-1.5 text-sm bg-[var(--color-bg-input)] border border-[var(--color-border)] rounded-[var(--radius-md)] text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus:outline-none focus:border-[var(--color-primary)]" />
             </div>
           ))}
+          <div className="flex flex-col gap-1">
+            <label className="text-xs text-[var(--color-text-subtle)]">Criticidade</label>
+            <select
+              value={comCriticidade ? 'com' : ''}
+              onChange={(e) => {
+                const v = e.target.value
+                const params = new URLSearchParams(searchParams.toString())
+                if (v === 'com') params.set('comCriticidade', 'true')
+                else params.delete('comCriticidade')
+                params.set('page', '1')
+                router.replace(`${pathname}?${params.toString()}`)
+              }}
+              className="px-2 py-1.5 text-sm bg-[var(--color-bg-input)] border border-[var(--color-border)] rounded-[var(--radius-md)] text-[var(--color-text)] focus:outline-none focus:border-[var(--color-primary)] cursor-pointer"
+            >
+              <option value="">Todos</option>
+              <option value="com">Com criticidade registrada</option>
+            </select>
+            <p className="text-[10px] text-[var(--color-text-subtle)] leading-snug">
+              Igual ao alerta da visão geral (exclui vazio e &quot;-&quot;).
+            </p>
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs text-[var(--color-text-subtle)]">Texto em criticidade</label>
+            <input
+              type="text"
+              placeholder="Ex.: QUEIMOU, contém…"
+              value={criticidade}
+              onChange={(e) => setParam('criticidade', e.target.value)}
+              className="px-2 py-1.5 text-sm bg-[var(--color-bg-input)] border border-[var(--color-border)] rounded-[var(--radius-md)] text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus:outline-none focus:border-[var(--color-primary)]"
+            />
+          </div>
         </div>
       )}
 

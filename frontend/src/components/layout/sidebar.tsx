@@ -190,34 +190,27 @@ export function Sidebar({
 }) {
   return (
     <>
-      {/* Overlay mobile (modal) */}
+      {/* Modal: overlay em todos os breakpoints (não empurra o layout) */}
       <div
         className={cn(
-          'lg:hidden fixed top-16 left-0 right-0 bottom-0 bg-black/40 z-40 transition-opacity',
-          open ? 'opacity-100' : 'opacity-0 pointer-events-none',
+          'fixed top-16 left-0 right-0 bottom-0 z-40 bg-black/40 transition-opacity duration-300',
+          open ? 'opacity-100' : 'pointer-events-none opacity-0',
         )}
         onClick={onClose}
+        role="presentation"
+        aria-hidden={!open}
       />
 
-      {/* Drawer mobile: modal abaixo do header */}
+      {/* Drawer único: slide por cima do conteúdo; header em largura total acima (h-16) */}
       <aside
         className={cn(
-          'lg:hidden fixed left-0 top-16 h-[calc(100vh-4rem)] w-[78vw] max-w-[320px] bg-[var(--color-bg-sidebar)] border-r border-[var(--color-border)] flex flex-col z-50 transition-transform',
-          'transform',
-          open ? 'translate-x-0' : '-translate-x-full',
+          'fixed left-0 top-16 z-50 flex h-[calc(100vh-4rem)] w-[min(78vw,320px)] flex-col border-r border-[var(--color-border)] bg-[var(--color-bg-sidebar)] transition-transform duration-300 lg:w-60',
+          open ? 'translate-x-0' : '-translate-x-full pointer-events-none',
         )}
+        aria-hidden={!open}
+        aria-label="Menu principal"
       >
         <SidebarContent onClose={onClose} showCloseButton />
-      </aside>
-
-      {/* Drawer desktop/tablet: abaixo do header, empurra conteúdo */}
-      <aside
-        className={cn(
-          'hidden lg:flex fixed left-0 top-16 h-[calc(100vh-4rem)] w-60 bg-[var(--color-bg-sidebar)] border-r border-[var(--color-border)] flex-col z-30 transition-transform',
-          open ? 'translate-x-0' : '-translate-x-full',
-        )}
-      >
-        <SidebarContent onClose={onClose} showCloseButton={false} />
       </aside>
     </>
   )
