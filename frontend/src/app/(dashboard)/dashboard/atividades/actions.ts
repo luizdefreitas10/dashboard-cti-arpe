@@ -4,11 +4,11 @@ import { handleAxiosError } from '@/services/error'
 import { pingApiHealth } from '@/lib/ping-api-health'
 import AtividadesService from '@/services/models/atividades'
 
-export async function getAtividadesStats() {
+export async function getAtividadesStats(params?: { ano?: string }) {
   try {
     void pingApiHealth()
     const { getStats } = AtividadesService()
-    const stats = await getStats()
+    const stats = await getStats(params?.ano ? { ano: params.ano } : undefined)
     return { isError: false, stats }
   } catch (error) {
     const e = handleAxiosError(error)

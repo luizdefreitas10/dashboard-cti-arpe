@@ -22,15 +22,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div className="min-h-screen bg-[var(--color-bg)]">
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <div
-        className={
-          sidebarOpen
-            ? 'ml-0 lg:ml-60 flex flex-col min-h-screen transition-[margin] duration-300'
-            : 'ml-0 lg:ml-0 flex flex-col min-h-screen transition-[margin] duration-300'
-        }
-      >
+      {/* Sem margin-left: menu é modal (overlay); evita faixa vazia no topo à esquerda quando o drawer abre */}
+      <div className="flex min-h-screen w-full min-w-0 max-w-[100vw] flex-col overflow-x-clip">
         <Header onMenuToggle={toggleSidebar} isMenuOpen={sidebarOpen} />
-        <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
+        <main className="flex-1 w-full min-w-0 max-w-full p-3 sm:p-6 lg:p-8">{children}</main>
         <Footer />
       </div>
       <Toaster

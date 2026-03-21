@@ -116,6 +116,22 @@ function parseObservacoesSolucao(raw: unknown): {
 export class UploadController {
   constructor(private prisma: PrismaService) {}
 
+  private async logImport(input: {
+    tipo: string
+    filename?: string
+    rowsCount?: number | null
+    message: string
+  }) {
+    await this.prisma.dataImportLog.create({
+      data: {
+        tipo: input.tipo,
+        filename: input.filename ?? null,
+        rowsCount: input.rowsCount ?? null,
+        message: input.message,
+      },
+    })
+  }
+
   @Post('atividades')
   @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
   async uploadAtividades(@UploadedFile() file: Express.Multer.File) {
@@ -149,6 +165,13 @@ export class UploadController {
       }))
 
     await this.prisma.atividade.createMany({ data, skipDuplicates: true })
+
+    await this.logImport({
+      tipo: 'atividades',
+      filename: file.originalname,
+      rowsCount: data.length,
+      message: `${data.length} atividades importadas com sucesso`,
+    })
 
     return { message: `${data.length} atividades importadas com sucesso`, total: data.length }
   }
@@ -216,8 +239,16 @@ export class UploadController {
       totals.celulares = data.length
     }
 
+    const msg = `Bens importados: ${totals.bens} equipamentos, ${totals.softwares} softwares, ${totals.ramais} ramais, ${totals.celulares} celulares`
+    await this.logImport({
+      tipo: 'bens',
+      filename: file.originalname,
+      rowsCount: totals.bens + totals.softwares + totals.ramais + totals.celulares,
+      message: msg,
+    })
+
     return {
-      message: `Bens importados: ${totals.bens} equipamentos, ${totals.softwares} softwares, ${totals.ramais} ramais, ${totals.celulares} celulares`,
+      message: msg,
       totals,
     }
   }
@@ -293,8 +324,15 @@ export class UploadController {
 
     const concluidosCount = data.filter((d) => d.status === 'concluido').length
     const emAndamentoCount = data.filter((d) => d.status === 'em_andamento').length
+    const msg = `${data.length} dashboard(s) importado(s): ${concluidosCount} concluído(s), ${emAndamentoCount} em andamento`
+    await this.logImport({
+      tipo: 'power_bi',
+      filename: file.originalname,
+      rowsCount: data.length,
+      message: msg,
+    })
     return {
-      message: `${data.length} dashboard(s) importado(s): ${concluidosCount} concluído(s), ${emAndamentoCount} em andamento`,
+      message: msg,
       total: data.length,
       concluidos: concluidosCount,
       emAndamento: emAndamentoCount,
@@ -370,11 +408,18 @@ export class UploadController {
 
     const concl = data.filter((d) => d.statusProjeto === 'concluida').length
     const and = data.filter((d) => d.statusProjeto === 'em_andamento').length
+    const msg =
+      data.length === 0
+        ? 'Nenhuma solução importada — base limpa. Verifique colunas TIPO e NOME.'
+        : `${data.length} solução(ões) importada(s): ${concl} concluída(s), ${and} em andamento`
+    await this.logImport({
+      tipo: 'solucoes_digitais',
+      filename: file.originalname,
+      rowsCount: data.length,
+      message: msg,
+    })
     return {
-      message:
-        data.length === 0
-          ? 'Nenhuma solução importada — base limpa. Verifique colunas TIPO e NOME.'
-          : `${data.length} solução(ões) importada(s): ${concl} concluída(s), ${and} em andamento`,
+      message: msg,
       total: data.length,
       concluidas: concl,
       emAndamento: and,

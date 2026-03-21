@@ -5,12 +5,13 @@ import { PRIORITY_COLORS } from '@/lib/chart-colors'
 import { formatMonth } from '@/lib/utils'
 
 interface Props {
-  data: { mes: string; Alta: number; Média: number; Baixa: number }[]
+  data: { mes: string; Alta: number; Média: number; Baixa: number; Outras?: number }[]
 }
 
 export function PrioridadePorMesChart({ data }: Props) {
   return (
-    <ResponsiveContainer width="100%" height={280}>
+    <div className="h-[280px] w-full min-w-0">
+      <ResponsiveContainer width="100%" height="100%">
       <BarChart data={data} margin={{ top: 8, right: 8, left: -10, bottom: 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
         <XAxis
@@ -40,7 +41,11 @@ export function PrioridadePorMesChart({ data }: Props) {
         <Bar dataKey="Alta" fill={PRIORITY_COLORS.Alta} radius={[2, 2, 0, 0]} />
         <Bar dataKey="Média" fill={PRIORITY_COLORS.Média} radius={[2, 2, 0, 0]} />
         <Bar dataKey="Baixa" fill={PRIORITY_COLORS.Baixa} radius={[2, 2, 0, 0]} />
+        {data.some((d) => (d.Outras ?? 0) > 0) ? (
+          <Bar dataKey="Outras" fill="#64748b" radius={[2, 2, 0, 0]} />
+        ) : null}
       </BarChart>
     </ResponsiveContainer>
+    </div>
   )
 }

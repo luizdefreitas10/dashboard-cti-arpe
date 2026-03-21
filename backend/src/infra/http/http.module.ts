@@ -5,6 +5,7 @@ import { BensController } from './controllers/bens.controller'
 import { UploadController } from './controllers/upload.controller'
 import { PowerBiController } from './controllers/power-bi.controller'
 import { SolucoesDigitaisController } from './controllers/solucoes-digitais.controller'
+import { ImportLogsController } from './controllers/import-logs.controller'
 import { HealthController } from './controllers/health.controller'
 import { ListAtividadesUseCase } from '@/domain/atividades/application/use-cases/list-atividades'
 import { GetAtividadesStatsUseCase } from '@/domain/atividades/application/use-cases/get-atividades-stats'
@@ -21,6 +22,7 @@ import { PrismaService } from '../database/prisma/prisma.service'
     UploadController,
     PowerBiController,
     SolucoesDigitaisController,
+    ImportLogsController,
   ],
   providers: [
     ListAtividadesUseCase,

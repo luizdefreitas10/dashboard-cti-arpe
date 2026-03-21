@@ -1,11 +1,14 @@
 import { getBensStats } from './actions'
 import { KpiCard } from '@/components/dashboard/kpi-card'
-import { BensPorTipoChart } from '@/components/charts/bens-por-tipo'
-import { BensPorSetorChart } from '@/components/charts/bens-por-setor'
-import { SoDistribuicaoChart } from '@/components/charts/so-distribuicao'
-import { RamaisPorSetorChart } from '@/components/charts/ramais-por-setor'
-import { ModeloChart } from '@/components/charts/modelo-chart'
-import { Monitor, Cpu, Phone, Smartphone } from 'lucide-react'
+import {
+  BensPorTipoChart,
+  BensPorSetorChart,
+  SoDistribuicaoChart,
+  RamaisPorSetorChart,
+  ModeloChart,
+} from '@/components/charts/charts-dynamic'
+import { Monitor, Cpu, Phone, Smartphone, AlertTriangle } from 'lucide-react'
+import Link from 'next/link'
 import { formatNumber } from '@/lib/utils'
 
 function ChartCard({ title, children, className = '' }: { title: string; children: React.ReactNode; className?: string }) {
@@ -30,6 +33,7 @@ export default async function DashboardBensPage() {
 
   const totalRamaisDigital = ramais.reduce((s, r) => s + r.digital, 0)
   const totalRamaisAnalogico = ramais.reduce((s, r) => s + r.analogico, 0)
+  const criticidade = stats.bensComCriticidadeRegistrada ?? 0
 
   return (
     <div className="flex flex-col gap-8">
@@ -64,6 +68,20 @@ export default async function DashboardBensPage() {
           subtitle="Celulares corporativos"
         />
       </div>
+
+      {criticidade > 0 ? (
+        <div className="flex items-start gap-3 rounded-[var(--radius-lg)] border border-amber-500/25 bg-amber-500/5 px-4 py-3">
+          <AlertTriangle className="text-amber-400 shrink-0 mt-0.5" size={18} />
+          <p className="text-sm text-[var(--color-text-muted)]">
+            <strong className="text-[var(--color-text)]">{criticidade}</strong> bens com criticidade registrada no
+            inventário —{' '}
+            <Link href="/tabelas/bens?comCriticidade=true" className="text-[var(--color-primary)] hover:underline font-medium">
+              revisar na tabela
+            </Link>
+            .
+          </p>
+        </div>
+      ) : null}
 
       {/* Linha 1 — Tipo de hardware + Bens por setor */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

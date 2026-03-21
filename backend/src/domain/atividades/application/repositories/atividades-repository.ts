@@ -42,6 +42,30 @@ export interface AtividadesPorPrioridade {
   total: number
 }
 
+/** Contagem real por mês e prioridade (não proporcional ao total global) */
+export interface AtividadesPorMesPrioridade {
+  mes: string
+  prioridade: string
+  total: number
+}
+
+/** Heatmap: dia da semana (texto) × mês — agregado a partir do banco */
+export interface AtividadesPorDiaSemanaMes {
+  mes: string
+  diaSemana: string
+  total: number
+}
+
+export interface AtividadesPorNomeAtividade {
+  nome: string
+  total: number
+}
+
+export interface AtividadesPorAno {
+  ano: string
+  total: number
+}
+
 export interface AtividadesStats {
   total: number
   porCategoria: AtividadesPorCategoria[]
@@ -49,6 +73,15 @@ export interface AtividadesStats {
   porResponsavel: AtividadesPorResponsavel[]
   porPrioridade: AtividadesPorPrioridade[]
   porMes: AtividadesPorMes[]
+  porMesPrioridade: AtividadesPorMesPrioridade[]
+  porDiaSemanaMes: AtividadesPorDiaSemanaMes[]
+  porNomeAtividade: AtividadesPorNomeAtividade[]
+  porAno: AtividadesPorAno[]
+  /** Cobertura temporal das atividades com data (sempre dataset completo) */
+  dataMinimaAtividade: string | null
+  dataMaximaAtividade: string | null
+  /** Anos distintos no banco (sempre dataset completo — para filtro de período na UI) */
+  anosComDados: string[]
 }
 
 export abstract class AtividadesRepository {

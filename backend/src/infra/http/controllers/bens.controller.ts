@@ -14,6 +14,11 @@ const querySchema = z.object({
   modelo: z.string().optional(),
   sistemaOperacional: z.string().optional(),
   busca: z.string().optional(),
+  criticidade: z.string().optional(),
+  comCriticidade: z
+    .string()
+    .optional()
+    .transform((v) => v === 'true' || v === '1'),
 })
 
 type QueryParams = z.infer<typeof querySchema>

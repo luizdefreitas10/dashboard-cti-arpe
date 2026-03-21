@@ -10,7 +10,8 @@ interface Props {
 export function BensPorSetorChart({ data }: Props) {
   const top12 = data.slice(0, 12)
   return (
-    <ResponsiveContainer width="100%" height={300}>
+    <div className="h-[300px] w-full min-w-0">
+      <ResponsiveContainer width="100%" height="100%">
       <BarChart data={top12} layout="vertical" margin={{ top: 0, right: 16, left: 8, bottom: 0 }}>
         <XAxis type="number" tick={{ fill: 'var(--color-text-subtle)', fontSize: 11 }} axisLine={false} tickLine={false} />
         <YAxis
@@ -38,5 +39,6 @@ export function BensPorSetorChart({ data }: Props) {
         </Bar>
       </BarChart>
     </ResponsiveContainer>
+    </div>
   )
 }

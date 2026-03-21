@@ -44,6 +44,19 @@ export interface AtividadesStats {
   porResponsavel: { responsavel: string; total: number }[]
   porPrioridade: { prioridade: string; total: number }[]
   porMes: { mes: string; total: number }[]
+  porMesPrioridade: { mes: string; prioridade: string; total: number }[]
+  porDiaSemanaMes: { mes: string; diaSemana: string; total: number }[]
+  porNomeAtividade: { nome: string; total: number }[]
+  porAno: { ano: string; total: number }[]
+  dataMinimaAtividade: string | null
+  dataMaximaAtividade: string | null
+  anosComDados: string[]
+}
+
+export interface AtividadesStatsQuery {
+  ano?: number | string
+  dataInicio?: string
+  dataFim?: string
 }
 
 export default function AtividadesService() {
@@ -59,9 +72,16 @@ export default function AtividadesService() {
     }
   }
 
-  async function getStats(config?: AxiosRequestConfig): Promise<AtividadesStats> {
+  async function getStats(query?: AtividadesStatsQuery, config?: AxiosRequestConfig): Promise<AtividadesStats> {
     try {
-      const { data } = await api.get<AtividadesStats>('/atividades/stats', config)
+      const params = Object.fromEntries(
+        Object.entries({
+          ano: query?.ano,
+          dataInicio: query?.dataInicio,
+          dataFim: query?.dataFim,
+        }).filter(([, v]) => v !== undefined && v !== ''),
+      )
+      const { data } = await api.get<AtividadesStats>('/atividades/stats', { ...config, params })
       return data
     } catch (e) {
       throw handleAxiosError(e)

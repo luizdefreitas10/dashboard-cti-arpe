@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common'
+import { Prisma } from '@prisma/client'
 import { PrismaService } from '../prisma.service'
 import { PrismaAtividadeMapper } from '../mappers/prisma-atividade-mapper'
 import {
@@ -36,51 +37,130 @@ export class PrismaAtividadesRepository implements AtividadesRepository {
     }
   }
 
+  private sqlDateFilter(filters?: Partial<AtividadeFilters>): Prisma.Sql {
+    if (!filters?.dataInicio && !filters?.dataFim) {
+      return Prisma.empty
+    }
+    const parts: Prisma.Sql[] = []
+    if (filters.dataInicio) {
+      parts.push(Prisma.sql`"data" >= ${filters.dataInicio}`)
+    }
+    if (filters.dataFim) {
+      parts.push(Prisma.sql`"data" <= ${filters.dataFim}`)
+    }
+    return Prisma.sql`AND ${Prisma.join(parts, ' AND ')}`
+  }
+
   async getStats(filters?: Partial<AtividadeFilters>): Promise<AtividadesStats> {
     type Row = { label: string; total: bigint }
     type MesRow = { mes: string; total: bigint }
+    type MesPriRow = { mes: string; prioridade: string; total: bigint }
+    type DiaMesRow = { mes: string; diaSemana: string; total: bigint }
+    type NomeRow = { nome: string; total: bigint }
+    type AnoRow = { ano: number; total: bigint }
+    type RangeRow = { min: Date | null; max: Date | null }
+    type AnoDistRow = { y: number }
 
-    const [total, porCategoria, porSetor, porResponsavel, porPrioridade, porMes] =
-      await Promise.all([
-        this.prisma.atividade.count(),
-        this.prisma.$queryRaw<Row[]>`
-          SELECT categoria AS label, COUNT(*) AS total
-          FROM atividades
-          WHERE categoria IS NOT NULL
-          GROUP BY categoria
-          ORDER BY total DESC
-        `,
-        this.prisma.$queryRaw<Row[]>`
-          SELECT setor AS label, COUNT(*) AS total
-          FROM atividades
-          WHERE setor IS NOT NULL
-          GROUP BY setor
-          ORDER BY total DESC
-          LIMIT 15
-        `,
-        this.prisma.$queryRaw<Row[]>`
-          SELECT responsavel AS label, COUNT(*) AS total
-          FROM atividades
-          WHERE responsavel IS NOT NULL
-          GROUP BY responsavel
-          ORDER BY total DESC
-          LIMIT 10
-        `,
-        this.prisma.$queryRaw<Row[]>`
-          SELECT prioridade AS label, COUNT(*) AS total
-          FROM atividades
-          WHERE prioridade IS NOT NULL
-          GROUP BY prioridade
-          ORDER BY total DESC
-        `,
-        this.prisma.$queryRaw<MesRow[]>`
-          SELECT TO_CHAR(data, 'YYYY-MM') AS mes, COUNT(*) AS total
-          FROM atividades
-          WHERE data IS NOT NULL
-          GROUP BY mes
-          ORDER BY mes ASC
-        `,
-      ])
+    const df = this.sqlDateFilter(filters)
+
+    const [
+      totalRows,
+      porCategoria,
+      porSetor,
+      porResponsavel,
+      porPrioridade,
+      porMes,
+      porMesPrioridade,
+      porDiaSemanaMes,
+      porNomeAtividade,
+      porAno,
+      rangeRows,
+      anosDistintos,
+    ] = await Promise.all([
+      this.prisma.$queryRaw<[{ c: bigint }]>`
+        SELECT COUNT(*)::bigint AS c FROM atividades WHERE 1=1 ${df}
+      `,
+      this.prisma.$queryRaw<Row[]>`
+        SELECT categoria AS label, COUNT(*)::bigint AS total
+        FROM atividades
+        WHERE categoria IS NOT NULL ${df}
+        GROUP BY categoria
+        ORDER BY total DESC
+      `,
+      this.prisma.$queryRaw<Row[]>`
+        SELECT setor AS label, COUNT(*)::bigint AS total
+        FROM atividades
+        WHERE setor IS NOT NULL ${df}
+        GROUP BY setor
+        ORDER BY total DESC
+        LIMIT 15
+      `,
+      this.prisma.$queryRaw<Row[]>`
+        SELECT responsavel AS label, COUNT(*)::bigint AS total
+        FROM atividades
+        WHERE responsavel IS NOT NULL ${df}
+        GROUP BY responsavel
+        ORDER BY total DESC
+        LIMIT 10
+      `,
+      this.prisma.$queryRaw<Row[]>`
+        SELECT prioridade AS label, COUNT(*)::bigint AS total
+        FROM atividades
+        WHERE prioridade IS NOT NULL ${df}
+        GROUP BY prioridade
+        ORDER BY total DESC
+      `,
+      this.prisma.$queryRaw<MesRow[]>`
+        SELECT TO_CHAR("data", 'YYYY-MM') AS mes, COUNT(*)::bigint AS total
+        FROM atividades
+        WHERE "data" IS NOT NULL ${df}
+        GROUP BY mes
+        ORDER BY mes ASC
+      `,
+      this.prisma.$queryRaw<MesPriRow[]>`
+        SELECT TO_CHAR("data", 'YYYY-MM') AS mes, prioridade, COUNT(*)::bigint AS total
+        FROM atividades
+        WHERE "data" IS NOT NULL AND prioridade IS NOT NULL ${df}
+        GROUP BY mes, prioridade
+        ORDER BY mes ASC, prioridade ASC
+      `,
+      this.prisma.$queryRaw<DiaMesRow[]>`
+        SELECT TO_CHAR("data", 'YYYY-MM') AS mes, TRIM("diaSemana") AS "diaSemana", COUNT(*)::bigint AS total
+        FROM atividades
+        WHERE "data" IS NOT NULL AND "diaSemana" IS NOT NULL AND TRIM("diaSemana") <> '' ${df}
+        GROUP BY mes, TRIM("diaSemana")
+        ORDER BY mes ASC, "diaSemana" ASC
+      `,
+      this.prisma.$queryRaw<NomeRow[]>`
+        SELECT nome, COUNT(*)::bigint AS total
+        FROM atividades
+        WHERE 1=1 ${df}
+        GROUP BY nome
+        ORDER BY total DESC
+        LIMIT 15
+      `,
+      this.prisma.$queryRaw<AnoRow[]>`
+        SELECT EXTRACT(YEAR FROM "data")::int AS ano, COUNT(*)::bigint AS total
+        FROM atividades
+        WHERE "data" IS NOT NULL ${df}
+        GROUP BY EXTRACT(YEAR FROM "data")
+        ORDER BY ano ASC
+      `,
+      this.prisma.$queryRaw<RangeRow[]>`
+        SELECT MIN("data") AS min, MAX("data") AS max
+        FROM atividades
+        WHERE "data" IS NOT NULL
+      `,
+      this.prisma.$queryRaw<AnoDistRow[]>`
+        SELECT DISTINCT EXTRACT(YEAR FROM "data")::int AS y
+        FROM atividades
+        WHERE "data" IS NOT NULL
+        ORDER BY y ASC
+      `,
+    ])
+
+    const total = Number(totalRows[0]?.c ?? 0n)
+    const range = rangeRows[0]
 
     return {
       total,
@@ -89,6 +169,21 @@ export class PrismaAtividadesRepository implements AtividadesRepository {
       porResponsavel: porResponsavel.map((r) => ({ responsavel: r.label, total: Number(r.total) })),
       porPrioridade: porPrioridade.map((r) => ({ prioridade: r.label, total: Number(r.total) })),
       porMes: porMes.map((r) => ({ mes: r.mes, total: Number(r.total) })),
+      porMesPrioridade: porMesPrioridade.map((r) => ({
+        mes: r.mes,
+        prioridade: r.prioridade,
+        total: Number(r.total),
+      })),
+      porDiaSemanaMes: porDiaSemanaMes.map((r) => ({
+        mes: r.mes,
+        diaSemana: r.diaSemana,
+        total: Number(r.total),
+      })),
+      porNomeAtividade: porNomeAtividade.map((r) => ({ nome: r.nome, total: Number(r.total) })),
+      porAno: porAno.map((r) => ({ ano: String(r.ano), total: Number(r.total) })),
+      dataMinimaAtividade: range?.min ? range.min.toISOString() : null,
+      dataMaximaAtividade: range?.max ? range.max.toISOString() : null,
+      anosComDados: anosDistintos.map((r) => String(r.y)),
     }
   }
 

@@ -29,6 +29,10 @@ export interface BemFilters {
   modelo?: string
   sistemaOperacional?: string
   busca?: string
+  /** Contém (texto) no campo criticidade */
+  criticidade?: string
+  /** true = apenas bens com criticidade preenchida (igual ao KPI da visão geral) */
+  comCriticidade?: boolean
 }
 
 export interface BensStats {
@@ -36,6 +40,7 @@ export interface BensStats {
   totalSoftwares: number
   totalRamais: number
   totalCelulares: number
+  bensComCriticidadeRegistrada: number
   porTipo: { tipo: string; total: number }[]
   porSetor: { setor: string; total: number }[]
   porModelo: { modelo: string; total: number }[]
@@ -69,7 +74,11 @@ export default function BensService() {
   async function findMany(filters: BemFilters = {}): Promise<BensResponse> {
     try {
       const params = Object.fromEntries(
-        Object.entries(filters).filter(([, v]) => v !== undefined && v !== ''),
+        Object.entries(filters).filter(([, v]) => {
+          if (v === undefined || v === '') return false
+          if (v === false) return false
+          return true
+        }),
       )
       const { data } = await api.get<BensResponse>('/bens', { params })
       return data

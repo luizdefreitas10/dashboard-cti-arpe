@@ -113,3 +113,17 @@ model SolucaoDigital {
 
   @@map("solucoes_digitais")
 }
+
+/// Histórico de importações de planilhas (auditoria / frescor dos dados)
+model DataImportLog {
+  id        String   @id @default(cuid())
+  /// atividades | bens | power_bi | solucoes_digitais
+  tipo      String
+  filename  String?
+  rowsCount Int?
+  message   String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt(sort: Desc)])
+  @@map("data_import_logs")
+}

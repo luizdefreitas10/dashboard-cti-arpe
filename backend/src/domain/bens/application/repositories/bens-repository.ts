@@ -11,6 +11,10 @@ export interface BemFilters {
   modelo?: string
   sistemaOperacional?: string
   busca?: string
+  /** Contém (case-insensitive) no campo criticidade */
+  criticidade?: string
+  /** Apenas bens com criticidade preenchida (exclui vazio e "-"), alinhado ao KPI da visão geral */
+  comCriticidade?: boolean
 }
 
 export interface BensPaginados {
@@ -43,6 +47,8 @@ export interface BensStats {
   totalSoftwares: number
   totalRamais: number
   totalCelulares: number
+  /** Bens com campo criticidade preenchido (alertas / observações de hardware) */
+  bensComCriticidadeRegistrada: number
   porTipo: BensPorTipo[]
   porSetor: BensPorSetor[]
   porModelo: BensPorModelo[]

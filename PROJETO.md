@@ -161,17 +161,60 @@ model Celular {
 ## Páginas e Rotas
 
 ```
-/                         → redirect para /dashboard/atividades
-/dashboard/atividades     → Dashboard principal de atividades
+/                         → redirect para /dashboard (visão geral executiva)
+/dashboard                → Visão geral: KPIs cruzados, atividades por ano, atalhos, últimas importações
+/dashboard/atividades     → Dashboard principal de atividades (filtro ?ano=AAAA opcional)
 /dashboard/bens           → Dashboard principal de bens
 /tabelas/atividades       → Tabela completa de atividades + filtros
 /tabelas/bens             → Tabela completa de bens + filtros
 /tabelas/softwares        → Tabela de softwares inventariados
 /tabelas/ramais           → Tabela de ramais por setor
-/importar                 → Upload de novas planilhas
+/tabelas/celulares        → Tabela de celulares (IMEI mascarado por padrão)
+/importar                 → Upload de planilhas + histórico de importações (auditoria)
 /power-bi                 → Catálogo de dashboards Power BI (carga via planilha)
 /solucoes-digitais        → Automações e soluções web CTI (carga via SOLUCOES-DIGITAIS-CTI.xlsx)
 ```
+
+### Navegação e UX (atual)
+
+- **Breadcrumb** no header nas páginas internas (exceto visão geral).
+- **Filtro de período** no dashboard de atividades: query `?ano=2025` (lista de anos vem de `anosComDados` na API).
+- **Drill-down**: clique em fatia de categoria, barra de setor ou barra de nome de atividade abre `/tabelas/atividades` com filtro/query correspondente.
+- **Banner de contexto temporal**: intervalo mín/máx de datas com `data` preenchida na base (sempre dataset completo), independente do filtro de ano nos gráficos.
+
+---
+
+## Evolução recente — governança e dados (branch `feat/cti-dashboard-governance-improvements`)
+
+### Backend
+
+- **Modelo `DataImportLog`**: auditoria de cada importação (`tipo`, `filename`, `rowsCount`, `message`, `createdAt`). Preenchido automaticamente após uploads em `/upload/*`.
+- **`GET /import-logs`**: últimos 80 registros (ordenado por data, `no-store`).
+- **`GET /atividades/stats`**: query opcional `ano`, `dataInicio`, `dataFim` — todas as agregações respeitam o período.
+- **Novos campos em `GET /atividades/stats`**:
+  - `porMesPrioridade` — contagens reais por mês × prioridade (substitui proporcionalização aproximada).
+  - `porDiaSemanaMes` — base para heatmap (dia da semana × mês) a partir do banco.
+  - `porNomeAtividade` — top 15 nomes de atividade.
+  - `porAno` — volume por ano civil.
+  - `dataMinimaAtividade` / `dataMaximaAtividade` — cobertura temporal global.
+  - `anosComDados` — anos distintos para o seletor de período.
+- **`GET /bens/stats`**: campo `bensComCriticidadeRegistrada` (bens com criticidade preenchida, exclui vazio e `-`).
+- **`GET /bens`** (lista paginada): query opcional `criticidade` (contém, case-insensitive) e `comCriticidade=true` (apenas bens com criticidade preenchida, mesma regra do KPI).
+
+### Frontend
+
+- Página **`/dashboard`** com visão executiva (atividades, bens, soluções digitais, Power BI, % Win11 vs Win10 quando aplicável, alerta de criticidade, tabela resumida de importações).
+- Gráficos de **prioridade por mês** e **heatmap** alimentados pelos novos campos da API.
+- Novo gráfico **top nomes de atividade** e **volume por ano**.
+- Tabela **`/tabelas/bens`**: filtros por criticidade (`Com criticidade registrada` + texto parcial) e link da visão geral com `?comCriticidade=true`.
+- Tabela **`/tabelas/celulares`** com export CSV e opção de revelar IMEI.
+- Página **Importar**: bloco “Histórico de importações” com refresh após cada upload.
+
+### Migração Prisma
+
+- Arquivo: `prisma/migrations/20260317190000_add_data_import_logs/migration.sql` — criar tabela `data_import_logs`.
+
+**Após merge/pull:** `npx prisma migrate deploy` (ou `migrate dev`) no backend e `npx prisma generate`.
 
 ---
 
@@ -204,8 +247,9 @@ model Celular {
 - Recharts `<BarChart layout="vertical">`
 
 ### Gráfico 4 — Barras Agrupadas: Prioridade por Mês
-- Cada mês: 3 barras (Alta, Média, Baixa)
-- Cores: vermelho (Alta), amarelo (Média), verde (Baixa)
+- Cada mês: barras **Alta**, **Média**, **Baixa** e **Outras** (quando houver prioridades fora do trio)
+- Dados: agregação **real** `porMesPrioridade` no backend (não mais proporcional ao total global)
+- Cores: vermelho (Alta), amarelo (Média), verde (Baixa), cinza (Outras)
 - Recharts `<BarChart>` com múltiplos `<Bar>`
 
 ### Gráfico 5 — Barras: Produtividade por Responsável
@@ -217,10 +261,10 @@ model Celular {
 - Recharts `<AreaChart>` com gradiente suave
 
 ### Gráfico 7 — Heatmap: Atividades por Dia da Semana × Mês
-- Linhas: dias da semana (Seg, Ter, Qua, Qui, Sex)
+- Linhas: dias úteis (Seg … Sex) após normalização de rótulos da planilha
 - Colunas: meses do período
-- Intensidade de cor = volume de atividades
-- CSS grid customizado
+- Intensidade de cor = volume de atividades (**agregação real** `porDiaSemanaMes` + `aggregateHeatmapDiaSemanaMes` no frontend)
+- Grid com melhorias de acessibilidade (`role="grid"`, `aria-label` nas células)
 
 ---
 
@@ -413,22 +457,22 @@ src/
 
 ```
 GET  /atividades                        → lista paginada com filtros
-GET  /atividades/stats                  → KPIs, distribuições, agrupamentos
-GET  /atividades/stats/por-mes          → agrupado por mês
-GET  /atividades/stats/por-categoria    → distribuição por categoria
-GET  /atividades/stats/por-setor        → top setores
-GET  /atividades/stats/por-responsavel  → por responsável
-GET  /atividades/stats/por-prioridade   → por prioridade
+GET  /atividades/stats                  → KPIs e agregações (query opcional: ano, dataInicio, dataFim)
 GET  /bens                              → lista paginada
-GET  /bens/stats                        → KPIs dos bens
-GET  /bens/stats/por-tipo               → por tipo de hardware
-GET  /bens/stats/por-setor              → por setor
-GET  /softwares                         → lista de softwares
-GET  /ramais                            → lista de ramais
-GET  /celulares                         → lista de celulares
-POST /upload/atividades                 → upload e parse de planilha
-POST /upload/bens                       → upload e parse de planilha
+GET  /bens/stats                        → KPIs dos bens (+ bensComCriticidadeRegistrada)
+GET  /bens/softwares                    → lista de softwares
+GET  /bens/ramais                       → lista de ramais
+GET  /bens/celulares                    → lista de celulares
+GET  /import-logs                       → histórico de importações (auditoria)
+GET  /power-bi                          → catálogo Power BI
+GET  /solucoes-digitais                 → soluções digitais
+POST /upload/atividades                 → upload e parse de planilha (+ log em data_import_logs)
+POST /upload/bens                       → upload e parse de planilha (+ log)
+POST /upload/power-bi                   → importação catálogo Power BI (+ log)
+POST /upload/solucoes-digitais          → importação soluções (+ log)
 ```
+
+> **Nota:** A documentação anterior citava rotas fragmentadas (`/atividades/stats/por-mes`, etc.). Na implementação atual **tudo** vem em um único `GET /atividades/stats` com o payload estendido.
 
 ### Query Params para listagem de atividades
 
@@ -442,6 +486,14 @@ POST /upload/bens                       → upload e parse de planilha
 &setor=RH
 &prioridade=Alta
 &busca=texto livre
+```
+
+### Query Params para `GET /atividades/stats`
+
+```
+?ano=2025                    → período 01/01 a 31/12 do ano
+&dataInicio=2025-01-01       → filtro de início (parseável por Date)
+&dataFim=2025-12-31          → filtro de fim
 ```
 
 ---
