@@ -42,8 +42,34 @@ export class AtividadesController {
   }
 
   @Get('stats')
-  async stats() {
-    const result = await this.getAtividadesStatsUseCase.execute()
+  async stats(
+    @Query('dataInicio') dataInicioQ?: string,
+    @Query('dataFim') dataFimQ?: string,
+    @Query('ano') anoQ?: string,
+  ) {
+    let dataInicio: Date | undefined
+    let dataFim: Date | undefined
+
+    if (anoQ?.trim()) {
+      const y = Number(anoQ)
+      if (!Number.isNaN(y) && y >= 1990 && y <= 2100) {
+        dataInicio = new Date(y, 0, 1, 0, 0, 0, 0)
+        dataFim = new Date(y, 11, 31, 23, 59, 59, 999)
+      }
+    } else {
+      if (dataInicioQ) {
+        const d = new Date(dataInicioQ)
+        if (!Number.isNaN(d.getTime())) dataInicio = d
+      }
+      if (dataFimQ) {
+        const d = new Date(dataFimQ)
+        if (!Number.isNaN(d.getTime())) dataFim = d
+      }
+    }
+
+    const result = await this.getAtividadesStatsUseCase.execute(
+      dataInicio ?? dataFim ? { dataInicio, dataFim } : {},
+    )
     if (result.isLeft()) return {}
     return result.value
   }

@@ -1,9 +1,28 @@
 'use client'
 
-import { useState, useRef } from 'react'
-import { Upload, FileSpreadsheet, CheckCircle, AlertCircle } from 'lucide-react'
+import { useState, useRef, useEffect, useCallback } from 'react'
+import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, History } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { cn } from '@/lib/utils'
+import { cn, formatDate } from '@/lib/utils'
+
+type ImportLogRow = {
+  id: string
+  tipo: string
+  filename: string | null
+  rowsCount: number | null
+  message: string | null
+  createdAt: string
+}
+
+function tipoLabel(tipo: string) {
+  const m: Record<string, string> = {
+    atividades: 'Atividades',
+    bens: 'Bens',
+    power_bi: 'Power BI',
+    solucoes_digitais: 'Soluções digitais',
+  }
+  return m[tipo] ?? tipo
+}
 
 type UploadStatus = 'idle' | 'uploading' | 'success' | 'error'
 
@@ -21,6 +40,27 @@ export default function ImportarPage() {
   const bensRef = useRef<HTMLInputElement>(null)
   const powerBiRef = useRef<HTMLInputElement>(null)
   const solucoesDigitaisRef = useRef<HTMLInputElement>(null)
+
+  const [importLogs, setImportLogs] = useState<ImportLogRow[]>([])
+  const [logsLoading, setLogsLoading] = useState(true)
+
+  const fetchLogs = useCallback(async () => {
+    try {
+      const base = process.env.NEXT_PUBLIC_API_URL ?? ''
+      const res = await fetch(`${base}/import-logs`, { cache: 'no-store' })
+      if (!res.ok) throw new Error('fetch')
+      const data = await res.json()
+      setImportLogs(data.logs ?? [])
+    } catch {
+      setImportLogs([])
+    } finally {
+      setLogsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchLogs()
+  }, [fetchLogs])
 
   const handleUpload = async (
     file: File,
@@ -46,6 +86,7 @@ export default function ImportarPage() {
       const data = await res.json()
       setState({ status: 'success', message: data.message ?? 'Importado com sucesso!' })
       toast.success('Importação concluída!')
+      void fetchLogs()
       onSuccess?.()
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Erro desconhecido'
@@ -55,7 +96,7 @@ export default function ImportarPage() {
   }
 
   return (
-    <div className="max-w-2xl flex flex-col gap-6">
+    <div className="max-w-3xl flex flex-col gap-8">
       <p className="text-sm text-[var(--color-text-muted)]">
         Faça upload das planilhas para atualizar os dados do dashboard. Os dados anteriores daquela importação serão substituídos.
       </p>
@@ -149,6 +190,50 @@ export default function ImportarPage() {
           </div>
         </div>
       ))}
+
+      <section className="border border-[var(--color-border)] rounded-[var(--radius-lg)] overflow-hidden bg-[var(--color-bg-card)]">
+        <div className="px-4 py-3 border-b border-[var(--color-border)] flex items-center gap-2">
+          <History size={16} className="text-[var(--color-primary)]" />
+          <div>
+            <p className="text-sm font-semibold text-[var(--color-text)]">Histórico de importações</p>
+            <p className="text-xs text-[var(--color-text-subtle)]">Registrado automaticamente após cada upload concluído.</p>
+          </div>
+        </div>
+        <div className="overflow-x-auto max-h-[320px] overflow-y-auto">
+          {logsLoading ? (
+            <p className="p-4 text-sm text-[var(--color-text-muted)]">Carregando…</p>
+          ) : importLogs.length === 0 ? (
+            <p className="p-4 text-sm text-[var(--color-text-muted)]">
+              Nenhum registro ainda. Após a primeira importação neste ambiente, o histórico aparecerá aqui.
+            </p>
+          ) : (
+            <table className="w-full text-sm">
+              <thead className="sticky top-0 bg-[var(--color-bg-card)] z-10">
+                <tr className="border-b border-[var(--color-border)] text-left text-xs text-[var(--color-text-subtle)] uppercase">
+                  <th className="px-4 py-2 font-medium">Data</th>
+                  <th className="px-4 py-2 font-medium">Tipo</th>
+                  <th className="px-4 py-2 font-medium">Arquivo</th>
+                  <th className="px-4 py-2 font-medium text-right">Linhas</th>
+                </tr>
+              </thead>
+              <tbody>
+                {importLogs.map((log) => (
+                  <tr key={log.id} className="border-b border-[var(--color-border)]/70 hover:bg-[var(--color-bg-hover)]/40">
+                    <td className="px-4 py-2 text-[var(--color-text-muted)] whitespace-nowrap tabular-nums">
+                      {formatDate(log.createdAt)}
+                    </td>
+                    <td className="px-4 py-2 text-[var(--color-text)]">{tipoLabel(log.tipo)}</td>
+                    <td className="px-4 py-2 text-xs text-[var(--color-text-muted)] max-w-[180px] truncate" title={log.filename ?? ''}>
+                      {log.filename ?? '—'}
+                    </td>
+                    <td className="px-4 py-2 text-right tabular-nums text-[var(--color-text-muted)]">{log.rowsCount ?? '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </section>
     </div>
   )
 }

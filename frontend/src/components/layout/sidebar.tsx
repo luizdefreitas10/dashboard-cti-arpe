@@ -29,6 +29,7 @@ const navItems: NavItem[] = [
     label: 'Dashboards',
     icon: <BarChart3 size={16} />,
     children: [
+      { label: 'Visão geral', href: '/dashboard' },
       { label: 'Atividades', href: '/dashboard/atividades' },
       { label: 'Bens Patrimoniais', href: '/dashboard/bens' },
     ],
@@ -41,6 +42,7 @@ const navItems: NavItem[] = [
       { label: 'Bens', href: '/tabelas/bens' },
       { label: 'Softwares', href: '/tabelas/softwares' },
       { label: 'Ramais', href: '/tabelas/ramais' },
+      { label: 'Celulares', href: '/tabelas/celulares' },
     ],
   },
   {
@@ -60,10 +62,17 @@ const navItems: NavItem[] = [
   },
 ]
 
+function childMatchesPath(pathname: string, childHref: string) {
+  if (pathname === childHref) return true
+  /* Evita que /dashboard marque também /dashboard/atividades */
+  if (childHref === '/dashboard') return pathname === '/dashboard'
+  return pathname.startsWith(`${childHref}/`)
+}
+
 function NavGroup({ item, onNavigate }: { item: NavItem; onNavigate: () => void }) {
   const pathname = usePathname()
   const [open, setOpen] = useState(
-    item.children?.some((c) => pathname.startsWith(c.href)) ?? false,
+    item.children?.some((c) => childMatchesPath(pathname, c.href)) ?? false,
   )
 
   if (item.href) {
@@ -114,7 +123,7 @@ function NavGroup({ item, onNavigate }: { item: NavItem; onNavigate: () => void 
               onClick={() => onNavigate()}
               className={cn(
                 'flex items-center gap-2 px-2 py-1.5 rounded-sm text-sm transition-colors cursor-pointer',
-                pathname === child.href
+                childMatchesPath(pathname, child.href)
                   ? 'text-(--color-primary)'
                   : 'text-(--color-text-muted) hover:text-(--color-text)',
               )}

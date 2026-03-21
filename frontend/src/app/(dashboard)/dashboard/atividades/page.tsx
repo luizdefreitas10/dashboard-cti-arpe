@@ -1,6 +1,8 @@
+import { Suspense } from 'react'
 import { getAtividadesStats } from './actions'
-import { KpiCard, KpiCardSkeleton } from '@/components/dashboard/kpi-card'
-import { SectionHeader } from '@/components/dashboard/section-header'
+import { KpiCard } from '@/components/dashboard/kpi-card'
+import { DashboardPeriodFilter } from '@/components/dashboard/dashboard-period-filter'
+import { DataFreshnessBanner } from '@/components/dashboard/data-freshness-banner'
 import { AtividadesPorMesChart } from '@/components/charts/atividades-por-mes'
 import { DistribuicaoCategoriasChart } from '@/components/charts/distribuicao-categorias'
 import { TopSetoresChart } from '@/components/charts/top-setores'
@@ -8,43 +10,26 @@ import { ProdutividadeResponsavelChart } from '@/components/charts/produtividade
 import { PrioridadePorMesChart } from '@/components/charts/prioridade-por-mes'
 import { EvolucaoTemporalChart } from '@/components/charts/evolucao-temporal'
 import { HeatmapDiasChart } from '@/components/charts/heatmap-dias'
+import { AtividadesPorAnoChart } from '@/components/charts/atividades-por-ano'
+import { TopNomesAtividadesChart } from '@/components/charts/top-nomes-atividades'
+import { pivotPrioridadePorMes, aggregateHeatmapDiaSemanaMes } from '@/lib/atividades-stats-helpers'
 import { Activity, Users, Building2, TrendingUp } from 'lucide-react'
+import Link from 'next/link'
 
-function ChartCard({ title, children, className = '' }: { title: string; children: React.ReactNode; className?: string }) {
+function ChartCard({ title, hint, children, className = '' }: { title: string; hint?: string; children: React.ReactNode; className?: string }) {
   return (
     <div className={`bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-6 ${className}`}>
-      <p className="text-sm font-semibold text-[var(--color-text)] mb-5">{title}</p>
+      <div className="mb-4">
+        <p className="text-sm font-semibold text-[var(--color-text)]">{title}</p>
+        {hint ? <p className="text-[11px] text-[var(--color-text-subtle)] mt-1">{hint}</p> : null}
+      </div>
       {children}
     </div>
   )
 }
 
-function buildPrioridadePorMes(
-  porMes: { mes: string; total: number }[],
-  porPrioridade: { prioridade: string; total: number }[],
-) {
-  return porMes.map((m) => ({
-    mes: m.mes,
-    Alta: Math.round((m.total * (porPrioridade.find((p) => p.prioridade === 'Alta')?.total ?? 0)) / 100),
-    Média: Math.round((m.total * (porPrioridade.find((p) => p.prioridade === 'Média')?.total ?? 0)) / 100),
-    Baixa: Math.round((m.total * (porPrioridade.find((p) => p.prioridade === 'Baixa')?.total ?? 0)) / 100),
-  }))
-}
-
-function buildHeatmapData(porMes: { mes: string; total: number }[]) {
-  const dias = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta']
-  const weights = [0.22, 0.20, 0.20, 0.21, 0.17]
-  const result: { diaSemana: string; mes: string; total: number }[] = []
-  for (const { mes, total } of porMes) {
-    for (let i = 0; i < dias.length; i++) {
-      result.push({ diaSemana: dias[i], mes, total: Math.round(total * weights[i]) })
-    }
-  }
-  return result
-}
-
-export default async function DashboardAtividadesPage() {
-  const { stats, isError } = await getAtividadesStats()
+async function DashboardAtividadesContent({ ano }: { ano?: string }) {
+  const { stats, isError } = await getAtividadesStats(ano ? { ano } : undefined)
 
   if (isError || !stats) {
     return (
@@ -56,11 +41,29 @@ export default async function DashboardAtividadesPage() {
 
   const topResponsavel = stats.porResponsavel[0]
   const topSetor = stats.porSetor[0]
-  const prioridadePorMes = buildPrioridadePorMes(stats.porMes, stats.porPrioridade)
-  const heatmapData = buildHeatmapData(stats.porMes)
+  const prioridadePorMes = pivotPrioridadePorMes(stats.porMesPrioridade ?? [])
+  const heatmapData = aggregateHeatmapDiaSemanaMes(stats.porDiaSemanaMes ?? [])
+  const anosComDados = stats.anosComDados ?? []
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <DataFreshnessBanner
+          dataMinima={stats.dataMinimaAtividade}
+          dataMaxima={stats.dataMaximaAtividade}
+          filtroAno={ano ?? null}
+        />
+        <Suspense fallback={null}>
+          <DashboardPeriodFilter anosDisponiveis={anosComDados} />
+        </Suspense>
+      </div>
+      <p className="text-xs text-[var(--color-text-subtle)]">
+        Dica: nos gráficos de <strong className="text-[var(--color-text-muted)]">setores</strong>,{' '}
+        <strong className="text-[var(--color-text-muted)]">categorias</strong> e{' '}
+        <strong className="text-[var(--color-text-muted)]">tipos de atividade</strong>, clique para abrir a tabela já
+        filtrada.
+      </p>
+
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
         <KpiCard
@@ -68,7 +71,7 @@ export default async function DashboardAtividadesPage() {
           value={stats.total}
           icon={<Activity size={18} />}
           color="var(--color-primary)"
-          subtitle="Período completo (2024–2026)"
+          subtitle={ano ? `Ano ${ano}` : 'Período completo nos filtros atuais'}
         />
         <KpiCard
           title="Categorias"
@@ -93,40 +96,87 @@ export default async function DashboardAtividadesPage() {
         />
       </div>
 
-      {/* Linha 1 — Atividades por mês + Categorias */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ChartCard title="Atividades por Mês" className="flex flex-col justify-center items-center">
           <AtividadesPorMesChart data={stats.porMes} />
         </ChartCard>
-        <ChartCard title="Distribuição por Categoria">
-          <DistribuicaoCategoriasChart data={stats.porCategoria} />
+        <ChartCard
+          title="Distribuição por Categoria"
+          hint="Clique em uma fatia para ver a tabela filtrada por categoria."
+        >
+          <DistribuicaoCategoriasChart data={stats.porCategoria} enableDrillDown />
         </ChartCard>
       </div>
 
-      {/* Linha 2 — Top Setores + Produtividade */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ChartCard title="Top 10 Setores com mais Demandas">
-          <TopSetoresChart data={stats.porSetor} />
+        <ChartCard
+          title="Top 10 Setores com mais Demandas"
+          hint="Clique em uma barra para filtrar por setor na tabela."
+        >
+          <TopSetoresChart data={stats.porSetor} enableDrillDown />
         </ChartCard>
         <ChartCard title="Produtividade por Responsável">
           <ProdutividadeResponsavelChart data={stats.porResponsavel} />
         </ChartCard>
       </div>
 
-      {/* Linha 3 — Prioridade por Mês (largura total) */}
-      <ChartCard title="Distribuição de Prioridade por Mês">
+      <ChartCard
+        title="Top tipos de atividade (nome padronizado)"
+        hint="Clique em uma barra para buscar esse nome na tabela de atividades."
+      >
+        <TopNomesAtividadesChart data={stats.porNomeAtividade ?? []} enableDrillDown />
+      </ChartCard>
+
+      <ChartCard
+        title="Distribuição de Prioridade por Mês"
+        hint="Contagens reais por mês e prioridade (planilha importada)."
+      >
         <PrioridadePorMesChart data={prioridadePorMes} />
       </ChartCard>
 
-      {/* Linha 4 — Evolução temporal + Heatmap */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <ChartCard title="Volume por Ano (comparativo)">
+          <AtividadesPorAnoChart data={stats.porAno ?? []} />
+        </ChartCard>
         <ChartCard title="Evolução Temporal (Área)">
           <EvolucaoTemporalChart data={stats.porMes} />
         </ChartCard>
-        <ChartCard title="Concentração por Dia da Semana × Mês">
-          <HeatmapDiasChart data={heatmapData} />
-        </ChartCard>
+      </div>
+
+      <ChartCard
+        title="Concentração por Dia da Semana × Mês"
+        hint="Agregação a partir do campo dia da semana nos registros (dias úteis)."
+      >
+        <HeatmapDiasChart data={heatmapData} />
+      </ChartCard>
+
+      <div className="text-center">
+        <Link
+          href="/tabelas/atividades"
+          className="text-sm text-[var(--color-primary)] hover:underline font-medium"
+        >
+          Ver tabela completa de atividades →
+        </Link>
       </div>
     </div>
+  )
+}
+
+export default async function DashboardAtividadesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ ano?: string }>
+}) {
+  const { ano } = await searchParams
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center h-64 text-[var(--color-text-muted)] text-sm">
+          Carregando dashboard…
+        </div>
+      }
+    >
+      <DashboardAtividadesContent ano={ano} />
+    </Suspense>
   )
 }

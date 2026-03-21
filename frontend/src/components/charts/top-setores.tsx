@@ -1,10 +1,13 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 import { PALETTE } from '@/lib/chart-colors'
 
 interface Props {
   data: { setor: string; total: number }[]
+  /** Clique na barra abre a tabela de atividades filtrada por setor */
+  enableDrillDown?: boolean
 }
 
 const CustomTooltip = ({ active, payload }: any) => {
@@ -17,7 +20,8 @@ const CustomTooltip = ({ active, payload }: any) => {
   )
 }
 
-export function TopSetoresChart({ data }: Props) {
+export function TopSetoresChart({ data, enableDrillDown }: Props) {
+  const router = useRouter()
   const top10 = data.slice(0, 10)
 
   return (
@@ -37,7 +41,18 @@ export function TopSetoresChart({ data }: Props) {
           tickLine={false}
         />
         <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--color-border)' }} />
-        <Bar dataKey="total" radius={[0, 4, 4, 0]}>
+        <Bar
+          dataKey="total"
+          radius={[0, 4, 4, 0]}
+          cursor={enableDrillDown ? 'pointer' : 'default'}
+          onClick={(item: unknown) => {
+            if (!enableDrillDown) return
+            const payload = (item as { payload?: { setor?: string } })?.payload
+            const setor = payload?.setor
+            if (!setor) return
+            router.push(`/tabelas/atividades?setor=${encodeURIComponent(setor)}`)
+          }}
+        >
           {top10.map((_, i) => (
             <Cell key={i} fill={PALETTE[i % PALETTE.length]} />
           ))}

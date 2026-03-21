@@ -33,12 +33,19 @@ export class PrismaBensRepository implements BensRepository {
   async getStats(): Promise<BensStats> {
     type Row = { label: string; total: bigint }
 
-    const [totalBens, totalSoftwares, totalRamais, totalCelulares, porTipo, porSetor, porModelo, porSO] =
+    const [totalBens, totalSoftwares, totalRamais, totalCelulares, bensComCriticidadeRegistrada, porTipo, porSetor, porModelo, porSO] =
       await Promise.all([
         this.prisma.bem.count(),
         this.prisma.software.count(),
         this.prisma.ramal.count(),
         this.prisma.celular.count(),
+        this.prisma
+          .$queryRaw<[{ c: bigint }]>`
+          SELECT COUNT(*)::bigint AS c FROM bens
+          WHERE criticidade IS NOT NULL
+            AND TRIM(criticidade) <> ''
+            AND TRIM(criticidade) <> '-'
+        `.then((r) => Number(r[0]?.c ?? 0n)),
         this.prisma.$queryRaw<Row[]>`
           SELECT "tipoHardware" AS label, COUNT(*) AS total
           FROM bens
@@ -76,6 +83,7 @@ export class PrismaBensRepository implements BensRepository {
       totalSoftwares,
       totalRamais,
       totalCelulares,
+      bensComCriticidadeRegistrada,
       porTipo: porTipo.map((r) => ({ tipo: r.label, total: Number(r.total) })),
       porSetor: porSetor.map((r) => ({ setor: r.label, total: Number(r.total) })),
       porModelo: porModelo.map((r) => ({ modelo: r.label, total: Number(r.total) })),

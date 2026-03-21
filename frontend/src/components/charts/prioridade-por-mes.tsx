@@ -5,7 +5,7 @@ import { PRIORITY_COLORS } from '@/lib/chart-colors'
 import { formatMonth } from '@/lib/utils'
 
 interface Props {
-  data: { mes: string; Alta: number; Média: number; Baixa: number }[]
+  data: { mes: string; Alta: number; Média: number; Baixa: number; Outras?: number }[]
 }
 
 export function PrioridadePorMesChart({ data }: Props) {
@@ -40,6 +40,9 @@ export function PrioridadePorMesChart({ data }: Props) {
         <Bar dataKey="Alta" fill={PRIORITY_COLORS.Alta} radius={[2, 2, 0, 0]} />
         <Bar dataKey="Média" fill={PRIORITY_COLORS.Média} radius={[2, 2, 0, 0]} />
         <Bar dataKey="Baixa" fill={PRIORITY_COLORS.Baixa} radius={[2, 2, 0, 0]} />
+        {data.some((d) => (d.Outras ?? 0) > 0) ? (
+          <Bar dataKey="Outras" fill="#64748b" radius={[2, 2, 0, 0]} />
+        ) : null}
       </BarChart>
     </ResponsiveContainer>
   )

@@ -36,6 +36,7 @@ export interface BensStats {
   totalSoftwares: number
   totalRamais: number
   totalCelulares: number
+  bensComCriticidadeRegistrada: number
   porTipo: { tipo: string; total: number }[]
   porSetor: { setor: string; total: number }[]
   porModelo: { modelo: string; total: number }[]

@@ -3,8 +3,13 @@
 import { usePathname } from 'next/navigation'
 import { Menu, X } from 'lucide-react'
 import { ThemeSwitch } from '@/components/layout/theme-switch'
+import { Breadcrumb } from '@/components/layout/breadcrumb'
 
 const TITLES: Record<string, { title: string; subtitle: string }> = {
+  '/dashboard': {
+    title: 'Visão geral',
+    subtitle: 'Indicadores executivos da CTI',
+  },
   '/dashboard/atividades': {
     title: 'Dashboard de Atividades',
     subtitle: 'Visão geral das atividades da CTI',
@@ -28,6 +33,10 @@ const TITLES: Record<string, { title: string; subtitle: string }> = {
   '/tabelas/ramais': {
     title: 'Ramais Telefônicos',
     subtitle: 'Monitoramento de telefones por setor',
+  },
+  '/tabelas/celulares': {
+    title: 'Celulares corporativos',
+    subtitle: 'Inventário com IMEI protegido',
   },
   '/importar': {
     title: 'Importar Dados',
@@ -65,7 +74,8 @@ export function Header({
           {isMenuOpen ? <X size={18} /> : <Menu size={18} />}
         </button>
 
-        <div>
+        <div className="min-w-0 flex-1">
+          <Breadcrumb />
           <h1 className="text-base font-semibold text-(--color-text)">{info.title}</h1>
           <p className="text-xs text-(--color-text-subtle)">{info.subtitle}</p>
         </div>

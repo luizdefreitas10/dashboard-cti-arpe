@@ -1,12 +1,12 @@
 'use client'
 
 import { formatNumber } from '@/lib/utils'
+import { HEATMAP_DIAS_ORDEM } from '@/lib/atividades-stats-helpers'
 
 interface Props {
+  /** Agregação real dia útil × mês (ex.: saída de aggregateHeatmapDiaSemanaMes). */
   data: { diaSemana: string; mes: string; total: number }[]
 }
-
-const DIAS = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta']
 
 export function HeatmapDiasChart({ data }: Props) {
   const meses = [...new Set(data.map((d) => d.mes))].sort().slice(-12)
@@ -27,34 +27,48 @@ export function HeatmapDiasChart({ data }: Props) {
 
   return (
     <div className="overflow-x-auto">
-      <div className="min-w-max">
-        <div className="flex gap-1 mb-1 ml-[72px]">
+      <p className="sr-only">
+        Mapa de calor: atividades por dia da semana e mês, com intensidade proporcional ao volume. Dados
+        agregados a partir do campo dia da semana nas planilhas importadas.
+      </p>
+      <div className="min-w-max" role="grid" aria-label="Atividades por dia da semana e mês">
+        <div className="flex gap-1 mb-1 ml-[72px]" role="row">
+          <span className="sr-only">Meses</span>
           {meses.map((mes) => {
             const [y, m] = mes.split('-')
             const label = new Date(Number(y), Number(m) - 1).toLocaleDateString('pt-BR', { month: 'short' })
             return (
-              <div key={mes} className="w-8 text-center text-[10px] text-[var(--color-text-subtle)]">
+              <div
+                key={mes}
+                role="columnheader"
+                className="w-8 text-center text-[10px] text-[var(--color-text-subtle)]"
+              >
                 {label}
               </div>
             )
           })}
         </div>
-        {DIAS.map((dia) => (
-          <div key={dia} className="flex items-center gap-1 mb-1">
-            <div className="w-16 text-right text-[11px] text-[var(--color-text-muted)] pr-2">{dia}</div>
+        {HEATMAP_DIAS_ORDEM.map((dia) => (
+          <div key={dia} className="flex items-center gap-1 mb-1" role="row">
+            <div className="w-16 text-right text-[11px] text-[var(--color-text-muted)] pr-2" role="rowheader">
+              {dia}
+            </div>
             {meses.map((mes) => {
               const val = getValue(dia, mes)
               return (
                 <div
                   key={mes}
+                  role="gridcell"
+                  tabIndex={0}
+                  aria-label={`${dia}, ${mes}: ${formatNumber(val)} atividades`}
                   title={`${dia} ${mes}: ${formatNumber(val)}`}
-                  className={`w-8 h-8 rounded-[var(--radius-sm)] cursor-default transition-opacity hover:opacity-80 ${getColor(val)}`}
+                  className={`w-8 h-8 rounded-[var(--radius-sm)] cursor-default transition-opacity hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] ${getColor(val)}`}
                 />
               )
             })}
           </div>
         ))}
-        <div className="flex items-center gap-2 ml-[72px] mt-3">
+        <div className="flex items-center gap-2 ml-[72px] mt-3" aria-hidden>
           <span className="text-[10px] text-[var(--color-text-subtle)]">Menos</span>
           {['bg-[var(--color-border)]', 'bg-blue-900/40', 'bg-blue-700/50', 'bg-blue-500/60', 'bg-blue-400'].map(
             (c, i) => <div key={i} className={`w-4 h-4 rounded-sm ${c}`} />,

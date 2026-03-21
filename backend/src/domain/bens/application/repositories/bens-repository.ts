@@ -43,6 +43,8 @@ export interface BensStats {
   totalSoftwares: number
   totalRamais: number
   totalCelulares: number
+  /** Bens com campo criticidade preenchido (alertas / observações de hardware) */
+  bensComCriticidadeRegistrada: number
   porTipo: BensPorTipo[]
   porSetor: BensPorSetor[]
   porModelo: BensPorModelo[]

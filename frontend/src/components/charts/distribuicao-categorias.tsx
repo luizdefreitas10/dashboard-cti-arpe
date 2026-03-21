@@ -1,11 +1,13 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 import { CATEGORY_COLORS, getColor } from '@/lib/chart-colors'
 import { formatNumber } from '@/lib/utils'
 
 interface Props {
   data: { categoria: string; total: number }[]
+  enableDrillDown?: boolean
 }
 
 const CustomTooltip = ({ active, payload }: any) => {
@@ -19,7 +21,8 @@ const CustomTooltip = ({ active, payload }: any) => {
   )
 }
 
-export function DistribuicaoCategoriasChart({ data }: Props) {
+export function DistribuicaoCategoriasChart({ data, enableDrillDown }: Props) {
+  const router = useRouter()
   const total = data.reduce((s, d) => s + d.total, 0)
   const enriched = data.map((d) => ({
     ...d,
@@ -41,6 +44,12 @@ export function DistribuicaoCategoriasChart({ data }: Props) {
               innerRadius="32%"
               outerRadius="78%"
               paddingAngle={2}
+              cursor={enableDrillDown ? 'pointer' : 'default'}
+              onClick={(_, index) => {
+                if (!enableDrillDown) return
+                const cat = enriched[index]?.categoria
+                if (cat) router.push(`/tabelas/atividades?categoria=${encodeURIComponent(cat)}`)
+              }}
             >
               {enriched.map((entry) => (
                 <Cell key={entry.categoria} fill={getColor(entry.categoria, CATEGORY_COLORS)} />
