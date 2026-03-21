@@ -1,5 +1,11 @@
 import type { Metadata, Viewport } from 'next'
+import { Source_Sans_3 } from 'next/font/google'
 import './globals.css'
+
+const sourceSans = Source_Sans_3({
+  subsets: ['latin'],
+  display: 'swap',
+})
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -18,7 +24,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" className={sourceSans.className}>
       <body>{children}</body>
     </html>
   )

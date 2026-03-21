@@ -3,6 +3,8 @@ import { getAtividadesStats } from './actions'
 import { KpiCard } from '@/components/dashboard/kpi-card'
 import { DashboardPeriodFilter } from '@/components/dashboard/dashboard-period-filter'
 import { DataFreshnessBanner } from '@/components/dashboard/data-freshness-banner'
+import { ErrorState } from '@/components/dashboard/error-state'
+import { DashboardTabs } from '@/components/dashboard/dashboard-tabs'
 import {
   AtividadesPorMesChart,
   DistribuicaoCategoriasChart,
@@ -30,14 +32,24 @@ function ChartCard({ title, hint, children, className = '' }: { title: string; h
   )
 }
 
+function calcVariacaoAnoAno(porAno: { ano: string; total: number }[]) {
+  if (!porAno || porAno.length < 2) return null
+  const sorted = [...porAno].sort((a, b) => Number(b.ano) - Number(a.ano))
+  const atual = sorted[0]?.total ?? 0
+  const anterior = sorted[1]?.total ?? 0
+  if (anterior === 0) return null
+  return ((atual - anterior) / anterior) * 100
+}
+
 async function DashboardAtividadesContent({ ano }: { ano?: string }) {
-  const { stats, isError } = await getAtividadesStats(ano ? { ano } : undefined)
+  const { stats, isError, error } = await getAtividadesStats(ano ? { ano } : undefined)
 
   if (isError || !stats) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-[var(--color-text-muted)]">Erro ao carregar dados. Verifique se o backend está rodando.</p>
-      </div>
+      <ErrorState
+        message={error ?? 'Erro ao carregar dados.'}
+        hint="Verifique se o backend está rodando e tente novamente."
+      />
     )
   }
 
@@ -46,6 +58,7 @@ async function DashboardAtividadesContent({ ano }: { ano?: string }) {
   const prioridadePorMes = pivotPrioridadePorMes(stats.porMesPrioridade ?? [])
   const heatmapData = aggregateHeatmapDiaSemanaMes(stats.porDiaSemanaMes ?? [])
   const anosComDados = stats.anosComDados ?? []
+  const variacaoAnoAno = calcVariacaoAnoAno(stats.porAno ?? [])
 
   return (
     <div className="flex flex-col gap-6">
@@ -66,7 +79,7 @@ async function DashboardAtividadesContent({ ano }: { ano?: string }) {
         filtrada.
       </p>
 
-      {/* KPI Cards */}
+      {/* KPI Cards com comparação temporal */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
         <KpiCard
           title="Total de Atividades"
@@ -74,13 +87,17 @@ async function DashboardAtividadesContent({ ano }: { ano?: string }) {
           icon={<Activity size={18} />}
           color="var(--color-primary)"
           subtitle={ano ? `Ano ${ano}` : 'Período completo nos filtros atuais'}
+          tooltip="Total de atividades no período selecionado"
+          variationDelta={variacaoAnoAno}
+          variationLabel={ano ? undefined : 'vs ano anterior'}
         />
         <KpiCard
           title="Categorias"
           value={stats.porCategoria.length}
           icon={<TrendingUp size={18} />}
-          color="#8b5cf6"
+          color="#1e5a8e"
           subtitle="Tipos distintos de atividade"
+          tooltip="Quantidade de categorias únicas"
         />
         <KpiCard
           title="Responsável mais ativo"
@@ -88,6 +105,7 @@ async function DashboardAtividadesContent({ ano }: { ano?: string }) {
           icon={<Users size={18} />}
           color="#10b981"
           subtitle={topResponsavel ? `${topResponsavel.total} atividades` : ''}
+          tooltip="Quem registrou mais atividades no período"
         />
         <KpiCard
           title="Setor com mais demandas"
@@ -95,62 +113,79 @@ async function DashboardAtividadesContent({ ano }: { ano?: string }) {
           icon={<Building2 size={18} />}
           color="#f97316"
           subtitle={topSetor ? `${topSetor.total} chamados` : ''}
+          tooltip="Setor que mais solicitou atendimento"
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ChartCard title="Atividades por Mês" className="flex flex-col justify-center items-center">
-          <AtividadesPorMesChart data={stats.porMes} />
-        </ChartCard>
-        <ChartCard
-          title="Distribuição por Categoria"
-          hint="Clique em uma fatia para ver a tabela filtrada por categoria."
-        >
-          <DistribuicaoCategoriasChart data={stats.porCategoria} enableDrillDown />
-        </ChartCard>
-      </div>
+      {/* Gráficos em abas */}
+      <DashboardTabs>
+        {(activeTab) => (
+          <>
+            {activeTab === 'volume' && (
+              <div className="flex flex-col gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <ChartCard title="Atividades por Mês" className="flex flex-col justify-center items-center">
+                    <AtividadesPorMesChart data={stats.porMes} />
+                  </ChartCard>
+                  <ChartCard title="Volume por Ano (comparativo)">
+                    <AtividadesPorAnoChart data={stats.porAno ?? []} />
+                  </ChartCard>
+                </div>
+                <ChartCard
+                  title="Concentração por Dia da Semana × Mês"
+                  hint="Intensidade das atividades ao longo da semana em cada mês. Tons mais escuros indicam maior volume."
+                >
+                  <HeatmapDiasChart data={heatmapData} />
+                </ChartCard>
+              </div>
+            )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ChartCard
-          title="Top 10 Setores com mais Demandas"
-          hint="Clique em uma barra para filtrar por setor na tabela."
-        >
-          <TopSetoresChart data={stats.porSetor} enableDrillDown />
-        </ChartCard>
-        <ChartCard title="Produtividade por Responsável">
-          <ProdutividadeResponsavelChart data={stats.porResponsavel} />
-        </ChartCard>
-      </div>
+            {activeTab === 'distribuicao' && (
+              <div className="flex flex-col gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <ChartCard
+                    title="Distribuição por Categoria"
+                    hint="Clique em uma fatia para ver a tabela filtrada por categoria."
+                  >
+                    <DistribuicaoCategoriasChart data={stats.porCategoria} enableDrillDown />
+                  </ChartCard>
+                  <ChartCard
+                    title="Top 10 Setores com mais Demandas"
+                    hint="Clique em uma barra para filtrar por setor na tabela."
+                  >
+                    <TopSetoresChart data={stats.porSetor} enableDrillDown />
+                  </ChartCard>
+                </div>
+                <ChartCard title="Produtividade por Responsável">
+                  <ProdutividadeResponsavelChart data={stats.porResponsavel} />
+                </ChartCard>
+                <ChartCard
+                  title="Top tipos de atividade (nome padronizado)"
+                  hint="Clique em uma barra para buscar esse nome na tabela de atividades."
+                >
+                  <TopNomesAtividadesChart data={stats.porNomeAtividade ?? []} enableDrillDown />
+                </ChartCard>
+              </div>
+            )}
 
-      <ChartCard
-        title="Top tipos de atividade (nome padronizado)"
-        hint="Clique em uma barra para buscar esse nome na tabela de atividades."
-      >
-        <TopNomesAtividadesChart data={stats.porNomeAtividade ?? []} enableDrillDown />
-      </ChartCard>
-
-      <ChartCard
-        title="Distribuição de Prioridade por Mês"
-        hint="Contagens reais por mês e prioridade (planilha importada)."
-      >
-        <PrioridadePorMesChart data={prioridadePorMes} />
-      </ChartCard>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ChartCard title="Volume por Ano (comparativo)">
-          <AtividadesPorAnoChart data={stats.porAno ?? []} />
-        </ChartCard>
-        <ChartCard title="Evolução Temporal (Área)">
-          <EvolucaoTemporalChart data={stats.porMes} />
-        </ChartCard>
-      </div>
-
-      <ChartCard
-        title="Concentração por Dia da Semana × Mês"
-        hint="Agregação a partir do campo dia da semana nos registros (dias úteis)."
-      >
-        <HeatmapDiasChart data={heatmapData} />
-      </ChartCard>
+            {activeTab === 'tendencias' && (
+              <div className="flex flex-col gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <ChartCard title="Evolução Temporal (Área)">
+                    <EvolucaoTemporalChart data={stats.porMes} />
+                  </ChartCard>
+                  <ChartCard
+                    title="Distribuição de Prioridade por Mês"
+                    hint="Contagens reais por mês e prioridade (planilha importada)."
+                  >
+                    <PrioridadePorMesChart data={prioridadePorMes} />
+                  </ChartCard>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </DashboardTabs>
 
       <div className="text-center">
         <Link
@@ -173,8 +208,13 @@ export default async function DashboardAtividadesPage({
   return (
     <Suspense
       fallback={
-        <div className="flex items-center justify-center h-64 text-[var(--color-text-muted)] text-sm">
-          Carregando dashboard…
+        <div className="flex flex-col items-center justify-center py-16 gap-4">
+          <div className="flex gap-2">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-24 w-48 bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] animate-pulse" />
+            ))}
+          </div>
+          <p className="text-sm text-[var(--color-text-muted)]">Carregando dashboard…</p>
         </div>
       }
     >

@@ -63,12 +63,13 @@ export function Header({
   const info = TITLES[pathname] ?? { title: 'Dashboard CTI', subtitle: 'Coordenadoria de TI' }
 
   return (
-    <header className="h-16 shrink-0 border-b border-(--color-border) flex items-center px-2.5 sm:px-4 md:px-6 bg-(--color-bg-sidebar)/60 backdrop-blur-sm sticky top-0 z-50 overflow-hidden">
+    <header className="h-16 shrink-0 border-b border-[var(--color-border)] flex items-center px-2.5 sm:px-4 md:px-6 bg-[var(--color-bg-sidebar)]/60 backdrop-blur-sm sticky top-0 z-50 overflow-hidden">
       <div className="grid w-full h-full min-h-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-1.5 sm:gap-3">
+        <div className="hidden lg:block w-10 shrink-0" aria-hidden />
         <button
           type="button"
           aria-label={isMenuOpen ? 'Fechar menu' : 'Abrir menu'}
-          className="flex items-center justify-center min-h-11 min-w-11 sm:min-h-10 sm:min-w-10 shrink-0 rounded-md border border-(--color-border) bg-(--color-bg-card) hover:bg-(--color-bg-hover) cursor-pointer touch-manipulation"
+          className="flex lg:hidden items-center justify-center min-h-11 min-w-11 sm:min-h-10 sm:min-w-10 shrink-0 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-hover)] cursor-pointer touch-manipulation"
           onClick={onMenuToggle}
         >
           {isMenuOpen ? <X size={18} /> : <Menu size={18} />}
@@ -76,10 +77,10 @@ export function Header({
 
         <div className="min-w-0 min-h-0 flex flex-col items-center justify-center text-center gap-0 px-1 py-0.5 leading-tight">
           <Breadcrumb />
-          <h1 className="text-sm sm:text-base font-semibold text-(--color-text) leading-tight max-w-[min(100%,20rem)] sm:max-w-md md:max-w-xl truncate">
+          <h1 className="text-sm sm:text-base font-semibold text-[var(--color-text)] leading-tight max-w-[min(100%,20rem)] sm:max-w-md md:max-w-xl truncate">
             {info.title}
           </h1>
-          <p className="text-[10px] sm:text-xs text-(--color-text-subtle) leading-tight max-w-[min(100%,22rem)] sm:max-w-lg md:max-w-2xl truncate">
+          <p className="text-[10px] sm:text-xs text-[var(--color-text-subtle)] leading-tight max-w-[min(100%,22rem)] sm:max-w-lg md:max-w-2xl truncate">
             {info.subtitle}
           </p>
         </div>

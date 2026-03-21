@@ -19,15 +19,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [])
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg)]">
+    <div className="min-h-screen bg-[var(--color-bg)] relative">
+      {/* Background ARPE - arpe-grafite como textura sutil (visível no tema claro) */}
+      <div
+        className="fixed inset-0 -z-10 opacity-[0.035] md:opacity-[0.04] bg-cover bg-center bg-no-repeat pointer-events-none [background-size:min(80vw,1200px)_auto]"
+        style={{ backgroundImage: "url('/arpe-grafite.png')" }}
+        aria-hidden
+      />
+
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      {/* Sem margin-left: menu é modal (overlay); evita faixa vazia no topo à esquerda quando o drawer abre */}
-      <div className="flex min-h-screen w-full min-w-0 max-w-[100vw] flex-col overflow-x-clip">
+      {/* Desktop: conteúdo com margin-left para a sidebar fixa */}
+      <div className="flex min-h-screen w-full min-w-0 max-w-[100vw] flex-col overflow-x-clip lg:pl-60">
         <Header onMenuToggle={toggleSidebar} isMenuOpen={sidebarOpen} />
         <main className="flex-1 w-full min-w-0 max-w-full p-3 sm:p-6 lg:p-8">{children}</main>
         <Footer />
       </div>
+
       <Toaster
         position="bottom-right"
         toastOptions={{

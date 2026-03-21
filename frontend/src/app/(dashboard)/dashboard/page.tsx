@@ -1,8 +1,11 @@
+import { Suspense } from 'react'
 import Link from 'next/link'
 import { getExecutiveOverview } from './actions'
-import { KpiCard } from '@/components/dashboard/kpi-card'
+import { KpiCard, KpiCardSkeleton } from '@/components/dashboard/kpi-card'
 import { AtividadesPorAnoChart } from '@/components/charts/charts-dynamic'
 import { DataFreshnessBanner } from '@/components/dashboard/data-freshness-banner'
+import { ErrorState } from '@/components/dashboard/error-state'
+import { DashboardOverviewSkeleton } from '@/components/dashboard/dashboard-overview-skeleton'
 import {
   Activity,
   Server,
@@ -28,16 +31,25 @@ function tipoImportLabel(tipo: string) {
   return m[tipo] ?? tipo
 }
 
-export default async function VisaoGeralDashboardPage() {
+function calcVariacaoAnoAno(porAno: { ano: string; total: number }[]) {
+  if (!porAno || porAno.length < 2) return null
+  const sorted = [...porAno].sort((a, b) => Number(b.ano) - Number(a.ano))
+  const atual = sorted[0]?.total ?? 0
+  const anterior = sorted[1]?.total ?? 0
+  if (anterior === 0) return null
+  return ((atual - anterior) / anterior) * 100
+}
+
+async function DashboardContent() {
   const data = await getExecutiveOverview()
 
   if (data.isError || !data.statsAtividades || !data.statsBens) {
+    const message = data.isError && 'error' in data ? data.error : 'Dados indisponíveis.'
     return (
-      <div className="flex w-full min-w-0 max-w-full items-center justify-center min-h-[40vh] px-1">
-        <p className="text-[var(--color-text-muted)] text-sm text-center [overflow-wrap:anywhere] text-pretty max-w-md">
-          Não foi possível carregar a visão geral. Verifique o backend e tente novamente.
-        </p>
-      </div>
+      <ErrorState
+        message={message ?? 'Erro ao carregar dados.'}
+        hint="Verifique se o backend está rodando e se a conexão está ok."
+      />
     )
   }
 
@@ -45,6 +57,7 @@ export default async function VisaoGeralDashboardPage() {
   const topSetor = a.porSetor[0]
   const topCat = a.porCategoria[0]
   const criticidade = b.bensComCriticidadeRegistrada ?? 0
+  const variacaoAtividades = calcVariacaoAnoAno(a.porAno ?? [])
 
   return (
     <div className="flex w-full min-w-0 max-w-full flex-col gap-6 sm:gap-8">
@@ -59,6 +72,7 @@ export default async function VisaoGeralDashboardPage() {
         </div>
       </div>
 
+      {/* KPIs principais — hierarquia: 1 destaque + 3 secundários */}
       <div className="grid grid-cols-1 min-w-0 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
         <KpiCard
           title="Atividades (total)"
@@ -66,13 +80,19 @@ export default async function VisaoGeralDashboardPage() {
           icon={<Activity size={18} />}
           color="var(--color-primary)"
           subtitle="Base importada"
+          tooltip="Total de atividades registradas na base da CTI"
+          href="/dashboard/atividades"
+          variationDelta={variacaoAtividades}
+          variationLabel="vs ano anterior"
         />
         <KpiCard
           title="Bens patrimoniais"
           value={formatNumber(b.totalBens)}
           icon={<Server size={18} />}
-          color="#8b5cf6"
+          color="#1e5a8e"
           subtitle={`${formatNumber(b.totalSoftwares)} softwares`}
+          tooltip="Equipamentos e softwares inventariados"
+          href="/dashboard/bens"
         />
         <KpiCard
           title="Soluções digitais"
@@ -80,6 +100,8 @@ export default async function VisaoGeralDashboardPage() {
           icon={<Layers size={18} />}
           color="#10b981"
           subtitle={`${data.solucoesConcluidas} concluídas · ${data.solucoesEmAndamento} em andamento`}
+          tooltip="Automações e projetos web desenvolvidos pela CTI"
+          href="/solucoes-digitais"
         />
         <KpiCard
           title="Dashboards Power BI"
@@ -87,9 +109,12 @@ export default async function VisaoGeralDashboardPage() {
           icon={<ExternalLink size={18} />}
           color="#f97316"
           subtitle={`${data.powerBiConcluidos} em produção`}
+          tooltip="Relatórios e dashboards externos"
+          href="/power-bi"
         />
       </div>
 
+      {/* KPIs secundários */}
       <div className="grid grid-cols-1 min-w-0 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <KpiCard
           title="Maior demanda (setor)"
@@ -97,6 +122,7 @@ export default async function VisaoGeralDashboardPage() {
           icon={<Activity size={18} />}
           color="#06b6d4"
           subtitle={topSetor ? `${formatNumber(topSetor.total)} atividades` : ''}
+          tooltip="Setor com mais atividades registradas"
         />
         <KpiCard
           title="Categoria predominante"
@@ -110,6 +136,7 @@ export default async function VisaoGeralDashboardPage() {
           icon={<Activity size={18} />}
           color="#eab308"
           subtitle={topCat ? `${formatNumber(topCat.total)} registros` : ''}
+          tooltip="Tipo de atividade mais frequente"
         />
         <KpiCard
           title="Ramais (total)"
@@ -117,6 +144,8 @@ export default async function VisaoGeralDashboardPage() {
           icon={<Phone size={18} />}
           color="#a855f7"
           subtitle="Telefonia por setor"
+          tooltip="Ramais digitais e analógicos"
+          href="/tabelas/ramais"
         />
         <KpiCard
           title="Celulares"
@@ -124,6 +153,8 @@ export default async function VisaoGeralDashboardPage() {
           icon={<Smartphone size={18} />}
           color="#14b8a6"
           subtitle="Inventário móvel"
+          tooltip="Celulares corporativos"
+          href="/tabelas/celulares"
         />
       </div>
 
@@ -261,7 +292,6 @@ export default async function VisaoGeralDashboardPage() {
               Auditoria automática após cada upload bem-sucedido.
             </p>
           </div>
-          {/* Mobile (ex.: iPhone SE): cartões empilhados — evita tabela larga e scroll horizontal */}
           <ul className="sm:hidden divide-y divide-[var(--color-border)]">
             {data.importLogs.map((log) => (
               <li key={log.id} className="px-3 py-3 space-y-1.5">
@@ -315,7 +345,21 @@ export default async function VisaoGeralDashboardPage() {
             </table>
           </div>
         </section>
-      ) : null}
+      ) : (
+        <section className="min-w-0">
+          <p className="text-xs text-[var(--color-text-subtle)]">
+            Nenhuma importação registrada. Use a página <Link href="/importar" className="text-[var(--color-primary)] hover:underline">Importar Dados</Link> para enviar planilhas.
+          </p>
+        </section>
+      )}
     </div>
+  )
+}
+
+export default function VisaoGeralDashboardPage() {
+  return (
+    <Suspense fallback={<DashboardOverviewSkeleton />}>
+      <DashboardContent />
+    </Suspense>
   )
 }
