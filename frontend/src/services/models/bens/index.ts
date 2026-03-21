@@ -70,6 +70,16 @@ export interface Celular {
   imei: string
 }
 
+export interface BemHistoricoItem {
+  id: string
+  tombamento: string
+  operacao: 'criado' | 'alterado' | 'removido'
+  campo: string | null
+  valorAnterior: string | null
+  valorNovo: string | null
+  createdAt: string
+}
+
 export default function BensService() {
   async function findMany(filters: BemFilters = {}): Promise<BensResponse> {
     try {
@@ -123,5 +133,15 @@ export default function BensService() {
     }
   }
 
-  return { findMany, getStats, getSoftwares, getRamais, getCelulares }
+  async function getHistorico(tombamento: string): Promise<{ historico: BemHistoricoItem[] }> {
+    try {
+      const enc = encodeURIComponent(tombamento)
+      const { data } = await api.get<{ historico: BemHistoricoItem[] }>(`/bens/${enc}/historico`)
+      return data
+    } catch (e) {
+      throw handleAxiosError(e)
+    }
+  }
+
+  return { findMany, getStats, getSoftwares, getRamais, getCelulares, getHistorico }
 }

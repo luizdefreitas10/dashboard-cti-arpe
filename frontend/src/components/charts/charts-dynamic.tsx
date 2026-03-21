@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic'
 /** Placeholder enquanto o bundle do Recharts carrega no cliente (evita SSR com dimensões -1). */
 function ChartSkeleton({ className }: { className: string }) {
   return (
-    <div className={`w-full min-w-0 rounded-md bg-(--color-bg-hover) animate-pulse ${className}`} aria-hidden />
+    <div className={`w-full min-w-0 rounded-md bg-[var(--color-bg-hover)] animate-pulse ${className}`} aria-hidden />
   )
 }
 

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { getApiBaseUrl } from '@/lib/api-config'
 
 /**
  * Dispara GET /health na API em paralelo (sem bloquear a página).
@@ -21,9 +22,9 @@ export function middleware(request: NextRequest) {
 
   if (!shouldPing) return NextResponse.next()
 
-  const base = process.env.NEXT_PUBLIC_API_URL?.trim()
+  const base = getApiBaseUrl()
   if (base) {
-    const url = `${base.replace(/\/$/, '')}/health`
+    const url = `${base}/health`
     fetch(url, {
       method: 'GET',
       cache: 'no-store',

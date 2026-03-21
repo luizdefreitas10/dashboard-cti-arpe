@@ -1,5 +1,7 @@
+import { Suspense } from 'react'
 import { getBensStats } from './actions'
-import { KpiCard } from '@/components/dashboard/kpi-card'
+import { KpiCard, KpiCardSkeleton } from '@/components/dashboard/kpi-card'
+import { ErrorState } from '@/components/dashboard/error-state'
 import {
   BensPorTipoChart,
   BensPorSetorChart,
@@ -9,7 +11,6 @@ import {
 } from '@/components/charts/charts-dynamic'
 import { Monitor, Cpu, Phone, Smartphone, AlertTriangle } from 'lucide-react'
 import Link from 'next/link'
-import { formatNumber } from '@/lib/utils'
 
 function ChartCard({ title, children, className = '' }: { title: string; children: React.ReactNode; className?: string }) {
   return (
@@ -20,14 +21,15 @@ function ChartCard({ title, children, className = '' }: { title: string; childre
   )
 }
 
-export default async function DashboardBensPage() {
-  const { stats, ramais, isError } = await getBensStats()
+async function DashboardBensContent() {
+  const { stats, ramais, isError, error } = await getBensStats()
 
   if (isError || !stats) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-[var(--color-text-muted)]">Erro ao carregar dados. Verifique se o backend está rodando.</p>
-      </div>
+      <ErrorState
+        message={error ?? 'Erro ao carregar dados.'}
+        hint="Verifique se o backend está rodando e tente novamente."
+      />
     )
   }
 
@@ -37,7 +39,6 @@ export default async function DashboardBensPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
         <KpiCard
           title="Bens Patrimoniais"
@@ -45,13 +46,17 @@ export default async function DashboardBensPage() {
           icon={<Monitor size={18} />}
           color="var(--color-primary)"
           subtitle="Equipamentos inventariados"
+          tooltip="Total de equipamentos no inventário"
+          href="/tabelas/bens"
         />
         <KpiCard
           title="Softwares"
           value={stats.totalSoftwares}
           icon={<Cpu size={18} />}
-          color="#8b5cf6"
+          color="#1e5a8e"
           subtitle="Ativos de software"
+          tooltip="Softwares licenciados e inventariados"
+          href="/tabelas/softwares"
         />
         <KpiCard
           title="Ramais"
@@ -59,6 +64,8 @@ export default async function DashboardBensPage() {
           icon={<Phone size={18} />}
           color="#10b981"
           subtitle={`${totalRamaisDigital} digitais · ${totalRamaisAnalogico} analógicos`}
+          tooltip="Ramais telefônicos por setor"
+          href="/tabelas/ramais"
         />
         <KpiCard
           title="Celulares"
@@ -66,6 +73,8 @@ export default async function DashboardBensPage() {
           icon={<Smartphone size={18} />}
           color="#f97316"
           subtitle="Celulares corporativos"
+          tooltip="Inventário de dispositivos móveis"
+          href="/tabelas/celulares"
         />
       </div>
 
@@ -110,5 +119,29 @@ export default async function DashboardBensPage() {
         </ChartCard>
       )}
     </div>
+  )
+}
+
+function BensSkeleton() {
+  return (
+    <div className="flex flex-col gap-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+        {[1, 2, 3, 4].map((i) => (
+          <KpiCardSkeleton key={i} />
+        ))}
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="h-64 bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] animate-pulse" />
+        <div className="h-64 bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] animate-pulse" />
+      </div>
+    </div>
+  )
+}
+
+export default function DashboardBensPage() {
+  return (
+    <Suspense fallback={<BensSkeleton />}>
+      <DashboardBensContent />
+    </Suspense>
   )
 }

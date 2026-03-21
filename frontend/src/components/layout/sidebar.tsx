@@ -64,7 +64,6 @@ const navItems: NavItem[] = [
 
 function childMatchesPath(pathname: string, childHref: string) {
   if (pathname === childHref) return true
-  /* Evita que /dashboard marque também /dashboard/atividades */
   if (childHref === '/dashboard') return pathname === '/dashboard'
   return pathname.startsWith(`${childHref}/`)
 }
@@ -105,7 +104,7 @@ function NavGroup({ item, onNavigate }: { item: NavItem; onNavigate: () => void 
     <div>
       <button
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-(--color-text-muted) hover:bg-(--color-bg-hover) hover:text-(--color-text) transition-colors cursor-pointer"
+        className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-[var(--color-text-muted)] hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text)] transition-colors cursor-pointer"
       >
         {item.icon}
         <span className="flex-1 text-left">{item.label}</span>
@@ -115,7 +114,7 @@ function NavGroup({ item, onNavigate }: { item: NavItem; onNavigate: () => void 
         />
       </button>
       {open && (
-        <div className="ml-5 mt-0.5 border-l border-(--color-border) pl-3 flex flex-col gap-0.5">
+        <div className="ml-5 mt-0.5 border-l border-[var(--color-border)] pl-3 flex flex-col gap-0.5">
           {item.children?.map((child) => (
             <Link
               key={child.href}
@@ -124,8 +123,8 @@ function NavGroup({ item, onNavigate }: { item: NavItem; onNavigate: () => void 
               className={cn(
                 'flex items-center gap-2 px-2 py-1.5 rounded-sm text-sm transition-colors cursor-pointer',
                 childMatchesPath(pathname, child.href)
-                  ? 'text-(--color-primary)'
-                  : 'text-(--color-text-muted) hover:text-(--color-text)',
+                  ? 'text-[var(--color-primary)]'
+                  : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]',
               )}
             >
               {child.label}
@@ -140,7 +139,6 @@ function NavGroup({ item, onNavigate }: { item: NavItem; onNavigate: () => void 
 function SidebarContent({ onClose, showCloseButton }: { onClose: () => void; showCloseButton: boolean }) {
   return (
     <>
-      {/* Logo */}
       <div className="px-5 py-4 border-b border-[var(--color-border)] relative">
         {showCloseButton && (
           <button
@@ -158,19 +156,17 @@ function SidebarContent({ onClose, showCloseButton }: { onClose: () => void; sho
           </div>
           <div>
             <p className="text-sm font-semibold text-[var(--color-text)] leading-tight">Dashboard CTI</p>
-            <p className="text-[11px] text-[var(--color-text-subtle)] leading-tight">Coord. de TI</p>
+            <p className="text-[11px] text-[var(--color-text-subtle)] leading-tight">Coord. de TI · ARPE</p>
           </div>
         </div>
       </div>
 
-      {/* Navegação */}
       <nav className="flex-1 overflow-y-auto px-3 py-4 flex flex-col gap-1">
         {navItems.map((item) => (
           <NavGroup key={item.label} item={item} onNavigate={onClose} />
         ))}
       </nav>
 
-      {/* Rodapé */}
       <div className="px-5 py-4 border-t border-[var(--color-border)]">
         <div className="flex items-center gap-2 text-[var(--color-text-subtle)]">
           <Activity size={12} />
@@ -181,19 +177,13 @@ function SidebarContent({ onClose, showCloseButton }: { onClose: () => void; sho
   )
 }
 
-export function Sidebar({
-  open,
-  onClose,
-}: {
-  open: boolean
-  onClose: () => void
-}) {
+export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
   return (
     <>
-      {/* Modal: overlay em todos os breakpoints (não empurra o layout) */}
+      {/* Overlay mobile/tablet */}
       <div
         className={cn(
-          'fixed top-16 left-0 right-0 bottom-0 z-40 bg-black/40 transition-opacity duration-300',
+          'fixed top-16 left-0 right-0 bottom-0 z-40 bg-black/40 transition-opacity duration-300 lg:hidden',
           open ? 'opacity-100' : 'pointer-events-none opacity-0',
         )}
         onClick={onClose}
@@ -201,16 +191,24 @@ export function Sidebar({
         aria-hidden={!open}
       />
 
-      {/* Drawer único: slide por cima do conteúdo; header em largura total acima (h-16) */}
+      {/* Drawer mobile/tablet - slide over content */}
       <aside
         className={cn(
-          'fixed left-0 top-16 z-50 flex h-[calc(100vh-4rem)] w-[min(78vw,320px)] flex-col border-r border-[var(--color-border)] bg-[var(--color-bg-sidebar)] transition-transform duration-300 lg:w-60',
+          'fixed left-0 top-16 z-50 flex h-[calc(100vh-4rem)] w-[min(78vw,320px)] flex-col border-r border-[var(--color-border)] bg-[var(--color-bg-sidebar)] transition-transform duration-300 lg:hidden',
           open ? 'translate-x-0' : '-translate-x-full pointer-events-none',
         )}
         aria-hidden={!open}
-        aria-label="Menu principal"
+        aria-label="Menu principal (mobile)"
       >
         <SidebarContent onClose={onClose} showCloseButton />
+      </aside>
+
+      {/* Sidebar fixa em desktop (lg+) - sempre visível */}
+      <aside
+        className="hidden lg:flex fixed left-0 top-0 z-30 h-screen w-60 flex-col border-r border-[var(--color-border)] bg-[var(--color-bg-sidebar)]"
+        aria-label="Menu principal"
+      >
+        <SidebarContent onClose={() => {}} showCloseButton={false} />
       </aside>
     </>
   )
