@@ -37,23 +37,27 @@ export function Breadcrumb({ className = '' }: { className?: string }) {
       aria-label="Trilha de navegação"
       className={`flex flex-wrap items-center justify-center gap-1 text-[11px] text-[var(--color-text-subtle)] mb-0.5 ${className}`}
     >
-      {trail.map((c, i) => {
-        const isLast = i === trail.length - 1
-        const showLink = Boolean(c.href) && !isLast
+      <ol className="flex flex-wrap items-center gap-1 list-none m-0 p-0" style={{ listStyle: 'none' }}>
+        {trail.map((c, i) => {
+          const isLast = i === trail.length - 1
+          const showLink = Boolean(c.href) && !isLast
 
-        return (
-          <span key={`${pathname}-crumb-${i}`} className="flex items-center gap-1">
-            {i > 0 ? <ChevronRight size={12} className="opacity-50 shrink-0" aria-hidden /> : null}
-            {showLink ? (
-              <Link href={c.href!} className="hover:text-[var(--color-primary)] transition-colors whitespace-nowrap">
-                {c.label}
-              </Link>
-            ) : (
-              <span className="text-[var(--color-text-muted)] font-medium whitespace-nowrap">{c.label}</span>
-            )}
-          </span>
-        )
-      })}
+          return (
+            <li key={`${pathname}-crumb-${i}`} className="flex items-center gap-1">
+              {i > 0 ? <ChevronRight size={12} className="opacity-50 shrink-0" aria-hidden /> : null}
+              {showLink ? (
+                <Link href={c.href!} className="hover:text-[var(--color-primary)] transition-colors whitespace-nowrap">
+                  {c.label}
+                </Link>
+              ) : (
+                <span className="text-[var(--color-text-muted)] font-medium whitespace-nowrap" aria-current="page">
+                  {c.label}
+                </span>
+              )}
+            </li>
+          )
+        })}
+      </ol>
     </nav>
   )
 }

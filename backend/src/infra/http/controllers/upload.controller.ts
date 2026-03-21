@@ -182,6 +182,50 @@ export class UploadController {
     if (!file) throw new BadRequestException('Nenhum arquivo enviado')
 
     const wb = XLSX.read(file.buffer, { type: 'buffer' })
+    const currentBens = await this.prisma.bem.findMany()
+    const currentByTomb = new Map(currentBens.map((b) => [b.tombamento, b]))
+
+    const wsBens = wb.Sheets['Monitoramento_Bens']
+    let bensData: { id: string; tombamento: string; tipoHardware: string | null; modelo: string | null; usuario: string | null; setor: string | null; finalidadePrincipal: string | null; sistemaOperacional: string | null; criticidade: string | null }[] = []
+    const historicoRecords: { id: string; tombamento: string; operacao: string; campo: string | null; valorAnterior: string | null; valorNovo: string | null }[] = []
+
+    if (wsBens) {
+      const rows = XLSX.utils.sheet_to_json(wsBens, { header: 1, defval: null }) as unknown[][]
+      bensData = rows.slice(1).filter((r) => r[0]).map((r) => ({
+        id: randomUUID(),
+        tombamento: String(r[0]).trim(),
+        tipoHardware: cleanStr(r[1]),
+        modelo: cleanStr(r[2]),
+        usuario: cleanStr(r[3]),
+        setor: cleanStr(r[4]),
+        finalidadePrincipal: cleanStr(r[5]),
+        sistemaOperacional: cleanStr(r[6]),
+        criticidade: cleanStr(r[7]),
+      }))
+
+      const newByTomb = new Set(bensData.map((b) => b.tombamento))
+      const fields = ['tipoHardware', 'modelo', 'usuario', 'setor', 'finalidadePrincipal', 'sistemaOperacional', 'criticidade'] as const
+
+      for (const novo of bensData) {
+        const antigo = currentByTomb.get(novo.tombamento)
+        if (!antigo) {
+          historicoRecords.push({ id: randomUUID(), tombamento: novo.tombamento, operacao: 'criado', campo: null, valorAnterior: null, valorNovo: null })
+        } else {
+          for (const f of fields) {
+            const vAnt = antigo[f] ?? null
+            const vNovo = novo[f] ?? null
+            if (String(vAnt ?? '') !== String(vNovo ?? '')) {
+              historicoRecords.push({ id: randomUUID(), tombamento: novo.tombamento, operacao: 'alterado', campo: f, valorAnterior: vAnt ? String(vAnt) : null, valorNovo: vNovo ? String(vNovo) : null })
+            }
+          }
+        }
+      }
+      for (const b of currentBens) {
+        if (!newByTomb.has(b.tombamento)) {
+          historicoRecords.push({ id: randomUUID(), tombamento: b.tombamento, operacao: 'removido', campo: null, valorAnterior: b.setor ? String(b.setor) : null, valorNovo: null })
+        }
+      }
+    }
 
     await this.prisma.$transaction([
       this.prisma.bem.deleteMany(),
@@ -192,18 +236,12 @@ export class UploadController {
 
     let totals = { bens: 0, softwares: 0, ramais: 0, celulares: 0 }
 
-    const wsBens = wb.Sheets['Monitoramento_Bens']
-    if (wsBens) {
-      const rows = XLSX.utils.sheet_to_json(wsBens, { header: 1, defval: null }) as unknown[][]
-      const data = rows.slice(1).filter((r) => r[0]).map((r) => ({
-        id: randomUUID(), tombamento: String(r[0]).trim(),
-        tipoHardware: cleanStr(r[1]), modelo: cleanStr(r[2]),
-        usuario: cleanStr(r[3]), setor: cleanStr(r[4]),
-        finalidadePrincipal: cleanStr(r[5]), sistemaOperacional: cleanStr(r[6]),
-        criticidade: cleanStr(r[7]),
-      }))
-      await this.prisma.bem.createMany({ data, skipDuplicates: true })
-      totals.bens = data.length
+    if (bensData.length > 0) {
+      await this.prisma.bem.createMany({ data: bensData, skipDuplicates: true })
+      totals.bens = bensData.length
+    }
+    if (historicoRecords.length > 0) {
+      await this.prisma.bemHistorico.createMany({ data: historicoRecords })
     }
 
     const wsSw = wb.Sheets['Ativos_Software']

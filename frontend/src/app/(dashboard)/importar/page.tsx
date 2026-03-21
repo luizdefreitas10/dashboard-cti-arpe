@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, History } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { cn, formatDate } from '@/lib/utils'
+import { getApiBaseUrl } from '@/lib/api-config'
 
 type ImportLogRow = {
   id: string
@@ -46,7 +47,7 @@ export default function ImportarPage() {
 
   const fetchLogs = useCallback(async () => {
     try {
-      const base = process.env.NEXT_PUBLIC_API_URL ?? ''
+      const base = getApiBaseUrl()
       const res = await fetch(`${base}/import-logs`, { cache: 'no-store' })
       if (!res.ok) throw new Error('fetch')
       const data = await res.json()
@@ -73,7 +74,7 @@ export default function ImportarPage() {
       const form = new FormData()
       form.append('file', file)
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${endpoint}`, {
+      const res = await fetch(`${getApiBaseUrl()}${endpoint}`, {
         method: 'POST',
         body: form,
       })

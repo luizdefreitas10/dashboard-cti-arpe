@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from '@nestjs/common'
+import { Controller, Get, Query, Param } from '@nestjs/common'
 import { z } from 'zod'
 import { ZodValidationPipe } from '../pipes/zod-validation-pipe'
 import { ListBensUseCase } from '@/domain/bens/application/use-cases/list-bens'
@@ -69,5 +69,16 @@ export class BensController {
   async celulares() {
     const celulares = await this.prisma.celular.findMany({ orderBy: { setor: 'asc' } })
     return { celulares, total: celulares.length }
+  }
+
+  @Get(':tombamento/historico')
+  async historico(@Param('tombamento') tombamento: string) {
+    if (!tombamento?.trim()) return { historico: [] }
+    const historico = await this.prisma.bemHistorico.findMany({
+      where: { tombamento: tombamento.trim() },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    })
+    return { historico }
   }
 }

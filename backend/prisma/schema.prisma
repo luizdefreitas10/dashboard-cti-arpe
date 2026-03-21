@@ -39,6 +39,22 @@ model Bem {
   @@map("bens")
 }
 
+/// Histórico de alterações de bens (registrado em cada importação de planilha)
+model BemHistorico {
+  id           String   @id @default(cuid())
+  tombamento   String
+  operacao     String   /// criado | alterado | removido
+  campo        String?  /// campo alterado (setor, usuario, etc) quando operacao=alterado
+  valorAnterior String?
+  valorNovo    String?
+  importLogId  String?
+  createdAt    DateTime @default(now())
+
+  @@index([tombamento])
+  @@index([createdAt(sort: Desc)])
+  @@map("bens_historico")
+}
+
 model Software {
   id         String  @id @default(cuid())
   nome       String

@@ -118,74 +118,68 @@ async function DashboardAtividadesContent({ ano }: { ano?: string }) {
       </div>
 
       {/* Gráficos em abas */}
-      <DashboardTabs>
-        {(activeTab) => (
-          <>
-            {activeTab === 'volume' && (
-              <div className="flex flex-col gap-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <ChartCard title="Atividades por Mês" className="flex flex-col justify-center items-center">
-                    <AtividadesPorMesChart data={stats.porMes} />
-                  </ChartCard>
-                  <ChartCard title="Volume por Ano (comparativo)">
-                    <AtividadesPorAnoChart data={stats.porAno ?? []} />
-                  </ChartCard>
-                </div>
-                <ChartCard
-                  title="Concentração por Dia da Semana × Mês"
-                  hint="Intensidade das atividades ao longo da semana em cada mês. Tons mais escuros indicam maior volume."
-                >
-                  <HeatmapDiasChart data={heatmapData} />
-                </ChartCard>
-              </div>
-            )}
-
-            {activeTab === 'distribuicao' && (
-              <div className="flex flex-col gap-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <ChartCard
-                    title="Distribuição por Categoria"
-                    hint="Clique em uma fatia para ver a tabela filtrada por categoria."
-                  >
-                    <DistribuicaoCategoriasChart data={stats.porCategoria} enableDrillDown />
-                  </ChartCard>
-                  <ChartCard
-                    title="Top 10 Setores com mais Demandas"
-                    hint="Clique em uma barra para filtrar por setor na tabela."
-                  >
-                    <TopSetoresChart data={stats.porSetor} enableDrillDown />
-                  </ChartCard>
-                </div>
-                <ChartCard title="Produtividade por Responsável">
-                  <ProdutividadeResponsavelChart data={stats.porResponsavel} />
-                </ChartCard>
-                <ChartCard
-                  title="Top tipos de atividade (nome padronizado)"
-                  hint="Clique em uma barra para buscar esse nome na tabela de atividades."
-                >
-                  <TopNomesAtividadesChart data={stats.porNomeAtividade ?? []} enableDrillDown />
-                </ChartCard>
-              </div>
-            )}
-
-            {activeTab === 'tendencias' && (
-              <div className="flex flex-col gap-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <ChartCard title="Evolução Temporal (Área)">
-                    <EvolucaoTemporalChart data={stats.porMes} />
-                  </ChartCard>
-                  <ChartCard
-                    title="Distribuição de Prioridade por Mês"
-                    hint="Contagens reais por mês e prioridade (planilha importada)."
-                  >
-                    <PrioridadePorMesChart data={prioridadePorMes} />
-                  </ChartCard>
-                </div>
-              </div>
-            )}
-          </>
-        )}
-      </DashboardTabs>
+      <DashboardTabs
+        volumeContent={
+          <div className="flex flex-col gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <ChartCard title="Atividades por Mês" className="flex flex-col justify-center items-center">
+                <AtividadesPorMesChart data={stats.porMes} />
+              </ChartCard>
+              <ChartCard title="Volume por Ano (comparativo)">
+                <AtividadesPorAnoChart data={stats.porAno ?? []} />
+              </ChartCard>
+            </div>
+            <ChartCard
+              title="Concentração por Dia da Semana × Mês"
+              hint="Intensidade das atividades ao longo da semana em cada mês. Tons mais escuros indicam maior volume."
+            >
+              <HeatmapDiasChart data={heatmapData} />
+            </ChartCard>
+          </div>
+        }
+        distribuicaoContent={
+          <div className="flex flex-col gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <ChartCard
+                title="Distribuição por Categoria"
+                hint="Clique em uma fatia para ver a tabela filtrada por categoria."
+              >
+                <DistribuicaoCategoriasChart data={stats.porCategoria} enableDrillDown />
+              </ChartCard>
+              <ChartCard
+                title="Top 10 Setores com mais Demandas"
+                hint="Clique em uma barra para filtrar por setor na tabela."
+              >
+                <TopSetoresChart data={stats.porSetor} enableDrillDown />
+              </ChartCard>
+            </div>
+            <ChartCard title="Produtividade por Responsável">
+              <ProdutividadeResponsavelChart data={stats.porResponsavel} />
+            </ChartCard>
+            <ChartCard
+              title="Top tipos de atividade (nome padronizado)"
+              hint="Clique em uma barra para buscar esse nome na tabela de atividades."
+            >
+              <TopNomesAtividadesChart data={stats.porNomeAtividade ?? []} enableDrillDown />
+            </ChartCard>
+          </div>
+        }
+        tendenciasContent={
+          <div className="flex flex-col gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <ChartCard title="Evolução Temporal (Área)">
+                <EvolucaoTemporalChart data={stats.porMes} />
+              </ChartCard>
+              <ChartCard
+                title="Distribuição de Prioridade por Mês"
+                hint="Contagens reais por mês e prioridade (planilha importada)."
+              >
+                <PrioridadePorMesChart data={prioridadePorMes} />
+              </ChartCard>
+            </div>
+          </div>
+        }
+      />
 
       <div className="text-center">
         <Link

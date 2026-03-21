@@ -2,13 +2,14 @@
  * Ajuda a “acordar” a API no Render (plano free hiberna após ~15 min).
  * Use em Server Actions antes de chamadas pesadas ao backend.
  */
+import { getApiBaseUrl } from './api-config'
+
 const HEALTH_PATH = '/health'
 const TIMEOUT_MS = 120_000
 
 export async function pingApiHealth(): Promise<void> {
-  const base = process.env.NEXT_PUBLIC_API_URL?.trim()
-  if (!base) return
-  const url = `${base.replace(/\/$/, '')}${HEALTH_PATH}`
+  const base = getApiBaseUrl()
+  const url = `${base}${HEALTH_PATH}`
   const ac = new AbortController()
   const t = setTimeout(() => ac.abort(), TIMEOUT_MS)
   try {

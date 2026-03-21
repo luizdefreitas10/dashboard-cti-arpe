@@ -19,20 +19,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [])
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg)] relative">
-      {/* Background ARPE - arpe-grafite como textura sutil (visível no tema claro) */}
-      <div
-        className="fixed inset-0 -z-10 opacity-[0.035] md:opacity-[0.04] bg-cover bg-center bg-no-repeat pointer-events-none [background-size:min(80vw,1200px)_auto]"
-        style={{ backgroundImage: "url('/arpe-grafite.png')" }}
-        aria-hidden
-      />
-
+    <div className="min-h-screen bg-[var(--color-bg)]">
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      {/* Desktop: conteúdo com margin-left para a sidebar fixa */}
       <div className="flex min-h-screen w-full min-w-0 max-w-[100vw] flex-col overflow-x-clip lg:pl-60">
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-[var(--color-primary)] focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-white focus:outline-none focus:ring-2 focus:ring-white"
+        >
+          Pular para o conteúdo principal
+        </a>
         <Header onMenuToggle={toggleSidebar} isMenuOpen={sidebarOpen} />
-        <main className="flex-1 w-full min-w-0 max-w-full p-3 sm:p-6 lg:p-8">{children}</main>
+        <main id="main-content" className="flex-1 w-full min-w-0 max-w-full p-3 sm:p-6 lg:p-8" tabIndex={-1}>
+          {children}
+        </main>
         <Footer />
       </div>
 

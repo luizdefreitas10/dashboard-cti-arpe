@@ -6,34 +6,51 @@ import { useReactTable, getCoreRowModel, flexRender, ColumnDef, getPaginationRow
 import BensService, { Bem, BemFilters } from '@/services/models/bens'
 import { cn, formatNumber } from '@/lib/utils'
 import { exportToCSV } from '@/lib/export-csv'
-import { Search, Download, ChevronLeft, ChevronRight, X, Filter } from 'lucide-react'
+import { Search, Download, ChevronLeft, ChevronRight, X, Filter, History } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { HistoricoDialog } from '@/components/bens/historico-dialog'
 
-const columns: ColumnDef<Bem>[] = [
-  { accessorKey: 'tombamento', header: 'Tombamento', cell: ({ getValue }) => <span className="font-mono text-xs text-[var(--color-text-muted)]">{String(getValue())}</span> },
-  { accessorKey: 'tipoHardware', header: 'Tipo', cell: ({ getValue }) => <span className="font-medium">{String(getValue() ?? '—')}</span> },
-  { accessorKey: 'modelo', header: 'Modelo', cell: ({ getValue }) => String(getValue() ?? '—') },
-  { accessorKey: 'usuario', header: 'Usuário', cell: ({ getValue }) => String(getValue() ?? '—') },
-  { accessorKey: 'setor', header: 'Setor', cell: ({ getValue }) => String(getValue() ?? '—') },
-  { accessorKey: 'finalidadePrincipal', header: 'Finalidade', cell: ({ getValue }) => <span className="text-[var(--color-text-muted)]">{String(getValue() ?? '—')}</span> },
-  {
-    accessorKey: 'sistemaOperacional',
-    header: 'Sistema Operacional',
-    cell: ({ getValue }) => {
-      const v = String(getValue() ?? '—')
-      const color = v.includes('11') ? 'bg-emerald-500/15 text-emerald-400' : v.includes('10') ? 'bg-amber-500/15 text-amber-400' : 'bg-[var(--color-border)] text-[var(--color-text-muted)]'
-      return <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium', color)}>{v}</span>
+function makeColumns(onHistorico: (tombamento: string) => void): ColumnDef<Bem>[] {
+  return [
+    { accessorKey: 'tombamento', header: 'Tombamento', cell: ({ getValue }) => <span className="font-mono text-xs text-[var(--color-text-muted)]">{String(getValue())}</span> },
+    { accessorKey: 'tipoHardware', header: 'Tipo', cell: ({ getValue }) => <span className="font-medium">{String(getValue() ?? '—')}</span> },
+    { accessorKey: 'modelo', header: 'Modelo', cell: ({ getValue }) => String(getValue() ?? '—') },
+    { accessorKey: 'usuario', header: 'Usuário', cell: ({ getValue }) => String(getValue() ?? '—') },
+    { accessorKey: 'setor', header: 'Setor', cell: ({ getValue }) => String(getValue() ?? '—') },
+    { accessorKey: 'finalidadePrincipal', header: 'Finalidade', cell: ({ getValue }) => <span className="text-[var(--color-text-muted)]">{String(getValue() ?? '—')}</span> },
+    {
+      accessorKey: 'sistemaOperacional',
+      header: 'Sistema Operacional',
+      cell: ({ getValue }) => {
+        const v = String(getValue() ?? '—')
+        const color = v.includes('11') ? 'bg-emerald-500/15 text-emerald-400' : v.includes('10') ? 'bg-amber-500/15 text-amber-400' : 'bg-[var(--color-border)] text-[var(--color-text-muted)]'
+        return <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium', color)}>{v}</span>
+      },
     },
-  },
-  {
-    accessorKey: 'criticidade',
-    header: 'Criticidade',
-    cell: ({ getValue }) => {
-      const v = String(getValue() ?? '—')
-      return <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium', v === 'QUEIMOU' ? 'bg-red-500/15 text-red-400' : 'bg-[var(--color-border)] text-[var(--color-text-subtle)]')}>{v}</span>
+    {
+      accessorKey: 'criticidade',
+      header: 'Criticidade',
+      cell: ({ getValue }) => {
+        const v = String(getValue() ?? '—')
+        return <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium', v === 'QUEIMOU' ? 'bg-red-500/15 text-red-400' : 'bg-[var(--color-border)] text-[var(--color-text-subtle)]')}>{v}</span>
+      },
     },
-  },
-]
+    {
+      id: 'acoes',
+      header: '',
+      cell: ({ row }) => (
+        <button
+          type="button"
+          onClick={() => onHistorico(row.original.tombamento)}
+          className="flex items-center gap-1.5 px-2 py-1.5 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-primary)] hover:bg-[var(--color-bg-hover)] rounded-[var(--radius-md)] transition-colors cursor-pointer"
+          title="Ver histórico de alterações"
+        >
+          <History size={14} /> Histórico
+        </button>
+      ),
+    },
+  ]
+}
 
 function TabelaBensContent() {
   const router = useRouter()
@@ -49,7 +66,14 @@ function TabelaBensContent() {
   const [exporting, setExporting] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
   const [searchInput, setSearchInput] = useState('')
+  const [historicoTombamento, setHistoricoTombamento] = useState<string | null>(null)
+  const [historicoOpen, setHistoricoOpen] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const openHistorico = useCallback((tombamento: string) => {
+    setHistoricoTombamento(tombamento)
+    setHistoricoOpen(true)
+  }, [])
 
   const page = Number(searchParams.get('page') ?? 1)
   const size = Number(searchParams.get('size') ?? 25)
@@ -107,6 +131,7 @@ function TabelaBensContent() {
     if (debounceRef.current) clearTimeout(debounceRef.current)
   }, [])
 
+  const columns = useMemo(() => makeColumns(openHistorico), [openHistorico])
   const table = useReactTable({ data, columns, getCoreRowModel: getCoreRowModel(), getPaginationRowModel: getPaginationRowModel(), manualPagination: true, pageCount: totalPages })
 
   const handleExport = async () => {
@@ -156,6 +181,14 @@ function TabelaBensContent() {
   }
 
   return (
+    <>
+      {historicoTombamento && (
+        <HistoricoDialog
+          tombamento={historicoTombamento}
+          open={historicoOpen}
+          onOpenChange={setHistoricoOpen}
+        />
+      )}
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-3 flex-wrap">
         <div className="relative flex-1 min-w-[200px] max-w-sm">
@@ -273,6 +306,7 @@ function TabelaBensContent() {
         </div>
       </div>
     </div>
+    </>
   )
 }
 
