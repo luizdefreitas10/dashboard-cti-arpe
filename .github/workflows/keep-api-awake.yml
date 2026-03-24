@@ -6,7 +6,7 @@ name: Keep API awake (ping /health)
 on:
   schedule:
     # A cada 10 minutos (UTC). Ajuste se quiser outro intervalo.
-    - cron: '*/10 * * * *'
+    - cron: '*/5 * * * *'
   workflow_dispatch: {}
 
 jobs:
