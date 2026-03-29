@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
@@ -9,7 +10,6 @@ import {
   ExternalLink,
   Layers,
   Activity,
-  Server,
   ChevronDown,
   X,
 } from 'lucide-react'
@@ -151,8 +151,15 @@ function SidebarContent({ onClose, showCloseButton }: { onClose: () => void; sho
           </button>
         )}
         <div className="flex items-center gap-3 pr-10">
-          <div className="w-8 h-8 rounded-[var(--radius-md)] bg-[var(--color-primary)]/20 flex items-center justify-center">
-            <Server size={16} className="text-[var(--color-primary)]" />
+          <div className="relative w-8 h-8 shrink-0 rounded-[var(--radius-md)] overflow-hidden border border-[var(--color-border)] bg-[var(--color-bg-card)] flex items-center justify-center">
+            <Image
+              src="/arpe-drawer-logo.svg"
+              alt="ARPE"
+              width={32}
+              height={32}
+              className="object-contain object-center p-0.5"
+              priority
+            />
           </div>
           <div>
             <p className="text-sm font-semibold text-[var(--color-text)] leading-tight">Dashboard CTI</p>
