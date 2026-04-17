@@ -21,6 +21,8 @@ import {
 } from 'lucide-react'
 import { formatNumber, formatDate } from '@/lib/utils'
 
+export const dynamic = 'force-dynamic'
+
 function tipoImportLabel(tipo: string) {
   const m: Record<string, string> = {
     atividades: 'Atividades',
