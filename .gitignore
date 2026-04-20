@@ -24,3 +24,8 @@ next-env.d.ts
 
 # Coverage
 coverage/
+
+# Local-only docs/config
+PROJETO.md
+DEPLOY-RENDER.md
+.cursor/
