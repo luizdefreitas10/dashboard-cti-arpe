@@ -144,3 +144,37 @@ model DataImportLog {
   @@index([createdAt(sort: Desc)])
   @@map("data_import_logs")
 }
+
+/// Contratos de telemática por prestador/serviço
+model ContratoServico {
+  id               String                   @id @default(cuid())
+  prestador        String
+  nomeServico      String
+  numeroReferencia String?
+  dataInicio       DateTime?
+  dataFinal        DateTime?
+  observacoes      String?
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+  pagamentos       ContratoPagamentoMensal[]
+
+  @@unique([prestador, nomeServico], map: "contratos_servicos_prestador_nomeServico_key")
+  @@map("contratos_servicos")
+}
+
+/// Competência mensal por contrato/serviço
+model ContratoPagamentoMensal {
+  id         String          @id @default(cuid())
+  servicoId  String
+  ano        Int
+  mes        Int
+  pagamento  String?
+  status     String
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  servico    ContratoServico @relation(fields: [servicoId], references: [id], onDelete: Cascade)
+
+  @@unique([servicoId, ano, mes], map: "contratos_pagamentos_servico_ano_mes_key")
+  @@index([ano, mes])
+  @@map("contratos_pagamentos_mensais")
+}

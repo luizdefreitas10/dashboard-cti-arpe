@@ -71,6 +71,170 @@ function parseDate(val: unknown): Date | null {
   return isNaN(d.getTime()) ? null : d
 }
 
+const MONTH_MAP: Record<string, number> = {
+  janeiro: 1,
+  fevereiro: 2,
+  marco: 3,
+  abril: 4,
+  maio: 5,
+  junho: 6,
+  julho: 7,
+  agosto: 8,
+  setembro: 9,
+  outubro: 10,
+  novembro: 11,
+  dezembro: 12,
+}
+
+function normText(v: unknown): string {
+  return String(v ?? '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+}
+
+function parseMonthNumber(v: unknown): number | null {
+  if (typeof v === 'number' && v >= 1 && v <= 12) return v
+  const key = normText(v)
+  return MONTH_MAP[key] ?? null
+}
+
+function parseYear(v: unknown): number | null {
+  if (typeof v === 'number' && Number.isFinite(v)) return Math.trunc(v)
+  const s = cleanStr(v)
+  if (!s) return null
+  const n = Number(s)
+  return Number.isFinite(n) ? Math.trunc(n) : null
+}
+
+function normalizeContratoStatus(raw: unknown, dataFinal: Date | null): 'PAGO' | 'A_VENCER' | 'VENCIDO' | 'SEM_STATUS' {
+  const s = normText(raw)
+  if (s.includes('pago') || s.includes('paga')) return 'PAGO'
+  if (s.includes('vencid')) return 'VENCIDO'
+  if (s.includes('vencer') || s.includes('a vencer')) return 'A_VENCER'
+  if (dataFinal) {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const end = new Date(dataFinal)
+    end.setHours(0, 0, 0, 0)
+    return end < today ? 'VENCIDO' : 'A_VENCER'
+  }
+  return 'SEM_STATUS'
+}
+
+type ParsedContratoMensal = {
+  ano: number
+  mes: number
+  pagamento: string | null
+  status: 'PAGO' | 'A_VENCER' | 'VENCIDO' | 'SEM_STATUS'
+}
+
+type ParsedContratoServico = {
+  prestador: 'OI' | 'CLARO' | 'SIMPRESS'
+  nomeServico: string
+  numeroReferencia: string | null
+  dataInicio: Date | null
+  dataFinal: Date | null
+  observacoes: string | null
+  pagamentos: ParsedContratoMensal[]
+}
+
+type SectionSpec = {
+  prestador: 'OI' | 'CLARO' | 'SIMPRESS'
+  nomeServico: string
+  startCol: number
+  hasObs: boolean
+}
+
+function readCell(matrix: unknown[][], row1: number, col1: number): unknown {
+  return matrix[row1 - 1]?.[col1 - 1] ?? null
+}
+
+function parseSectionsFromSheet(matrix: unknown[][], specs: SectionSpec[]): ParsedContratoServico[] {
+  const headerRows = [5, 21]
+  const out = new Map<string, ParsedContratoServico>()
+
+  for (const spec of specs) {
+    const key = `${spec.prestador}::${spec.nomeServico}`
+    if (!out.has(key)) {
+      out.set(key, {
+        prestador: spec.prestador,
+        nomeServico: spec.nomeServico,
+        numeroReferencia: null,
+        dataInicio: null,
+        dataFinal: null,
+        observacoes: null,
+        pagamentos: [],
+      })
+    }
+
+    const current = out.get(key)!
+    const competenciaSeen = new Set<string>()
+    let currentYear: number | null = null
+
+    for (const headerRow of headerRows) {
+      for (let r = headerRow + 1; r <= headerRow + 12; r++) {
+        const yearVal = parseYear(readCell(matrix, r, spec.startCol))
+        if (yearVal) currentYear = yearVal
+
+        const mes = parseMonthNumber(readCell(matrix, r, spec.startCol + 1))
+        if (!mes || !currentYear) continue
+
+        const pagamento = cleanStr(readCell(matrix, r, spec.startCol + 2))
+        const numeroRef = cleanStr(readCell(matrix, r, spec.startCol + 4))
+        const dataInicio = parseDate(readCell(matrix, r, spec.startCol + 5))
+        const dataFinal = parseDate(readCell(matrix, r, spec.startCol + 6))
+        const observacoes = spec.hasObs ? cleanStr(readCell(matrix, r, spec.startCol + 7)) : null
+
+        if (numeroRef) current.numeroReferencia = numeroRef
+        if (dataInicio) current.dataInicio = dataInicio
+        if (dataFinal) current.dataFinal = dataFinal
+        if (observacoes) current.observacoes = observacoes
+
+        const status = normalizeContratoStatus(readCell(matrix, r, spec.startCol + 3), dataFinal ?? current.dataFinal)
+        const compKey = `${currentYear}-${mes}`
+        if (competenciaSeen.has(compKey)) continue
+        competenciaSeen.add(compKey)
+
+        current.pagamentos.push({
+          ano: currentYear,
+          mes,
+          pagamento,
+          status,
+        })
+      }
+    }
+
+    current.pagamentos.sort((a, b) => a.ano - b.ano || a.mes - b.mes)
+  }
+
+  return [...out.values()]
+}
+
+function parseContratosWorkbook(wb: XLSX.WorkBook): ParsedContratoServico[] {
+  const specsBySheet: Record<string, SectionSpec[]> = {
+    OI: [
+      { prestador: 'OI', nomeServico: 'OI 0800 EXTRA REDE', startCol: 2, hasObs: true },
+      { prestador: 'OI', nomeServico: 'OI ADC PVF + WIFI', startCol: 11, hasObs: false },
+    ],
+    CLARO: [{ prestador: 'CLARO', nomeServico: 'CLARO SERVICOS MOVEIS', startCol: 2, hasObs: true }],
+    SIMPRESS: [
+      { prestador: 'SIMPRESS', nomeServico: 'SIMPRESS PRETO E BRANCO', startCol: 2, hasObs: false },
+      { prestador: 'SIMPRESS', nomeServico: 'SIMPRESS COLORIDA', startCol: 11, hasObs: false },
+    ],
+  }
+
+  const parsed: ParsedContratoServico[] = []
+  for (const [sheetName, specs] of Object.entries(specsBySheet)) {
+    const ws = wb.Sheets[sheetName]
+    if (!ws) continue
+    const matrix = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null }) as unknown[][]
+    parsed.push(...parseSectionsFromSheet(matrix, specs))
+  }
+  return parsed.filter((s) => s.pagamentos.length > 0)
+}
+
 function cleanHttpUrl(s: string | null): string | null {
   if (!s) return null
   const t = s.trim()
@@ -461,6 +625,76 @@ export class UploadController {
       total: data.length,
       concluidas: concl,
       emAndamento: and,
+    }
+  }
+
+  @Post('contratos')
+  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
+  async uploadContratos(@UploadedFile() file: Express.Multer.File) {
+    if (!file) throw new BadRequestException('Nenhum arquivo enviado')
+
+    const wb = XLSX.read(file.buffer, { type: 'buffer', cellDates: true })
+    const parsed = parseContratosWorkbook(wb)
+    if (parsed.length === 0) {
+      throw new BadRequestException('Nenhum contrato válido encontrado nas abas OI, CLARO e SIMPRESS.')
+    }
+
+    const contratosData = parsed.map((s) => ({
+      id: randomUUID(),
+      prestador: s.prestador,
+      nomeServico: s.nomeServico,
+      numeroReferencia: s.numeroReferencia,
+      dataInicio: s.dataInicio,
+      dataFinal: s.dataFinal,
+      observacoes: s.observacoes,
+    }))
+    const idByServiceKey = new Map<string, string>()
+    for (const row of contratosData) {
+      idByServiceKey.set(`${row.prestador}::${row.nomeServico}`, row.id)
+    }
+
+    const pagamentosData: {
+      id: string
+      servicoId: string
+      ano: number
+      mes: number
+      pagamento: string | null
+      status: string
+    }[] = []
+    for (const servico of parsed) {
+      const servicoId = idByServiceKey.get(`${servico.prestador}::${servico.nomeServico}`)
+      if (!servicoId) continue
+      for (const p of servico.pagamentos) {
+        pagamentosData.push({
+          id: randomUUID(),
+          servicoId,
+          ano: p.ano,
+          mes: p.mes,
+          pagamento: p.pagamento,
+          status: p.status,
+        })
+      }
+    }
+
+    await this.prisma.$transaction([
+      this.prisma.contratoPagamentoMensal.deleteMany(),
+      this.prisma.contratoServico.deleteMany(),
+      this.prisma.contratoServico.createMany({ data: contratosData }),
+      this.prisma.contratoPagamentoMensal.createMany({ data: pagamentosData }),
+    ])
+
+    const msg = `${contratosData.length} contrato(s)/serviço(s) e ${pagamentosData.length} competência(s) mensal(is) importados com sucesso`
+    await this.logImport({
+      tipo: 'contratos',
+      filename: file.originalname,
+      rowsCount: pagamentosData.length,
+      message: msg,
+    })
+
+    return {
+      message: msg,
+      servicos: contratosData.length,
+      competencias: pagamentosData.length,
     }
   }
 }
