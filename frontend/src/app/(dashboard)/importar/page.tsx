@@ -21,6 +21,7 @@ function tipoLabel(tipo: string) {
     bens: 'Bens',
     power_bi: 'Power BI',
     solucoes_digitais: 'Soluções digitais',
+    contratos: 'Contratos',
   }
   return m[tipo] ?? tipo
 }
@@ -37,10 +38,12 @@ export default function ImportarPage() {
   const [bens, setBens] = useState<UploadState>({ status: 'idle' })
   const [powerBi, setPowerBi] = useState<UploadState>({ status: 'idle' })
   const [solucoesDigitais, setSolucoesDigitais] = useState<UploadState>({ status: 'idle' })
+  const [contratos, setContratos] = useState<UploadState>({ status: 'idle' })
   const atividadesRef = useRef<HTMLInputElement>(null)
   const bensRef = useRef<HTMLInputElement>(null)
   const powerBiRef = useRef<HTMLInputElement>(null)
   const solucoesDigitaisRef = useRef<HTMLInputElement>(null)
+  const contratosRef = useRef<HTMLInputElement>(null)
 
   const [importLogs, setImportLogs] = useState<ImportLogRow[]>([])
   const [logsLoading, setLogsLoading] = useState(true)
@@ -132,6 +135,19 @@ export default function ImportarPage() {
           accept: '.xlsx,.csv',
           onSuccess: () => {
             window.location.href = '/power-bi'
+          },
+        },
+        {
+          label: 'Contratos de Telemática',
+          description:
+            'Arquivo: Contratos Telemática.xlsx — abas OI, CLARO e SIMPRESS com acompanhamento mensal por ano. Substitui toda a base de contratos.',
+          endpoint: '/upload/contratos',
+          state: contratos,
+          setState: setContratos,
+          ref: contratosRef,
+          accept: '.xlsx,.xls',
+          onSuccess: () => {
+            window.location.href = '/contratos'
           },
         },
         {

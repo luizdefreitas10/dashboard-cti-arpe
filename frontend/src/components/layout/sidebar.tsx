@@ -12,6 +12,7 @@ import {
   Activity,
   ChevronDown,
   X,
+  FileText,
 } from 'lucide-react'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
@@ -44,6 +45,11 @@ const navItems: NavItem[] = [
       { label: 'Ramais', href: '/tabelas/ramais' },
       { label: 'Celulares', href: '/tabelas/celulares' },
     ],
+  },
+  {
+    label: 'Contratos',
+    href: '/contratos',
+    icon: <FileText size={16} />,
   },
   {
     label: 'Power BI',
