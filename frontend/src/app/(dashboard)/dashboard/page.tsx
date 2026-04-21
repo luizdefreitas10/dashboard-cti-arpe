@@ -6,6 +6,7 @@ import { AtividadesPorAnoChart } from '@/components/charts/charts-dynamic'
 import { DataFreshnessBanner } from '@/components/dashboard/data-freshness-banner'
 import { ErrorState } from '@/components/dashboard/error-state'
 import { DashboardOverviewSkeleton } from '@/components/dashboard/dashboard-overview-skeleton'
+import { ContratosTelematicaOverviewSection } from '@/components/dashboard/contratos-telematica-overview-section'
 import {
   Activity,
   Server,
@@ -18,6 +19,7 @@ import {
   BarChart3,
   TableProperties,
   Upload,
+  FileText,
 } from 'lucide-react'
 import { formatNumber, formatDate } from '@/lib/utils'
 
@@ -29,6 +31,7 @@ function tipoImportLabel(tipo: string) {
     bens: 'Bens / inventário',
     power_bi: 'Power BI',
     solucoes_digitais: 'Soluções digitais',
+    contratos: 'Contratos (telemática)',
   }
   return m[tipo] ?? tipo
 }
@@ -66,8 +69,8 @@ async function DashboardContent() {
       <div className="min-w-0">
         <p className="text-sm text-[var(--color-text-muted)] leading-relaxed [overflow-wrap:anywhere] text-pretty">
           Visão executiva da <strong className="text-[var(--color-text)]">Coordenadoria de TI</strong>: indicadores
-          cruzados de atividades, patrimônio, soluções e importações recentes. Use os atalhos para aprofundar em cada
-          módulo.
+          cruzados de atividades, patrimônio, soluções, contratos de telemática e importações recentes. Use os atalhos
+          para aprofundar em cada módulo.
         </p>
         <div className="mt-4">
           <DataFreshnessBanner dataMinima={a.dataMinimaAtividade} dataMaxima={a.dataMaximaAtividade} />
@@ -160,6 +163,8 @@ async function DashboardContent() {
         />
       </div>
 
+      <ContratosTelematicaOverviewSection resumo={data.contratosResumo} />
+
       {data.pctWin11 != null ? (
         <div className="min-w-0 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-3 py-3 sm:px-4 text-sm text-[var(--color-text-muted)] [overflow-wrap:anywhere] text-pretty leading-relaxed">
           <span className="font-medium text-[var(--color-text)]">Windows 11</span> representa aproximadamente{' '}
@@ -242,6 +247,13 @@ async function DashboardContent() {
                   hint: 'Relatórios e dashboards externos',
                   icon: ExternalLink,
                   accent: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20',
+                },
+                {
+                  href: '/contratos',
+                  title: 'Contratos de telemática',
+                  hint: 'Pagamentos por prestador e competência',
+                  icon: FileText,
+                  accent: 'text-sky-400 bg-sky-500/10 border-sky-500/20',
                 },
                 {
                   href: '/solucoes-digitais',

@@ -1,14 +1,19 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import toast from 'react-hot-toast'
-import { CalendarClock, CheckCircle2, Search, AlertTriangle, Clock3, FileText } from 'lucide-react'
+import { CalendarClock, CheckCircle2, Search, AlertTriangle, Clock3, FileText, Loader2 } from 'lucide-react'
 import ContratosService, { ContratoServico, ContratoStatus, ContratosResumo } from '@/services/models/contratos'
+import { KpiCardSkeleton } from '@/components/dashboard/kpi-card'
 import { cn } from '@/lib/utils'
 
 const MONTH_LABELS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+/** Ano padrão ao abrir a tela; o usuário pode mudar para outro ano ou “todos”. */
+const DEFAULT_CONTRATOS_ANO = 2026
+/** Atraso após parar de digitar na busca antes de consultar a API (evita skeleton a cada tecla). */
+const SEARCH_DEBOUNCE_MS = 400
 const STATUS_META: Record<ContratoStatus, { label: string; className: string }> = {
   PAGO: { label: 'Pago', className: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' },
   A_VENCER: { label: 'A vencer', className: 'bg-amber-500/15 text-amber-400 border-amber-500/30' },
@@ -64,41 +69,160 @@ function MesBadge({ status }: { status: ContratoStatus }) {
   )
 }
 
+function ContratoServicoCardSkeleton() {
+  return (
+    <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 flex flex-col gap-4 animate-pulse">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="h-3 w-24 bg-[var(--color-bg-hover)] rounded" />
+          <div className="h-4 w-full max-w-[280px] bg-[var(--color-bg-hover)] rounded" />
+        </div>
+        <div className="shrink-0 space-y-2 text-right">
+          <div className="h-3 w-20 bg-[var(--color-bg-hover)] rounded ml-auto" />
+          <div className="h-4 w-28 bg-[var(--color-bg-hover)] rounded ml-auto" />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] h-[52px] bg-[var(--color-bg-hover)]/40" />
+        <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] h-[52px] bg-[var(--color-bg-hover)]/40" />
+      </div>
+
+      <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] overflow-hidden">
+        <div className="h-9 bg-[var(--color-bg-hover)]/70 border-b border-[var(--color-border)]" />
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div
+            key={i}
+            className="h-10 border-b border-[var(--color-border)]/60 flex items-center gap-3 px-3 last:border-b-0"
+          >
+            <div className="h-3 w-9 bg-[var(--color-bg-hover)] rounded shrink-0" />
+            <div className="h-3 w-10 bg-[var(--color-bg-hover)] rounded shrink-0" />
+            <div className="h-3 flex-1 max-w-[120px] bg-[var(--color-bg-hover)] rounded" />
+            <div className="h-5 w-16 bg-[var(--color-bg-hover)] rounded-md shrink-0" />
+          </div>
+        ))}
+      </div>
+
+      <div className="h-12 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-hover)]/30" />
+    </section>
+  )
+}
+
 export default function ContratosPage() {
   const [loading, setLoading] = useState(true)
+  const [listLoading, setListLoading] = useState(false)
   const [servicos, setServicos] = useState<ContratoServico[]>([])
+  const [anosDisponiveis, setAnosDisponiveis] = useState<number[]>([])
   const [resumo, setResumo] = useState<ContratosResumo | null>(null)
   const [prestador, setPrestador] = useState<'TODOS' | 'OI' | 'CLARO' | 'SIMPRESS'>('TODOS')
   const [status, setStatus] = useState<'TODOS' | ContratoStatus>('TODOS')
   const [search, setSearch] = useState('')
-  const [ano, setAno] = useState<number | null>(null)
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [ano, setAno] = useState<number | null>(DEFAULT_CONTRATOS_ANO)
 
-  const loadData = useCallback(async () => {
-    setLoading(true)
-    try {
-      const service = ContratosService()
-      const [list, summary] = await Promise.all([
-        service.list({ prestador, status, ano: ano ?? undefined, servico: search || undefined }),
-        service.resumo({ prestador, ano: ano ?? undefined }),
-      ])
-      setServicos(list)
-      setResumo(summary)
-    } catch {
-      toast.error('Não foi possível carregar os contratos.')
-    } finally {
-      setLoading(false)
-    }
-  }, [prestador, status, ano, search])
+  const debouncedSearchRef = useRef(debouncedSearch)
+  debouncedSearchRef.current = debouncedSearch
+
+  /** Primeira execução do efeito de busca é ignorada (carga inicial vem do efeito estrutural). */
+  const skipSearchOnlyFetch = useRef(true)
 
   useEffect(() => {
-    void loadData()
-  }, [loadData])
+    const handle = window.setTimeout(() => {
+      setDebouncedSearch(search.trim())
+    }, SEARCH_DEBOUNCE_MS)
+    return () => window.clearTimeout(handle)
+  }, [search])
 
-  const years = useMemo(() => {
-    const set = new Set<number>()
-    for (const s of servicos) for (const p of s.pagamentos) set.add(p.ano)
+  /** Prestador, status ou ano: KPI + lista + resumo (skeleton completo). */
+  useEffect(() => {
+    let cancelled = false
+    async function run() {
+      setLoading(true)
+      try {
+        const service = ContratosService()
+        const q = debouncedSearchRef.current
+        const listFilters = {
+          prestador,
+          status,
+          ano: ano ?? undefined,
+          servico: q || undefined,
+        }
+        const resumoFilters = {
+          prestador,
+          ano: ano ?? undefined,
+          servico: q || undefined,
+          status: status !== 'TODOS' ? status : undefined,
+        }
+        const [{ servicos: list, anosDisponiveis: anos }, summary] = await Promise.all([
+          service.list(listFilters),
+          service.resumo(resumoFilters),
+        ])
+        if (cancelled) return
+        setServicos(list)
+        setAnosDisponiveis(anos)
+        setResumo(summary)
+      } catch {
+        if (!cancelled) toast.error('Não foi possível carregar os contratos.')
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    void run()
+    return () => {
+      cancelled = true
+    }
+  }, [prestador, status, ano])
+
+  /** Somente texto de busca (debouncado): atualiza lista sem skeleton global.
+   * Prestador/status/ano disparam o efeito estrutural acima; não repetir aqui (evita fetch duplicado). */
+  useEffect(() => {
+    if (skipSearchOnlyFetch.current) {
+      skipSearchOnlyFetch.current = false
+      return
+    }
+    let cancelled = false
+    async function run() {
+      setListLoading(true)
+      try {
+        const service = ContratosService()
+        const listFilters = {
+          prestador,
+          status,
+          ano: ano ?? undefined,
+          servico: debouncedSearch || undefined,
+        }
+        const resumoFilters = {
+          prestador,
+          ano: ano ?? undefined,
+          servico: debouncedSearch || undefined,
+          status: status !== 'TODOS' ? status : undefined,
+        }
+        const [{ servicos: list, anosDisponiveis: anos }, summary] = await Promise.all([
+          service.list(listFilters),
+          service.resumo(resumoFilters),
+        ])
+        if (cancelled) return
+        setServicos(list)
+        setAnosDisponiveis(anos)
+        setResumo(summary)
+      } catch {
+        if (!cancelled) toast.error('Não foi possível carregar os contratos.')
+      } finally {
+        if (!cancelled) setListLoading(false)
+      }
+    }
+    void run()
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intencional: só reage ao termo debouncado
+  }, [debouncedSearch])
+
+  const yearOptions = useMemo(() => {
+    const set = new Set<number>(anosDisponiveis)
+    if (ano !== null) set.add(ano)
     return [...set].sort((a, b) => b - a)
-  }, [servicos])
+  }, [anosDisponiveis, ano])
 
   const visibleServicos = useMemo(() => {
     const hasCompetenciaFilter = status !== 'TODOS' || ano !== null
@@ -108,8 +232,12 @@ export default function ContratosPage() {
   }, [servicos, status, ano])
 
   const hasActiveFilters = useMemo(
-    () => prestador !== 'TODOS' || status !== 'TODOS' || ano !== null || search.trim().length > 0,
-    [prestador, status, ano, search],
+    () =>
+      prestador !== 'TODOS' ||
+      status !== 'TODOS' ||
+      ano !== null ||
+      debouncedSearch.length > 0,
+    [prestador, status, ano, debouncedSearch],
   )
 
   const hasImportedContracts = (resumo?.totalServicos ?? 0) > 0
@@ -121,18 +249,31 @@ export default function ContratosPage() {
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <KpiCard label="Serviços" value={resumo?.totalServicos ?? 0} icon={<FileText size={15} />} colorClass="border-[var(--color-border)] text-[var(--color-text-subtle)]" />
-        <KpiCard label="Pago" value={resumo?.byStatus.PAGO ?? 0} icon={<CheckCircle2 size={15} />} colorClass="border-emerald-500/30 text-emerald-400" />
-        <KpiCard label="A vencer" value={resumo?.byStatus.A_VENCER ?? 0} icon={<Clock3 size={15} />} colorClass="border-amber-500/30 text-amber-400" />
-        <KpiCard label="Vencido" value={resumo?.byStatus.VENCIDO ?? 0} icon={<AlertTriangle size={15} />} colorClass="border-rose-500/30 text-rose-400" />
+        {loading ? (
+          Array.from({ length: 4 }).map((_, i) => <KpiCardSkeleton key={i} />)
+        ) : (
+          <>
+            <KpiCard label="Serviços" value={resumo?.totalServicos ?? 0} icon={<FileText size={15} />} colorClass="border-[var(--color-border)] text-[var(--color-text-subtle)]" />
+            <KpiCard label="Pago" value={resumo?.byStatus.PAGO ?? 0} icon={<CheckCircle2 size={15} />} colorClass="border-emerald-500/30 text-emerald-400" />
+            <KpiCard label="A vencer" value={resumo?.byStatus.A_VENCER ?? 0} icon={<Clock3 size={15} />} colorClass="border-amber-500/30 text-amber-400" />
+            <KpiCard label="Vencido" value={resumo?.byStatus.VENCIDO ?? 0} icon={<AlertTriangle size={15} />} colorClass="border-rose-500/30 text-rose-400" />
+          </>
+        )}
       </div>
 
-      <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 flex flex-col gap-3">
+      <div
+        className={cn(
+          'rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 flex flex-col gap-3 transition-opacity',
+          loading && 'opacity-60 pointer-events-none',
+        )}
+        aria-busy={loading || listLoading}
+      >
         <div className="flex flex-col sm:flex-row gap-3">
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value as typeof status)}
-            className="px-3 py-2 rounded-[var(--radius-md)] bg-[var(--color-bg-input)] border border-[var(--color-border)] text-sm text-[var(--color-text)]"
+            disabled={loading}
+            className="px-3 py-2 rounded-[var(--radius-md)] bg-[var(--color-bg-input)] border border-[var(--color-border)] text-sm text-[var(--color-text)] disabled:cursor-not-allowed"
           >
             <option value="TODOS">Status: todos</option>
             <option value="PAGO">Pago</option>
@@ -143,10 +284,11 @@ export default function ContratosPage() {
           <select
             value={ano ?? ''}
             onChange={(e) => setAno(e.target.value ? Number(e.target.value) : null)}
-            className="px-3 py-2 rounded-[var(--radius-md)] bg-[var(--color-bg-input)] border border-[var(--color-border)] text-sm text-[var(--color-text)]"
+            disabled={loading}
+            className="px-3 py-2 rounded-[var(--radius-md)] bg-[var(--color-bg-input)] border border-[var(--color-border)] text-sm text-[var(--color-text)] disabled:cursor-not-allowed"
           >
             <option value="">Ano: todos</option>
-            {years.map((y) => (
+            {yearOptions.map((y) => (
               <option key={y} value={y}>
                 {y}
               </option>
@@ -158,8 +300,15 @@ export default function ContratosPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar serviço/contrato..."
-              className="w-full pl-9 pr-3 py-2 rounded-[var(--radius-md)] bg-[var(--color-bg-input)] border border-[var(--color-border)] text-sm text-[var(--color-text)]"
+              disabled={loading}
+              className="w-full pl-9 pr-9 py-2 rounded-[var(--radius-md)] bg-[var(--color-bg-input)] border border-[var(--color-border)] text-sm text-[var(--color-text)] disabled:cursor-not-allowed"
+              aria-busy={listLoading}
             />
+            {listLoading && !loading ? (
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-subtle)]" aria-hidden>
+                <Loader2 className="size-4 animate-spin" />
+              </span>
+            ) : null}
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -168,8 +317,9 @@ export default function ContratosPage() {
               key={p}
               type="button"
               onClick={() => setPrestador(p)}
+              disabled={loading}
               className={cn(
-                'inline-flex items-center gap-2 px-3 py-2 rounded-[var(--radius-md)] border text-xs transition-colors',
+                'inline-flex items-center gap-2 px-3 py-2 rounded-[var(--radius-md)] border text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-80',
                 prestador === p
                   ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/10 text-[var(--color-primary)]'
                   : 'border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-text)]',
@@ -187,7 +337,11 @@ export default function ContratosPage() {
       </div>
 
       {loading ? (
-        <p className="text-sm text-[var(--color-text-muted)]">Carregando contratos…</p>
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <ContratoServicoCardSkeleton key={i} />
+          ))}
+        </div>
       ) : visibleServicos.length === 0 ? (
         <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-5">
           {!hasImportedContracts ? (
@@ -218,7 +372,23 @@ export default function ContratosPage() {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+        <div
+          className={cn(
+            'relative grid grid-cols-1 xl:grid-cols-2 gap-4',
+            listLoading && !loading && 'opacity-70 transition-opacity',
+          )}
+        >
+          {listLoading && !loading ? (
+            <div
+              className="absolute inset-0 z-[1] flex items-start justify-center pt-8 pointer-events-none"
+              aria-live="polite"
+            >
+              <span className="inline-flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-card)]/95 px-3 py-2 text-xs text-[var(--color-text-muted)] shadow-sm">
+                <Loader2 className="size-3.5 animate-spin shrink-0" aria-hidden />
+                Atualizando lista…
+              </span>
+            </div>
+          ) : null}
           {visibleServicos.map((s) => (
             <section key={s.id} className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 flex flex-col gap-4">
               <div className="flex items-start justify-between gap-3">

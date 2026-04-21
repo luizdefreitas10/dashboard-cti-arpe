@@ -8,6 +8,8 @@ import SolucoesDigitaisService from '@/services/models/solucoes-digitais'
 import PowerBiService from '@/services/models/power-bi'
 import ImportLogsService from '@/services/models/import-logs'
 import type { DataImportLog } from '@/services/models/import-logs'
+import ContratosService from '@/services/models/contratos'
+import type { ContratosResumo } from '@/services/models/contratos'
 
 /** Dados agregados para a visão executiva (página inicial /dashboard). */
 export async function getExecutiveOverview() {
@@ -19,12 +21,13 @@ export async function getExecutiveOverview() {
     const powerBi = PowerBiService()
     const importLogs = ImportLogsService()
 
-    const [statsAtividades, statsBens, listaSolucoes, dashboards, logs] = await Promise.all([
+    const [statsAtividades, statsBens, listaSolucoes, dashboards, logs, contratosResumo] = await Promise.all([
       atividades.getStats(),
       bens.getStats(),
       solucoes.list(),
       powerBi.list().catch(() => []),
       importLogs.list().catch(() => []),
+      ContratosService().resumo({}).catch(() => null as ContratosResumo | null),
     ])
 
     const solucoesConcluidas = listaSolucoes.filter((s) => s.statusProjeto === 'concluida').length
@@ -53,6 +56,7 @@ export async function getExecutiveOverview() {
       powerBiConcluidos,
       pctWin11,
       importLogs: logs.slice(0, 12),
+      contratosResumo,
     }
   } catch (error) {
     const e = handleAxiosError(error)
@@ -68,6 +72,7 @@ export async function getExecutiveOverview() {
       powerBiConcluidos: 0,
       pctWin11: null as number | null,
       importLogs: [] as DataImportLog[],
+      contratosResumo: null as ContratosResumo | null,
     }
   }
 }
