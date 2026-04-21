@@ -45,7 +45,7 @@ export default function ContratosService() {
     servico?: string
     ano?: number
     status?: ContratoStatus | 'TODOS'
-  }): Promise<ContratoServico[]> {
+  }): Promise<{ servicos: ContratoServico[]; anosDisponiveis: number[] }> {
     try {
       const params: Record<string, string | number> = { _: Date.now() }
       if (filters?.prestador && filters.prestador !== 'TODOS') params.prestador = filters.prestador
@@ -53,21 +53,31 @@ export default function ContratosService() {
       if (filters?.ano) params.ano = filters.ano
       if (filters?.status && filters.status !== 'TODOS') params.status = filters.status
 
-      const { data } = await api.get<{ servicos: ContratoServico[] }>('/contratos', {
+      const { data } = await api.get<{ servicos: ContratoServico[]; anosDisponiveis?: number[] }>('/contratos', {
         params,
         headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
       })
-      return data.servicos ?? []
+      return {
+        servicos: data.servicos ?? [],
+        anosDisponiveis: data.anosDisponiveis ?? [],
+      }
     } catch (e) {
       throw handleAxiosError(e)
     }
   }
 
-  async function resumo(filters?: { ano?: number; prestador?: string }): Promise<ContratosResumo> {
+  async function resumo(filters?: {
+    ano?: number
+    prestador?: string
+    servico?: string
+    status?: ContratoStatus | 'TODOS'
+  }): Promise<ContratosResumo> {
     try {
       const params: Record<string, string | number> = { _: Date.now() }
       if (filters?.ano) params.ano = filters.ano
       if (filters?.prestador && filters.prestador !== 'TODOS') params.prestador = filters.prestador
+      if (filters?.servico) params.servico = filters.servico
+      if (filters?.status && filters.status !== 'TODOS') params.status = filters.status
 
       const { data } = await api.get<ContratosResumo>('/contratos/resumo', {
         params,

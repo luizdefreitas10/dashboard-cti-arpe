@@ -16,10 +16,53 @@ export class ContratosController {
   ) {
     const ano = anoRaw ? Number(anoRaw) : undefined
 
+    const servicoWhere = {
+      ...(prestador ? { prestador } : {}),
+      ...(servico ? { nomeServico: { contains: servico, mode: 'insensitive' as const } } : {}),
+    }
+
+    const [servicos, anoRows] = await Promise.all([
+      this.prisma.contratoServico.findMany({
+        where: servicoWhere,
+        include: {
+          pagamentos: {
+            where: {
+              ...(Number.isFinite(ano) ? { ano } : {}),
+              ...(status ? { status } : {}),
+            },
+            orderBy: [{ ano: 'asc' }, { mes: 'asc' }],
+          },
+        },
+        orderBy: [{ prestador: 'asc' }, { nomeServico: 'asc' }],
+      }),
+      this.prisma.contratoPagamentoMensal.findMany({
+        where: { servico: servicoWhere },
+        select: { ano: true },
+        distinct: ['ano'],
+        orderBy: { ano: 'desc' },
+      }),
+    ])
+
+    const anosDisponiveis = anoRows.map((r) => r.ano)
+
+    return { servicos, anosDisponiveis }
+  }
+
+  @Get('resumo')
+  @Header('Cache-Control', 'no-store, no-cache, must-revalidate')
+  @Header('Pragma', 'no-cache')
+  async resumo(
+    @Query('ano') anoRaw?: string,
+    @Query('prestador') prestador?: string,
+    @Query('servico') servico?: string,
+    @Query('status') status?: string,
+  ) {
+    const ano = anoRaw ? Number(anoRaw) : undefined
+
     const servicos = await this.prisma.contratoServico.findMany({
       where: {
         ...(prestador ? { prestador } : {}),
-        ...(servico ? { nomeServico: { contains: servico, mode: 'insensitive' } } : {}),
+        ...(servico ? { nomeServico: { contains: servico, mode: 'insensitive' as const } } : {}),
       },
       include: {
         pagamentos: {
@@ -27,26 +70,6 @@ export class ContratosController {
             ...(Number.isFinite(ano) ? { ano } : {}),
             ...(status ? { status } : {}),
           },
-          orderBy: [{ ano: 'asc' }, { mes: 'asc' }],
-        },
-      },
-      orderBy: [{ prestador: 'asc' }, { nomeServico: 'asc' }],
-    })
-
-    return { servicos }
-  }
-
-  @Get('resumo')
-  @Header('Cache-Control', 'no-store, no-cache, must-revalidate')
-  @Header('Pragma', 'no-cache')
-  async resumo(@Query('ano') anoRaw?: string, @Query('prestador') prestador?: string) {
-    const ano = anoRaw ? Number(anoRaw) : undefined
-
-    const servicos = await this.prisma.contratoServico.findMany({
-      where: { ...(prestador ? { prestador } : {}) },
-      include: {
-        pagamentos: {
-          where: { ...(Number.isFinite(ano) ? { ano } : {}) },
         },
       },
     })
