@@ -108,18 +108,12 @@ function parseYear(v: unknown): number | null {
   return Number.isFinite(n) ? Math.trunc(n) : null
 }
 
-function normalizeContratoStatus(raw: unknown, dataFinal: Date | null): 'PAGO' | 'A_VENCER' | 'VENCIDO' | 'SEM_STATUS' {
+export function normalizeContratoStatus(raw: unknown): 'PAGO' | 'A_VENCER' | 'VENCIDO' | 'SEM_STATUS' {
   const s = normText(raw)
   if (s.includes('pago') || s.includes('paga')) return 'PAGO'
   if (s.includes('vencid')) return 'VENCIDO'
   if (s.includes('vencer') || s.includes('a vencer')) return 'A_VENCER'
-  if (dataFinal) {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    const end = new Date(dataFinal)
-    end.setHours(0, 0, 0, 0)
-    return end < today ? 'VENCIDO' : 'A_VENCER'
-  }
+  if (!s) return 'A_VENCER'
   return 'SEM_STATUS'
 }
 
@@ -192,7 +186,7 @@ function parseSectionsFromSheet(matrix: unknown[][], specs: SectionSpec[]): Pars
         if (dataFinal) current.dataFinal = dataFinal
         if (observacoes) current.observacoes = observacoes
 
-        const status = normalizeContratoStatus(readCell(matrix, r, spec.startCol + 3), dataFinal ?? current.dataFinal)
+        const status = normalizeContratoStatus(readCell(matrix, r, spec.startCol + 3))
         const compKey = `${currentYear}-${mes}`
         if (competenciaSeen.has(compKey)) continue
         competenciaSeen.add(compKey)
