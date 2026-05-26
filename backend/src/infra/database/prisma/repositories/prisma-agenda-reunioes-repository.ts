@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import {
   AgendaReuniaoFilters,
+  AgendaReuniaoUpdateData,
   AgendaReunioesPaginadas,
   AgendaReunioesRepository,
 } from '@/domain/agenda/application/repositories/agenda-reunioes-repository';
@@ -44,6 +45,32 @@ export class PrismaAgendaReunioesRepository implements AgendaReunioesRepository 
     });
 
     return PrismaAgendaReuniaoMapper.toDomain(created);
+  }
+
+  async update(
+    id: string,
+    data: AgendaReuniaoUpdateData,
+  ): Promise<AgendaReuniao | null> {
+    const existing = await this.prisma.agendaReuniao.findUnique({
+      where: { id },
+    });
+
+    if (!existing) return null;
+
+    const updated = await this.prisma.agendaReuniao.update({
+      where: { id },
+      data,
+    });
+
+    return PrismaAgendaReuniaoMapper.toDomain(updated);
+  }
+
+  async delete(id: string): Promise<boolean> {
+    const deleted = await this.prisma.agendaReuniao.deleteMany({
+      where: { id },
+    });
+
+    return deleted.count > 0;
   }
 
   private buildWhere(

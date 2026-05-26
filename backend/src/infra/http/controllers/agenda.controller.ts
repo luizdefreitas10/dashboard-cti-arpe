@@ -2,13 +2,20 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
+  NotFoundException,
+  Param,
+  Patch,
   Post,
   Query,
 } from '@nestjs/common';
 import { z } from 'zod';
 import { CreateAgendaReuniaoUseCase } from '@/domain/agenda/application/use-cases/create-agenda-reuniao';
+import { DeleteAgendaReuniaoUseCase } from '@/domain/agenda/application/use-cases/delete-agenda-reuniao';
 import { ListAgendaReunioesUseCase } from '@/domain/agenda/application/use-cases/list-agenda-reunioes';
+import { UpdateAgendaReuniaoUseCase } from '@/domain/agenda/application/use-cases/update-agenda-reuniao';
 import { ZodValidationPipe } from '../pipes/zod-validation-pipe';
 import { AgendaReuniaoPresenter } from '../presenters/agenda-reuniao-presenter';
 
@@ -26,6 +33,10 @@ const querySchema = z.object({
   ordem: z.enum(['asc', 'desc']).default('desc'),
 });
 
+const paramsSchema = z.object({
+  id: z.string().min(1),
+});
+
 const createSchema = z
   .object({
     tema: z.string().trim().min(1, 'Informe o tema da reunião'),
@@ -41,6 +52,7 @@ const createSchema = z
   });
 
 type QueryParams = z.infer<typeof querySchema>;
+type RouteParams = z.infer<typeof paramsSchema>;
 type CreateBody = z.infer<typeof createSchema>;
 
 @Controller('agenda/reunioes')
@@ -48,6 +60,8 @@ export class AgendaController {
   constructor(
     private listAgendaReunioesUseCase: ListAgendaReunioesUseCase,
     private createAgendaReuniaoUseCase: CreateAgendaReuniaoUseCase,
+    private updateAgendaReuniaoUseCase: UpdateAgendaReuniaoUseCase,
+    private deleteAgendaReuniaoUseCase: DeleteAgendaReuniaoUseCase,
   ) {}
 
   @Get()
@@ -85,5 +99,38 @@ export class AgendaController {
     return {
       reuniao: AgendaReuniaoPresenter.toHTTP(result.value.reuniao),
     };
+  }
+
+  @Patch(':id')
+  async update(
+    @Param(new ZodValidationPipe(paramsSchema)) params: RouteParams,
+    @Body(new ZodValidationPipe(createSchema)) body: CreateBody,
+  ) {
+    const result = await this.updateAgendaReuniaoUseCase.execute({
+      id: params.id,
+      ...body,
+    });
+
+    if (result.isLeft()) {
+      throw new NotFoundException('Reunião não encontrada');
+    }
+
+    return {
+      reuniao: AgendaReuniaoPresenter.toHTTP(result.value.reuniao),
+    };
+  }
+
+  @Delete(':id')
+  @HttpCode(204)
+  async delete(
+    @Param(new ZodValidationPipe(paramsSchema)) params: RouteParams,
+  ) {
+    const result = await this.deleteAgendaReuniaoUseCase.execute({
+      id: params.id,
+    });
+
+    if (result.isLeft()) {
+      throw new NotFoundException('Reunião não encontrada');
+    }
   }
 }

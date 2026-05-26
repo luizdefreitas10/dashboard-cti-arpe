@@ -41,6 +41,8 @@ export interface CreateAgendaReuniaoInput {
   descricaoPauta?: string
 }
 
+export type UpdateAgendaReuniaoInput = CreateAgendaReuniaoInput
+
 export default function AgendaService() {
   async function findMany(
     filters: AgendaReuniaoFilters = {},
@@ -66,5 +68,22 @@ export default function AgendaService() {
     }
   }
 
-  return { findMany, create }
+  async function update(id: string, input: UpdateAgendaReuniaoInput): Promise<AgendaReuniao> {
+    try {
+      const { data } = await api.patch<{ reuniao: AgendaReuniao }>(`/agenda/reunioes/${id}`, input)
+      return data.reuniao
+    } catch (error) {
+      throw handleAxiosError(error)
+    }
+  }
+
+  async function remove(id: string): Promise<void> {
+    try {
+      await api.delete(`/agenda/reunioes/${id}`)
+    } catch (error) {
+      throw handleAxiosError(error)
+    }
+  }
+
+  return { findMany, create, update, remove }
 }

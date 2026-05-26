@@ -12,13 +12,21 @@ import {
   Filter,
   Loader2,
   MapPin,
+  Pencil,
   Plus,
+  Save,
   Search,
+  Trash2,
   X,
 } from 'lucide-react'
 import { EmptyState } from '@/components/dashboard/empty-state'
 import { cn, formatNumber } from '@/lib/utils'
-import AgendaService, { AgendaReuniao, AgendaReuniaoFilters, CreateAgendaReuniaoInput } from '@/services/models/agenda'
+import AgendaService, {
+  AgendaReuniao,
+  AgendaReuniaoFilters,
+  CreateAgendaReuniaoInput,
+  UpdateAgendaReuniaoInput,
+} from '@/services/models/agenda'
 
 const DEFAULT_PAGE_SIZE = 10
 const SEARCH_DEBOUNCE_MS = 350
@@ -155,15 +163,67 @@ function MeetingDetailsDialog({
   open,
   onOpenChange,
   today,
+  busy,
+  onSave,
+  onDelete,
 }: {
   reuniao: AgendaReuniao | null
   open: boolean
   onOpenChange: (open: boolean) => void
   today: string
+  busy: boolean
+  onSave: (id: string, input: UpdateAgendaReuniaoInput) => Promise<void>
+  onDelete: (id: string) => Promise<void>
 }) {
+  const [editing, setEditing] = useState(false)
+  const [form, setForm] = useState<UpdateAgendaReuniaoInput>(() => ({
+    tema: reuniao?.tema ?? '',
+    data: reuniao ? dateKey(reuniao.data) : '',
+    horaInicio: reuniao?.horaInicio ?? '',
+    horaFim: reuniao?.horaFim ?? '',
+    local: reuniao?.local ?? '',
+    descricaoPauta: reuniao?.descricaoPauta ?? '',
+  }))
+
   if (!reuniao) return null
 
   const highlighted = isTodayMeeting(reuniao, today)
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!reuniao) return
+
+    const input = {
+      tema: form.tema.trim(),
+      data: form.data,
+      horaInicio: form.horaInicio,
+      horaFim: form.horaFim,
+      local: form.local.trim(),
+      descricaoPauta: form.descricaoPauta?.trim() || undefined,
+    }
+
+    if (!input.tema || !input.data || !input.horaInicio || !input.horaFim || !input.local) {
+      toast.error('Preencha todos os dados obrigatórios da reunião.')
+      return
+    }
+
+    if (input.horaFim <= input.horaInicio) {
+      toast.error('A hora de fim deve ser maior que a hora de início.')
+      return
+    }
+
+    await onSave(reuniao.id, input)
+    setForm(input)
+    setEditing(false)
+  }
+
+  async function handleDelete() {
+    if (!reuniao) return
+    const confirmed = window.confirm('Tem certeza que deseja excluir esta reunião? Esta ação não pode ser desfeita.')
+    if (!confirmed) return
+
+    await onDelete(reuniao.id)
+  }
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -189,50 +249,177 @@ function MeetingDetailsDialog({
                 {reuniao.tema}
               </Dialog.Title>
             </div>
-            <Dialog.Close asChild>
-              <button
-                type="button"
-                className="shrink-0 rounded-[var(--radius-md)] p-2 text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text)] cursor-pointer"
-                aria-label="Fechar detalhes da reunião"
-              >
-                <X size={18} />
-              </button>
-            </Dialog.Close>
+            <div className="flex shrink-0 items-center gap-1">
+              {!editing && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setEditing(true)}
+                    disabled={busy}
+                    className="rounded-[var(--radius-md)] p-2 text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text)] disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
+                    aria-label="Editar reunião"
+                  >
+                    <Pencil size={18} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDelete}
+                    disabled={busy}
+                    className="rounded-[var(--radius-md)] p-2 text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-alta)] disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
+                    aria-label="Excluir reunião"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </>
+              )}
+              <Dialog.Close asChild>
+                <button
+                  type="button"
+                  className="rounded-[var(--radius-md)] p-2 text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text)] cursor-pointer"
+                  aria-label="Fechar detalhes da reunião"
+                >
+                  <X size={18} />
+                </button>
+              </Dialog.Close>
+            </div>
           </div>
 
           <div id="agenda-reuniao-description" className="flex-1 overflow-y-auto px-5 py-4">
-            <div className="grid gap-3 sm:grid-cols-3">
-              <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-hover)]/35 p-3">
-                <p className="text-xs uppercase tracking-wide text-[var(--color-text-subtle)]">Data</p>
-                <p className="mt-1 text-sm font-semibold text-[var(--color-text)]">{formatAgendaDate(reuniao.data)}</p>
-              </div>
-              <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-hover)]/35 p-3">
-                <p className="text-xs uppercase tracking-wide text-[var(--color-text-subtle)]">Horário</p>
-                <p className="mt-1 text-sm font-semibold text-[var(--color-text)] tabular-nums">
-                  {reuniao.horaInicio} às {reuniao.horaFim}
-                </p>
-              </div>
-              <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-hover)]/35 p-3">
-                <p className="text-xs uppercase tracking-wide text-[var(--color-text-subtle)]">Local</p>
-                <p className="mt-1 text-sm font-semibold text-[var(--color-text)]">{reuniao.local}</p>
-              </div>
-            </div>
+            {editing ? (
+              <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label htmlFor="edit-tema" className="text-sm font-medium text-[var(--color-text)]">Tema da reunião</label>
+                  <input
+                    id="edit-tema"
+                    type="text"
+                    value={form.tema}
+                    onChange={(event) => setForm((current) => ({ ...current, tema: event.target.value }))}
+                    className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-input)] px-3 py-2 text-sm text-[var(--color-text)] focus:border-[var(--color-primary)] focus:outline-none"
+                  />
+                </div>
 
-            <div className="mt-4 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-hover)]/35 p-4">
-              <div className="mb-2 flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-[var(--color-text-subtle)]">
-                <FileText size={14} aria-hidden />
-                <span>Descrição/Pauta</span>
-              </div>
-              {reuniao.descricaoPauta ? (
-                <p className="whitespace-pre-line text-sm leading-relaxed text-[var(--color-text-muted)]">
-                  {reuniao.descricaoPauta}
-                </p>
-              ) : (
-                <p className="text-sm text-[var(--color-text-muted)]">
-                  Nenhuma descrição ou pauta foi registrada para esta reunião.
-                </p>
-              )}
-            </div>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="flex flex-col gap-1.5">
+                    <label htmlFor="edit-data" className="text-sm font-medium text-[var(--color-text)]">Data</label>
+                    <input
+                      id="edit-data"
+                      type="date"
+                      value={form.data}
+                      onChange={(event) => setForm((current) => ({ ...current, data: event.target.value }))}
+                      className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-input)] px-3 py-2 text-sm text-[var(--color-text)] focus:border-[var(--color-primary)] focus:outline-none"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label htmlFor="edit-horaInicio" className="text-sm font-medium text-[var(--color-text)]">Início</label>
+                    <input
+                      id="edit-horaInicio"
+                      type="time"
+                      value={form.horaInicio}
+                      onChange={(event) => setForm((current) => ({ ...current, horaInicio: event.target.value }))}
+                      className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-input)] px-3 py-2 text-sm text-[var(--color-text)] focus:border-[var(--color-primary)] focus:outline-none"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label htmlFor="edit-horaFim" className="text-sm font-medium text-[var(--color-text)]">Fim</label>
+                    <input
+                      id="edit-horaFim"
+                      type="time"
+                      value={form.horaFim}
+                      onChange={(event) => setForm((current) => ({ ...current, horaFim: event.target.value }))}
+                      className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-input)] px-3 py-2 text-sm text-[var(--color-text)] focus:border-[var(--color-primary)] focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label htmlFor="edit-local" className="text-sm font-medium text-[var(--color-text)]">Local</label>
+                  <input
+                    id="edit-local"
+                    type="text"
+                    value={form.local}
+                    onChange={(event) => setForm((current) => ({ ...current, local: event.target.value }))}
+                    className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-input)] px-3 py-2 text-sm text-[var(--color-text)] focus:border-[var(--color-primary)] focus:outline-none"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label htmlFor="edit-descricaoPauta" className="text-sm font-medium text-[var(--color-text)]">
+                    Descrição/Pauta <span className="text-[var(--color-text-subtle)]">(opcional)</span>
+                  </label>
+                  <textarea
+                    id="edit-descricaoPauta"
+                    value={form.descricaoPauta ?? ''}
+                    onChange={(event) => setForm((current) => ({ ...current, descricaoPauta: event.target.value }))}
+                    rows={5}
+                    className="w-full resize-y rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-input)] px-3 py-2 text-sm text-[var(--color-text)] focus:border-[var(--color-primary)] focus:outline-none"
+                  />
+                </div>
+
+                <div className="flex flex-col-reverse gap-2 border-t border-[var(--color-border)] pt-4 sm:flex-row sm:justify-end">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditing(false)
+                      setForm({
+                        tema: reuniao.tema,
+                        data: dateKey(reuniao.data),
+                        horaInicio: reuniao.horaInicio,
+                        horaFim: reuniao.horaFim,
+                        local: reuniao.local,
+                        descricaoPauta: reuniao.descricaoPauta ?? '',
+                      })
+                    }}
+                    disabled={busy}
+                    className="rounded-[var(--radius-md)] border border-[var(--color-border)] px-4 py-2 text-sm font-medium text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text)] disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={busy}
+                    className="inline-flex items-center justify-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[var(--color-primary-hover)] disabled:cursor-not-allowed disabled:opacity-70 cursor-pointer"
+                  >
+                    {busy ? <Loader2 size={16} className="animate-spin" aria-hidden /> : <Save size={16} aria-hidden />}
+                    {busy ? 'Salvando...' : 'Salvar alterações'}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-hover)]/35 p-3">
+                    <p className="text-xs uppercase tracking-wide text-[var(--color-text-subtle)]">Data</p>
+                    <p className="mt-1 text-sm font-semibold text-[var(--color-text)]">{formatAgendaDate(reuniao.data)}</p>
+                  </div>
+                  <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-hover)]/35 p-3">
+                    <p className="text-xs uppercase tracking-wide text-[var(--color-text-subtle)]">Horário</p>
+                    <p className="mt-1 text-sm font-semibold text-[var(--color-text)] tabular-nums">
+                      {reuniao.horaInicio} às {reuniao.horaFim}
+                    </p>
+                  </div>
+                  <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-hover)]/35 p-3">
+                    <p className="text-xs uppercase tracking-wide text-[var(--color-text-subtle)]">Local</p>
+                    <p className="mt-1 text-sm font-semibold text-[var(--color-text)]">{reuniao.local}</p>
+                  </div>
+                </div>
+
+                <div className="mt-4 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-hover)]/35 p-4">
+                  <div className="mb-2 flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-[var(--color-text-subtle)]">
+                    <FileText size={14} aria-hidden />
+                    <span>Descrição/Pauta</span>
+                  </div>
+                  {reuniao.descricaoPauta ? (
+                    <p className="whitespace-pre-line text-sm leading-relaxed text-[var(--color-text-muted)]">
+                      {reuniao.descricaoPauta}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-[var(--color-text-muted)]">
+                      Nenhuma descrição ou pauta foi registrada para esta reunião.
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </Dialog.Content>
       </Dialog.Portal>
@@ -273,6 +460,7 @@ export default function AgendaPage() {
   const [loading, setLoading] = useState(true)
   const [listLoading, setListLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [dialogBusy, setDialogBusy] = useState(false)
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [localFilter, setLocalFilter] = useState('')
@@ -379,6 +567,34 @@ export default function AgendaPage() {
       toast.error(extractErrorMessage(error))
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  async function handleUpdateMeeting(id: string, input: UpdateAgendaReuniaoInput) {
+    setDialogBusy(true)
+    try {
+      const updated = await service.update(id, input)
+      setSelectedMeeting(updated)
+      toast.success('Reunião atualizada com sucesso.')
+      await fetchAgenda()
+    } catch (error) {
+      toast.error(extractErrorMessage(error))
+    } finally {
+      setDialogBusy(false)
+    }
+  }
+
+  async function handleDeleteMeeting(id: string) {
+    setDialogBusy(true)
+    try {
+      await service.remove(id)
+      setSelectedMeeting(null)
+      toast.success('Reunião excluída com sucesso.')
+      await fetchAgenda()
+    } catch (error) {
+      toast.error(extractErrorMessage(error))
+    } finally {
+      setDialogBusy(false)
     }
   }
 
@@ -729,12 +945,16 @@ export default function AgendaPage() {
       </section>
 
       <MeetingDetailsDialog
+        key={selectedMeeting?.id ?? 'empty'}
         reuniao={selectedMeeting}
         open={detailsOpen}
         onOpenChange={(open) => {
           if (!open) setSelectedMeeting(null)
         }}
         today={today}
+        busy={dialogBusy}
+        onSave={handleUpdateMeeting}
+        onDelete={handleDeleteMeeting}
       />
     </div>
   )
