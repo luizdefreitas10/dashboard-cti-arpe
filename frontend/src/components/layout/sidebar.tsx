@@ -13,6 +13,7 @@ import {
   ChevronDown,
   X,
   FileText,
+  CalendarDays,
 } from 'lucide-react'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
@@ -50,6 +51,11 @@ const navItems: NavItem[] = [
     label: 'Contratos',
     href: '/contratos',
     icon: <FileText size={16} />,
+  },
+  {
+    label: 'Agenda',
+    href: '/agenda',
+    icon: <CalendarDays size={16} />,
   },
   {
     label: 'Power BI',

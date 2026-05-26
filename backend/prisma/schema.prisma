@@ -26,6 +26,22 @@ model Atividade {
   @@map("atividades")
 }
 
+model AgendaReuniao {
+  id         String   @id @default(cuid())
+  tema       String
+  data       DateTime @db.Date
+  horaInicio String
+  horaFim    String
+  local      String
+  descricaoPauta String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([data, horaInicio])
+  @@index([createdAt(sort: Desc)])
+  @@map("agenda_reunioes")
+}
+
 model Bem {
   id                  String  @id @default(cuid())
   tombamento          String  @unique
