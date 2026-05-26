@@ -42,6 +42,10 @@ const TITLES: Record<string, { title: string; subtitle: string }> = {
     title: 'Importar Dados',
     subtitle: 'Atualizar dados a partir de planilhas',
   },
+  '/agenda': {
+    title: 'Agenda',
+    subtitle: 'Registro e histórico de reuniões da CTI',
+  },
   '/power-bi': {
     title: 'Power BI',
     subtitle: 'Dashboards externos da CTI',

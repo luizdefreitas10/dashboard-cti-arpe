@@ -20,6 +20,7 @@ function trailForPath(pathname: string): Crumb[] {
     '/tabelas/celulares': [home, { label: 'Tabelas', href: '/tabelas/atividades' }, { label: 'Celulares' }],
     '/importar': [home, { label: 'Importar' }],
     '/contratos': [home, { label: 'Contratos' }],
+    '/agenda': [home, { label: 'Agenda' }],
     '/power-bi': [home, { label: 'Power BI' }],
     '/solucoes-digitais': [home, { label: 'Soluções digitais' }],
   }
