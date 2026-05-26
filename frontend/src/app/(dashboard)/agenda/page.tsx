@@ -105,14 +105,14 @@ function MeetingCard({
       type="button"
       onClick={() => onSelect(reuniao)}
       className={cn(
-        'w-full rounded-[var(--radius-lg)] border bg-[var(--color-bg-card)] p-4 text-left transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)]',
+        'w-full min-w-0 overflow-hidden rounded-[var(--radius-lg)] border bg-[var(--color-bg-card)] p-3 text-left transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)] sm:p-4',
         highlighted
           ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/10'
           : 'border-[var(--color-border)] hover:border-[var(--color-border-strong)]',
       )}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
+      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             {highlighted && (
               <span className="rounded-full border border-[var(--color-primary)]/40 bg-[var(--color-primary)]/15 px-2 py-0.5 text-[11px] font-semibold text-[var(--color-primary)]">
@@ -123,33 +123,33 @@ function MeetingCard({
               {formatAgendaWeekday(reuniao.data)}
             </p>
           </div>
-          <h3 className="mt-1 truncate text-base font-semibold text-[var(--color-text)]" title={reuniao.tema}>
+          <h3 className="mt-1 text-base font-semibold text-[var(--color-text)] wrap-anywhere" title={reuniao.tema}>
             {reuniao.tema}
           </h3>
         </div>
-        <div className="shrink-0 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-hover)] px-2.5 py-1.5 text-right">
+        <div className="w-fit max-w-full shrink-0 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-hover)] px-2.5 py-1.5 text-left sm:text-right">
           <p className="text-xs font-semibold text-[var(--color-text)] tabular-nums">{formatAgendaDate(reuniao.data)}</p>
         </div>
       </div>
 
       <div className="mt-4 grid gap-2 text-sm text-[var(--color-text-muted)] sm:grid-cols-2">
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 items-center gap-2">
           <Clock3 size={15} className="shrink-0 text-[var(--color-text-subtle)]" aria-hidden />
-          <span className="tabular-nums">{reuniao.horaInicio} às {reuniao.horaFim}</span>
+          <span className="min-w-0 tabular-nums">{reuniao.horaInicio} às {reuniao.horaFim}</span>
         </div>
         <div className="flex min-w-0 items-center gap-2">
           <MapPin size={15} className="shrink-0 text-[var(--color-text-subtle)]" aria-hidden />
-          <span className="truncate" title={reuniao.local}>{reuniao.local}</span>
+          <span className="min-w-0 wrap-anywhere" title={reuniao.local}>{reuniao.local}</span>
         </div>
       </div>
 
       {reuniao.descricaoPauta && (
-        <div className="mt-4 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-hover)]/35 p-3">
-          <div className="mb-1 flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-[var(--color-text-subtle)]">
+        <div className="mt-4 min-w-0 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-hover)]/35 p-3">
+          <div className="mb-1 flex min-w-0 items-center gap-2 text-xs font-medium uppercase tracking-wide text-[var(--color-text-subtle)]">
             <FileText size={14} aria-hidden />
             <span>Descrição/Pauta</span>
           </div>
-          <p className="line-clamp-3 whitespace-pre-line text-sm leading-relaxed text-[var(--color-text-muted)]">
+          <p className="line-clamp-3 whitespace-pre-line text-sm leading-relaxed text-[var(--color-text-muted)] wrap-anywhere">
             {reuniao.descricaoPauta}
           </p>
         </div>
@@ -230,11 +230,11 @@ function MeetingDetailsDialog({
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
         <Dialog.Content
-          className="fixed left-1/2 top-1/2 z-50 flex max-h-[85vh] w-[min(92vw,560px)] -translate-x-1/2 -translate-y-1/2 flex-col rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-card)] shadow-lg focus:outline-none"
+          className="fixed inset-x-2 bottom-3 top-3 z-50 flex min-w-0 flex-col overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-card)] shadow-lg focus:outline-none sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:max-h-[85vh] sm:w-[min(92vw,560px)] sm:-translate-x-1/2 sm:-translate-y-1/2"
           aria-describedby="agenda-reuniao-description"
         >
-          <div className="flex items-start justify-between gap-4 border-b border-[var(--color-border)] px-5 py-4">
-            <div className="min-w-0">
+          <div className="flex min-w-0 flex-col gap-3 border-b border-[var(--color-border)] px-4 py-4 sm:flex-row sm:items-start sm:justify-between sm:px-5">
+            <div className="min-w-0 flex-1">
               <div className="mb-2 flex flex-wrap items-center gap-2">
                 {highlighted && (
                   <span className="rounded-full border border-[var(--color-primary)]/40 bg-[var(--color-primary)]/15 px-2 py-0.5 text-[11px] font-semibold text-[var(--color-primary)]">
@@ -245,11 +245,11 @@ function MeetingDetailsDialog({
                   {formatAgendaWeekday(reuniao.data)}
                 </span>
               </div>
-              <Dialog.Title className="text-lg font-semibold text-[var(--color-text)]">
+              <Dialog.Title className="text-lg font-semibold text-[var(--color-text)] wrap-anywhere">
                 {reuniao.tema}
               </Dialog.Title>
             </div>
-            <div className="flex shrink-0 items-center gap-1">
+            <div className="flex shrink-0 items-center justify-end gap-1">
               {!editing && (
                 <>
                   <button
@@ -284,9 +284,9 @@ function MeetingDetailsDialog({
             </div>
           </div>
 
-          <div id="agenda-reuniao-description" className="flex-1 overflow-y-auto px-5 py-4">
+          <div id="agenda-reuniao-description" className="min-w-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5">
             {editing ? (
-              <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+              <form onSubmit={handleSubmit} className="flex min-w-0 flex-col gap-4">
                 <div className="flex flex-col gap-1.5">
                   <label htmlFor="edit-tema" className="text-sm font-medium text-[var(--color-text)]">Tema da reunião</label>
                   <input
@@ -298,7 +298,7 @@ function MeetingDetailsDialog({
                   />
                 </div>
 
-                <div className="grid gap-3 sm:grid-cols-3">
+                <div className="grid min-w-0 gap-3 sm:grid-cols-3">
                   <div className="flex flex-col gap-1.5">
                     <label htmlFor="edit-data" className="text-sm font-medium text-[var(--color-text)]">Data</label>
                     <input
@@ -355,7 +355,7 @@ function MeetingDetailsDialog({
                   />
                 </div>
 
-                <div className="flex flex-col-reverse gap-2 border-t border-[var(--color-border)] pt-4 sm:flex-row sm:justify-end">
+                <div className="flex min-w-0 flex-col-reverse gap-2 border-t border-[var(--color-border)] pt-4 sm:flex-row sm:justify-end">
                   <button
                     type="button"
                     onClick={() => {
@@ -370,14 +370,14 @@ function MeetingDetailsDialog({
                       })
                     }}
                     disabled={busy}
-                    className="rounded-[var(--radius-md)] border border-[var(--color-border)] px-4 py-2 text-sm font-medium text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text)] disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
+                    className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] px-4 py-2 text-sm font-medium text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text)] disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer sm:w-auto"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
                     disabled={busy}
-                    className="inline-flex items-center justify-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[var(--color-primary-hover)] disabled:cursor-not-allowed disabled:opacity-70 cursor-pointer"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[var(--color-primary-hover)] disabled:cursor-not-allowed disabled:opacity-70 cursor-pointer sm:w-auto"
                   >
                     {busy ? <Loader2 size={16} className="animate-spin" aria-hidden /> : <Save size={16} aria-hidden />}
                     {busy ? 'Salvando...' : 'Salvar alterações'}
@@ -386,30 +386,30 @@ function MeetingDetailsDialog({
               </form>
             ) : (
               <>
-                <div className="grid gap-3 sm:grid-cols-3">
-                  <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-hover)]/35 p-3">
+                <div className="grid min-w-0 gap-3 sm:grid-cols-3">
+                  <div className="min-w-0 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-hover)]/35 p-3">
                     <p className="text-xs uppercase tracking-wide text-[var(--color-text-subtle)]">Data</p>
                     <p className="mt-1 text-sm font-semibold text-[var(--color-text)]">{formatAgendaDate(reuniao.data)}</p>
                   </div>
-                  <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-hover)]/35 p-3">
+                  <div className="min-w-0 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-hover)]/35 p-3">
                     <p className="text-xs uppercase tracking-wide text-[var(--color-text-subtle)]">Horário</p>
                     <p className="mt-1 text-sm font-semibold text-[var(--color-text)] tabular-nums">
                       {reuniao.horaInicio} às {reuniao.horaFim}
                     </p>
                   </div>
-                  <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-hover)]/35 p-3">
+                  <div className="min-w-0 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-hover)]/35 p-3">
                     <p className="text-xs uppercase tracking-wide text-[var(--color-text-subtle)]">Local</p>
-                    <p className="mt-1 text-sm font-semibold text-[var(--color-text)]">{reuniao.local}</p>
+                    <p className="mt-1 text-sm font-semibold text-[var(--color-text)] wrap-anywhere">{reuniao.local}</p>
                   </div>
                 </div>
 
-                <div className="mt-4 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-hover)]/35 p-4">
+                <div className="mt-4 min-w-0 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-hover)]/35 p-4">
                   <div className="mb-2 flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-[var(--color-text-subtle)]">
                     <FileText size={14} aria-hidden />
                     <span>Descrição/Pauta</span>
                   </div>
                   {reuniao.descricaoPauta ? (
-                    <p className="whitespace-pre-line text-sm leading-relaxed text-[var(--color-text-muted)]">
+                    <p className="whitespace-pre-line text-sm leading-relaxed text-[var(--color-text-muted)] wrap-anywhere">
                       {reuniao.descricaoPauta}
                     </p>
                   ) : (
@@ -603,43 +603,43 @@ export default function AgendaPage() {
   const detailsOpen = Boolean(selectedMeeting)
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex min-w-0 max-w-full flex-col gap-4 overflow-x-hidden sm:gap-5">
       <section
         aria-live="polite"
         className={cn(
-          'rounded-[var(--radius-xl)] border p-5',
+          'min-w-0 max-w-full overflow-hidden rounded-[var(--radius-xl)] border p-4 sm:p-5',
           reunioesHoje.length
             ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/10'
             : 'border-[var(--color-border)] bg-[var(--color-bg-card)]',
         )}
       >
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div>
+        <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="min-w-0">
             <div className="flex items-center gap-2 text-sm font-medium text-[var(--color-text-muted)]">
               <CalendarDays size={18} className="text-[var(--color-primary)]" aria-hidden />
               <span>Reuniões de hoje</span>
             </div>
-            <h2 className="mt-2 text-2xl font-semibold text-[var(--color-text)]">
+            <h2 className="mt-2 text-xl font-semibold text-[var(--color-text)] wrap-anywhere sm:text-2xl">
               {loading ? 'Carregando agenda...' : todayMeetingsHeading(reunioesHoje.length)}
             </h2>
-            <p className="mt-1 max-w-2xl text-sm text-[var(--color-text-muted)]">
+            <p className="mt-1 max-w-2xl text-sm text-[var(--color-text-muted)] wrap-anywhere">
               {reunioesHoje.length
                 ? 'Os cards abaixo ficam destacados para que o usuário identifique rapidamente os compromissos do dia.'
                 : 'Quando houver reuniões na data atual, elas aparecerão aqui com destaque visual.'}
             </p>
           </div>
-          <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-4 py-3">
+          <div className="w-fit max-w-full rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-4 py-3">
             <p className="text-xs uppercase tracking-wide text-[var(--color-text-subtle)]">Hoje</p>
             <p className="mt-1 text-lg font-semibold text-[var(--color-text)] tabular-nums">{formatAgendaDate(today)}</p>
           </div>
         </div>
 
         {loading ? (
-          <div className="mt-5 grid gap-3 lg:grid-cols-3">
+          <div className="mt-5 grid min-w-0 gap-3 lg:grid-cols-3">
             {Array.from({ length: 3 }).map((_, index) => <MeetingCardSkeleton key={index} />)}
           </div>
         ) : visibleTodayMeetings.length ? (
-          <div className="mt-5 grid gap-3 lg:grid-cols-3">
+          <div className="mt-5 grid min-w-0 gap-3 lg:grid-cols-3">
             {visibleTodayMeetings.map((reuniao) => (
               <MeetingCard key={reuniao.id} reuniao={reuniao} today={today} onSelect={setSelectedMeeting} />
             ))}
@@ -647,52 +647,52 @@ export default function AgendaPage() {
         ) : null}
       </section>
 
-      <section className="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-5">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div>
+      <section className="min-w-0 max-w-full overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 sm:p-5">
+        <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
             <div className="flex items-center gap-2 text-sm font-medium text-[var(--color-text-muted)]">
               <CalendarDays size={18} className="text-[var(--color-primary)]" aria-hidden />
               <span>Próximas reuniões</span>
             </div>
-            <h2 className="mt-2 text-xl font-semibold text-[var(--color-text)]">
+            <h2 className="mt-2 text-xl font-semibold text-[var(--color-text)] wrap-anywhere">
               {loading ? 'Carregando próximas reuniões...' : upcomingMeetingsHeading(proximasReunioes.length)}
             </h2>
-            <p className="mt-1 max-w-2xl text-sm text-[var(--color-text-muted)]">
+            <p className="mt-1 max-w-2xl text-sm text-[var(--color-text-muted)] wrap-anywhere">
               Acompanhe os próximos compromissos já registrados, em ordem cronológica.
             </p>
           </div>
-          <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-hover)]/35 px-4 py-3">
+          <div className="w-fit max-w-full rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-hover)]/35 px-4 py-3">
             <p className="text-xs uppercase tracking-wide text-[var(--color-text-subtle)]">A partir de</p>
             <p className="mt-1 text-lg font-semibold text-[var(--color-text)] tabular-nums">{formatAgendaDate(tomorrow)}</p>
           </div>
         </div>
 
         {loading ? (
-          <div className="mt-5 grid gap-3 lg:grid-cols-3">
+          <div className="mt-5 grid min-w-0 gap-3 lg:grid-cols-3">
             {Array.from({ length: 3 }).map((_, index) => <MeetingCardSkeleton key={index} />)}
           </div>
         ) : proximasReunioes.length ? (
-          <div className="mt-5 grid gap-3 lg:grid-cols-3">
+          <div className="mt-5 grid min-w-0 gap-3 lg:grid-cols-3">
             {proximasReunioes.map((reuniao) => (
               <MeetingCard key={reuniao.id} reuniao={reuniao} today={today} onSelect={setSelectedMeeting} />
             ))}
           </div>
         ) : (
-          <div className="mt-5 rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)] bg-[var(--color-bg-hover)]/25 p-5 text-sm text-[var(--color-text-muted)]">
+          <div className="mt-5 min-w-0 rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)] bg-[var(--color-bg-hover)]/25 p-4 text-sm text-[var(--color-text-muted)] wrap-anywhere sm:p-5">
             Cadastre uma reunião com data futura para que ela apareça neste quadro.
           </div>
         )}
       </section>
 
-      <section className="grid gap-5 xl:grid-cols-[minmax(320px,420px)_1fr]">
+      <section className="grid min-w-0 gap-4 sm:gap-5 xl:grid-cols-[minmax(0,420px)_minmax(0,1fr)]">
         <form
           onSubmit={handleSubmit}
-          className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-5"
+          className="min-w-0 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 sm:p-5"
         >
           <div>
             <p className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-subtle)]">Registro rápido</p>
             <h2 className="mt-1 text-lg font-semibold text-[var(--color-text)]">Nova reunião</h2>
-            <p className="mt-1 text-sm text-[var(--color-text-muted)]">
+            <p className="mt-1 text-sm text-[var(--color-text-muted)] wrap-anywhere">
               Informe tema, data, horário, local e a pauta quando quiser documentar os assuntos tratados.
             </p>
           </div>
@@ -710,7 +710,7 @@ export default function AgendaPage() {
               />
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-3 xl:grid-cols-1 2xl:grid-cols-3">
+            <div className="grid min-w-0 gap-4 sm:grid-cols-3 xl:grid-cols-1 2xl:grid-cols-3">
               <div className="flex flex-col gap-1.5">
                 <label htmlFor="data" className="text-sm font-medium text-[var(--color-text)]">Data</label>
                 <input
@@ -782,25 +782,25 @@ export default function AgendaPage() {
           </div>
         </form>
 
-        <section className="min-w-0 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-5">
-          <div className="flex flex-col gap-4">
+        <section className="min-w-0 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 sm:p-5">
+          <div className="flex min-w-0 flex-col gap-4">
             <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-              <div>
+              <div className="min-w-0">
                 <p className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-subtle)]">Histórico</p>
                 <h2 className="mt-1 text-lg font-semibold text-[var(--color-text)]">Todas as reuniões</h2>
               </div>
               <p className="text-sm text-[var(--color-text-muted)]">{formatNumber(total)} registro{total === 1 ? '' : 's'}</p>
             </div>
 
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-              <div className="relative min-w-[220px] flex-1">
+            <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-center">
+              <div className="relative min-w-0 flex-1">
                 <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-subtle)]" aria-hidden />
                 <input
                   type="text"
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
                   placeholder="Buscar por tema, local ou pauta..."
-                  className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-input)] py-2 pl-9 pr-3 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus:border-[var(--color-primary)] focus:outline-none"
+                  className="w-full min-w-0 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-input)] py-2 pl-9 pr-3 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus:border-[var(--color-primary)] focus:outline-none"
                 />
               </div>
 
@@ -808,7 +808,7 @@ export default function AgendaPage() {
                 type="button"
                 onClick={() => setShowFilters((current) => !current)}
                 className={cn(
-                  'inline-flex items-center justify-center gap-2 rounded-[var(--radius-md)] border px-3 py-2 text-sm transition-colors cursor-pointer',
+                  'inline-flex w-full items-center justify-center gap-2 rounded-[var(--radius-md)] border px-3 py-2 text-sm transition-colors cursor-pointer lg:w-auto',
                   showFilters
                     ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/10 text-[var(--color-primary)]'
                     : 'border-[var(--color-border)] bg-[var(--color-bg-card)] text-[var(--color-text-muted)] hover:text-[var(--color-text)]',
@@ -822,7 +822,7 @@ export default function AgendaPage() {
                 <button
                   type="button"
                   onClick={clearFilters}
-                  className="inline-flex items-center justify-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-3 py-2 text-sm text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-alta)] cursor-pointer"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-3 py-2 text-sm text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-alta)] cursor-pointer lg:w-auto"
                 >
                   <X size={15} aria-hidden />
                   Limpar
@@ -831,7 +831,7 @@ export default function AgendaPage() {
             </div>
 
             {showFilters && (
-              <div className="grid gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-hover)]/35 p-4 md:grid-cols-3">
+              <div className="grid min-w-0 gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-hover)]/35 p-4 md:grid-cols-3">
                 <div className="flex flex-col gap-1.5">
                   <label htmlFor="localFilter" className="text-xs font-medium text-[var(--color-text-subtle)]">Local</label>
                   <input
@@ -877,11 +877,11 @@ export default function AgendaPage() {
 
             <div className="relative">
               {loading ? (
-                <div className="grid gap-3">
+                <div className="grid min-w-0 gap-3">
                   {Array.from({ length: 5 }).map((_, index) => <MeetingCardSkeleton key={index} />)}
                 </div>
               ) : reunioes.length ? (
-                <div className="grid gap-3">
+                <div className="grid min-w-0 gap-3">
                   {reunioes.map((reuniao) => (
                     <MeetingCard key={reuniao.id} reuniao={reuniao} today={today} onSelect={setSelectedMeeting} />
                   ))}
@@ -901,8 +901,8 @@ export default function AgendaPage() {
               )}
             </div>
 
-            <div className="flex flex-col gap-3 border-t border-[var(--color-border)] pt-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-2 text-sm text-[var(--color-text-muted)]">
+            <div className="flex min-w-0 flex-col gap-3 border-t border-[var(--color-border)] pt-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex min-w-0 flex-wrap items-center gap-2 text-sm text-[var(--color-text-muted)]">
                 <span>Por página:</span>
                 <select
                   value={size}
@@ -916,7 +916,7 @@ export default function AgendaPage() {
                 </select>
               </div>
 
-              <div className="flex items-center justify-between gap-3 text-sm text-[var(--color-text-muted)] sm:justify-end">
+              <div className="flex min-w-0 flex-wrap items-center justify-between gap-3 text-sm text-[var(--color-text-muted)] sm:justify-end">
                 <span>Página {page} de {totalPages}</span>
                 <div className="flex gap-1">
                   <button
