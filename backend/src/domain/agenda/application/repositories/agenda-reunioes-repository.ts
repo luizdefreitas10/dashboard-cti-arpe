@@ -15,9 +15,23 @@ export interface AgendaReunioesPaginadas {
   total: number;
 }
 
+export interface AgendaReuniaoUpdateData {
+  tema: string;
+  data: Date;
+  horaInicio: string;
+  horaFim: string;
+  local: string;
+  descricaoPauta?: string | null;
+}
+
 export abstract class AgendaReunioesRepository {
   abstract findMany(
     filters: AgendaReuniaoFilters,
   ): Promise<AgendaReunioesPaginadas>;
   abstract create(reuniao: AgendaReuniao): Promise<AgendaReuniao>;
+  abstract update(
+    id: string,
+    data: AgendaReuniaoUpdateData,
+  ): Promise<AgendaReuniao | null>;
+  abstract delete(id: string): Promise<boolean>;
 }
