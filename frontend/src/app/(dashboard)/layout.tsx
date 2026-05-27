@@ -3,6 +3,7 @@
 import { Sidebar } from '@/components/layout/sidebar'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
+import { PwaInstallPrompt } from '@/components/layout/pwa-install-prompt'
 import { Toaster } from 'react-hot-toast'
 import { useEffect, useState } from 'react'
 
@@ -47,6 +48,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           },
         }}
       />
+      <PwaInstallPrompt />
     </div>
   )
 }
