@@ -1,0 +1,31 @@
+name: Database safety
+
+on:
+  pull_request:
+    paths:
+      - 'backend/prisma/migrations/**'
+      - 'backend/prisma/seed.ts'
+      - 'backend/scripts/check-destructive-migrations.js'
+      - 'backend/package.json'
+      - '.github/workflows/database-safety.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/prisma/migrations/**'
+      - 'backend/prisma/seed.ts'
+      - 'backend/scripts/check-destructive-migrations.js'
+      - 'backend/package.json'
+      - '.github/workflows/database-safety.yml'
+
+jobs:
+  migration-safety:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check destructive migrations
+        env:
+          ALLOW_DESTRUCTIVE_MIGRATIONS: ${{ vars.ALLOW_DESTRUCTIVE_MIGRATIONS }}
+        run: npm --prefix backend run db:check-migrations

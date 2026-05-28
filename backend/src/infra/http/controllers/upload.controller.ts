@@ -2,6 +2,7 @@ import {
   Controller, Post, UseInterceptors, UploadedFile, BadRequestException,
 } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
+import { Prisma } from '@prisma/client'
 import { memoryStorage } from 'multer'
 import * as XLSX from 'xlsx'
 import { PrismaService } from '@/infra/database/prisma/prisma.service'
@@ -279,8 +280,8 @@ export class UploadController {
     filename?: string
     rowsCount?: number | null
     message: string
-  }) {
-    await this.prisma.dataImportLog.create({
+  }, client: Prisma.TransactionClient | PrismaService = this.prisma) {
+    await client.dataImportLog.create({
       data: {
         tipo: input.tipo,
         filename: input.filename ?? null,
@@ -301,8 +302,6 @@ export class UploadController {
 
     const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null }) as unknown[][]
 
-    await this.prisma.atividade.deleteMany()
-
     const data = rows
       .slice(1)
       .filter((r) => r[0])
@@ -322,13 +321,19 @@ export class UploadController {
         createdAt: new Date(),
       }))
 
-    await this.prisma.atividade.createMany({ data, skipDuplicates: true })
+    if (data.length === 0) {
+      throw new BadRequestException('Nenhuma atividade valida encontrada. A base atual foi preservada.')
+    }
 
-    await this.logImport({
-      tipo: 'atividades',
-      filename: file.originalname,
-      rowsCount: data.length,
-      message: `${data.length} atividades importadas com sucesso`,
+    await this.prisma.$transaction(async (tx) => {
+      await tx.atividade.deleteMany()
+      await tx.atividade.createMany({ data, skipDuplicates: true })
+      await this.logImport({
+        tipo: 'atividades',
+        filename: file.originalname,
+        rowsCount: data.length,
+        message: `${data.length} atividades importadas com sucesso`,
+      }, tx)
     })
 
     return { message: `${data.length} atividades importadas com sucesso`, total: data.length }
@@ -346,6 +351,13 @@ export class UploadController {
     const wsBens = wb.Sheets['Monitoramento_Bens']
     let bensData: { id: string; tombamento: string; tipoHardware: string | null; modelo: string | null; usuario: string | null; setor: string | null; finalidadePrincipal: string | null; sistemaOperacional: string | null; criticidade: string | null }[] = []
     const historicoRecords: { id: string; tombamento: string; operacao: string; campo: string | null; valorAnterior: string | null; valorNovo: string | null }[] = []
+    const wsSw = wb.Sheets['Ativos_Software']
+    const wsRamais = wb.Sheets['Monitoramento_Telefones']
+    const wsCel = wb.Sheets['Monitoramento_Celulares']
+
+    if (!wsBens && !wsSw && !wsRamais && !wsCel) {
+      throw new BadRequestException('Nenhuma aba esperada foi encontrada. A base atual foi preservada.')
+    }
 
     if (wsBens) {
       const rows = XLSX.utils.sheet_to_json(wsBens, { header: 1, defval: null }) as unknown[][]
@@ -385,62 +397,89 @@ export class UploadController {
       }
     }
 
-    await this.prisma.$transaction([
-      this.prisma.bem.deleteMany(),
-      this.prisma.software.deleteMany(),
-      this.prisma.ramal.deleteMany(),
-      this.prisma.celular.deleteMany(),
-    ])
-
-    let totals = { bens: 0, softwares: 0, ramais: 0, celulares: 0 }
-
-    if (bensData.length > 0) {
-      await this.prisma.bem.createMany({ data: bensData, skipDuplicates: true })
-      totals.bens = bensData.length
-    }
-    if (historicoRecords.length > 0) {
-      await this.prisma.bemHistorico.createMany({ data: historicoRecords })
-    }
-
-    const wsSw = wb.Sheets['Ativos_Software']
+    let softwaresData: { id: string; nome: string; versao: string | null; finalidade: string | null }[] = []
     if (wsSw) {
       const rows = XLSX.utils.sheet_to_json(wsSw, { header: 1, defval: null }) as unknown[][]
-      const data = rows.slice(1).filter((r) => r[0]).map((r) => ({
+      softwaresData = rows.slice(1).filter((r) => r[0]).map((r) => ({
         id: randomUUID(), nome: String(r[0]).trim(),
         versao: cleanStr(r[1]), finalidade: cleanStr(r[2]),
       }))
-      await this.prisma.software.createMany({ data, skipDuplicates: true })
-      totals.softwares = data.length
     }
 
-    const wsRamais = wb.Sheets['Monitoramento_Telefones']
+    let ramaisData: { id: string; setor: string; digital: number; analogico: number; total: number; descricao: string | null }[] = []
     if (wsRamais) {
       const rows = XLSX.utils.sheet_to_json(wsRamais, { header: 1, defval: null }) as unknown[][]
-      const data = rows.slice(1).filter((r) => r[0] && typeof r[1] === 'number').map((r) => {
+      ramaisData = rows.slice(1).filter((r) => r[0] && typeof r[1] === 'number').map((r) => {
         const digital = Number(r[1]) || 0
         const analogico = Number(r[2]) || 0
         return { id: randomUUID(), setor: String(r[0]).trim(), digital, analogico, total: digital + analogico, descricao: cleanStr(r[4]) }
       })
-      await this.prisma.ramal.createMany({ data, skipDuplicates: true })
-      totals.ramais = data.length
     }
 
-    const wsCel = wb.Sheets['Monitoramento_Celulares']
+    let celularesData: { id: string; modelo: string; setor: string; imei: string }[] = []
     if (wsCel) {
       const rows = XLSX.utils.sheet_to_json(wsCel, { header: 1, defval: null }) as unknown[][]
-      const data = rows.slice(1).filter((r) => r[0] && r[2]).map((r) => ({
+      celularesData = rows.slice(1).filter((r) => r[0] && r[2]).map((r) => ({
         id: randomUUID(), modelo: String(r[0]).trim(), setor: cleanStr(r[1]) ?? 'CTI', imei: String(r[2]).trim(),
       }))
-      await this.prisma.celular.createMany({ data, skipDuplicates: true })
-      totals.celulares = data.length
+    }
+
+    if (wsBens && bensData.length === 0) {
+      throw new BadRequestException('A aba Monitoramento_Bens nao possui linhas validas. A base atual foi preservada.')
+    }
+    if (wsSw && softwaresData.length === 0) {
+      throw new BadRequestException('A aba Ativos_Software nao possui linhas validas. A base atual foi preservada.')
+    }
+    if (wsRamais && ramaisData.length === 0) {
+      throw new BadRequestException('A aba Monitoramento_Telefones nao possui linhas validas. A base atual foi preservada.')
+    }
+    if (wsCel && celularesData.length === 0) {
+      throw new BadRequestException('A aba Monitoramento_Celulares nao possui linhas validas. A base atual foi preservada.')
+    }
+
+    const totals = {
+      bens: wsBens ? bensData.length : 0,
+      softwares: wsSw ? softwaresData.length : 0,
+      ramais: wsRamais ? ramaisData.length : 0,
+      celulares: wsCel ? celularesData.length : 0,
     }
 
     const msg = `Bens importados: ${totals.bens} equipamentos, ${totals.softwares} softwares, ${totals.ramais} ramais, ${totals.celulares} celulares`
-    await this.logImport({
-      tipo: 'bens',
-      filename: file.originalname,
-      rowsCount: totals.bens + totals.softwares + totals.ramais + totals.celulares,
-      message: msg,
+
+    await this.prisma.$transaction(async (tx) => {
+      if (wsBens) {
+        await tx.bem.deleteMany()
+        if (bensData.length > 0) {
+          await tx.bem.createMany({ data: bensData, skipDuplicates: true })
+        }
+        if (historicoRecords.length > 0) {
+          await tx.bemHistorico.createMany({ data: historicoRecords })
+        }
+      }
+      if (wsSw) {
+        await tx.software.deleteMany()
+        if (softwaresData.length > 0) {
+          await tx.software.createMany({ data: softwaresData, skipDuplicates: true })
+        }
+      }
+      if (wsRamais) {
+        await tx.ramal.deleteMany()
+        if (ramaisData.length > 0) {
+          await tx.ramal.createMany({ data: ramaisData, skipDuplicates: true })
+        }
+      }
+      if (wsCel) {
+        await tx.celular.deleteMany()
+        if (celularesData.length > 0) {
+          await tx.celular.createMany({ data: celularesData, skipDuplicates: true })
+        }
+      }
+      await this.logImport({
+        tipo: 'bens',
+        filename: file.originalname,
+        rowsCount: totals.bens + totals.softwares + totals.ramais + totals.celulares,
+        message: msg,
+      }, tx)
     })
 
     return {
@@ -516,17 +555,21 @@ export class UploadController {
       )
     }
 
-    await this.prisma.$transaction([this.prisma.powerBiReport.deleteMany(), this.prisma.powerBiReport.createMany({ data })])
-
     const concluidosCount = data.filter((d) => d.status === 'concluido').length
     const emAndamentoCount = data.filter((d) => d.status === 'em_andamento').length
     const msg = `${data.length} dashboard(s) importado(s): ${concluidosCount} concluído(s), ${emAndamentoCount} em andamento`
-    await this.logImport({
-      tipo: 'power_bi',
-      filename: file.originalname,
-      rowsCount: data.length,
-      message: msg,
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.powerBiReport.deleteMany()
+      await tx.powerBiReport.createMany({ data })
+      await this.logImport({
+        tipo: 'power_bi',
+        filename: file.originalname,
+        rowsCount: data.length,
+        message: msg,
+      }, tx)
     })
+
     return {
       message: msg,
       total: data.length,
@@ -597,23 +640,25 @@ export class UploadController {
       })
     }
 
-    await this.prisma.$transaction([
-      this.prisma.solucaoDigital.deleteMany(),
-      this.prisma.solucaoDigital.createMany({ data }),
-    ])
+    if (data.length === 0) {
+      throw new BadRequestException('Nenhuma solucao valida encontrada. A base atual foi preservada.')
+    }
 
     const concl = data.filter((d) => d.statusProjeto === 'concluida').length
     const and = data.filter((d) => d.statusProjeto === 'em_andamento').length
-    const msg =
-      data.length === 0
-        ? 'Nenhuma solução importada — base limpa. Verifique colunas TIPO e NOME.'
-        : `${data.length} solução(ões) importada(s): ${concl} concluída(s), ${and} em andamento`
-    await this.logImport({
-      tipo: 'solucoes_digitais',
-      filename: file.originalname,
-      rowsCount: data.length,
-      message: msg,
+    const msg = `${data.length} solução(ões) importada(s): ${concl} concluída(s), ${and} em andamento`
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.solucaoDigital.deleteMany()
+      await tx.solucaoDigital.createMany({ data })
+      await this.logImport({
+        tipo: 'solucoes_digitais',
+        filename: file.originalname,
+        rowsCount: data.length,
+        message: msg,
+      }, tx)
     })
+
     return {
       message: msg,
       total: data.length,
@@ -670,19 +715,19 @@ export class UploadController {
       }
     }
 
-    await this.prisma.$transaction([
-      this.prisma.contratoPagamentoMensal.deleteMany(),
-      this.prisma.contratoServico.deleteMany(),
-      this.prisma.contratoServico.createMany({ data: contratosData }),
-      this.prisma.contratoPagamentoMensal.createMany({ data: pagamentosData }),
-    ])
-
     const msg = `${contratosData.length} contrato(s)/serviço(s) e ${pagamentosData.length} competência(s) mensal(is) importados com sucesso`
-    await this.logImport({
-      tipo: 'contratos',
-      filename: file.originalname,
-      rowsCount: pagamentosData.length,
-      message: msg,
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.contratoPagamentoMensal.deleteMany()
+      await tx.contratoServico.deleteMany()
+      await tx.contratoServico.createMany({ data: contratosData })
+      await tx.contratoPagamentoMensal.createMany({ data: pagamentosData })
+      await this.logImport({
+        tipo: 'contratos',
+        filename: file.originalname,
+        rowsCount: pagamentosData.length,
+        message: msg,
+      }, tx)
     })
 
     return {

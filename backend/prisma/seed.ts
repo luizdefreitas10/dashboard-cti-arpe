@@ -5,6 +5,29 @@ import { randomUUID } from 'crypto'
 
 const prisma = new PrismaClient()
 
+function assertSeedIsAllowed() {
+  const databaseUrl = process.env.SUPABASE_DATABASE_URL ?? process.env.DATABASE_URL ?? ''
+  const isRemoteDatabase = /^postgres(ql)?:\/\//i.test(databaseUrl) && !/(localhost|127\.0\.0\.1|dashboard_cti_db)/i.test(databaseUrl)
+  const isProductionLike =
+    process.env.NODE_ENV === 'production' ||
+    process.env.RENDER === 'true' ||
+    process.env.VERCEL === '1' ||
+    isRemoteDatabase
+
+  if (!isProductionLike || process.env.ALLOW_PRODUCTION_SEED === 'true') {
+    return
+  }
+
+  console.error(
+    [
+      'Seed bloqueado por seguranca.',
+      'Este script apaga e recria dados de tabelas importadas, entao nao deve rodar em producao ou bancos remotos por acidente.',
+      'Se voce realmente precisa executar este seed, rode com ALLOW_PRODUCTION_SEED=true.',
+    ].join('\n'),
+  )
+  process.exit(1)
+}
+
 function cleanStr(val: unknown): string | null {
   if (val === null || val === undefined) return null
   const s = String(val).trim()
@@ -151,6 +174,7 @@ async function seedBens() {
 }
 
 async function main() {
+  assertSeedIsAllowed()
   console.log('\n🌱 Iniciando seed do Dashboard CTI...\n')
   try {
     await seedAtividades()
