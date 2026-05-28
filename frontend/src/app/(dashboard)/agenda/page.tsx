@@ -1,17 +1,20 @@
 'use client'
 
-import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode, type RefObject } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import toast from 'react-hot-toast'
 import {
+  Bold,
   CalendarDays,
   ChevronLeft,
   ChevronRight,
   Clock3,
   FileText,
   Filter,
+  Italic,
   Loader2,
   MapPin,
+  Maximize2,
   Pencil,
   Plus,
   Save,
@@ -89,6 +92,246 @@ function extractErrorMessage(error: unknown) {
   return 'Não foi possível concluir a operação.'
 }
 
+function renderInlineMarkdown(text: string, keyPrefix: string): ReactNode[] {
+  const nodes: ReactNode[] = []
+  let index = 0
+
+  while (index < text.length) {
+    if (text.startsWith('**', index)) {
+      const end = text.indexOf('**', index + 2)
+      if (end > index + 2) {
+        nodes.push(
+          <strong key={`${keyPrefix}-${index}`} className="font-semibold text-[var(--color-text)]">
+            {text.slice(index + 2, end)}
+          </strong>,
+        )
+        index = end + 2
+        continue
+      }
+    }
+
+    if (text[index] === '*' && text[index + 1] !== '*') {
+      const end = text.indexOf('*', index + 1)
+      if (end > index + 1) {
+        nodes.push(
+          <em key={`${keyPrefix}-${index}`} className="italic text-[var(--color-text)]">
+            {text.slice(index + 1, end)}
+          </em>,
+        )
+        index = end + 1
+        continue
+      }
+    }
+
+    const nextBold = text.indexOf('**', index + 1)
+    const nextItalic = text.indexOf('*', index + 1)
+    const candidates = [nextBold, nextItalic].filter((position) => position > index)
+    const nextMarker = candidates.length ? Math.min(...candidates) : text.length
+    nodes.push(text.slice(index, nextMarker))
+    index = nextMarker
+  }
+
+  return nodes
+}
+
+function AgendaFormattedText({
+  value,
+  className,
+}: {
+  value: string
+  className?: string
+}) {
+  const lines = value.split(/\r?\n/)
+
+  return (
+    <div className={cn('whitespace-pre-wrap text-sm leading-relaxed text-[var(--color-text-muted)] wrap-anywhere', className)}>
+      {lines.map((line, lineIndex) => (
+        <Fragment key={`${lineIndex}-${line}`}>
+          {renderInlineMarkdown(line, `line-${lineIndex}`)}
+          {lineIndex < lines.length - 1 ? <br /> : null}
+        </Fragment>
+      ))}
+    </div>
+  )
+}
+
+function DescriptionPautaEditor({
+  id,
+  value,
+  onChange,
+  placeholder,
+  rows = 4,
+}: {
+  id: string
+  value: string
+  onChange: (value: string) => void
+  placeholder?: string
+  rows?: number
+}) {
+  const [expandedOpen, setExpandedOpen] = useState(false)
+  const compactTextareaRef = useRef<HTMLTextAreaElement>(null)
+  const expandedTextareaRef = useRef<HTMLTextAreaElement>(null)
+  const helperId = `${id}-helper`
+  const previewId = `${id}-preview`
+
+  function applyFormat(marker: '**' | '*', fallback: string, textarea: HTMLTextAreaElement | null) {
+    if (!textarea) return
+
+    const start = textarea.selectionStart
+    const end = textarea.selectionEnd
+    const selectedText = value.slice(start, end)
+    const replacementText = selectedText || fallback
+    const nextValue = `${value.slice(0, start)}${marker}${replacementText}${marker}${value.slice(end)}`
+    const selectionStart = start + marker.length
+    const selectionEnd = selectionStart + replacementText.length
+
+    onChange(nextValue)
+    window.requestAnimationFrame(() => {
+      textarea.focus()
+      textarea.setSelectionRange(selectionStart, selectionEnd)
+    })
+  }
+
+  function renderToolbar(textareaRef: RefObject<HTMLTextAreaElement | null>, expanded = false) {
+    return (
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={() => applyFormat('**', 'texto em negrito', textareaRef.current)}
+          className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-2.5 py-1.5 text-xs font-medium text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text)] cursor-pointer"
+          aria-label="Aplicar negrito na descrição ou pauta"
+        >
+          <Bold size={14} aria-hidden />
+          Negrito
+        </button>
+        <button
+          type="button"
+          onClick={() => applyFormat('*', 'texto em itálico', textareaRef.current)}
+          className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-2.5 py-1.5 text-xs font-medium text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text)] cursor-pointer"
+          aria-label="Aplicar itálico na descrição ou pauta"
+        >
+          <Italic size={14} aria-hidden />
+          Itálico
+        </button>
+        {!expanded && (
+          <button
+            type="button"
+            onClick={() => setExpandedOpen(true)}
+            className="ml-auto inline-flex min-h-9 items-center justify-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-2.5 py-1.5 text-xs font-medium text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text)] cursor-pointer"
+            aria-label="Expandir editor de descrição ou pauta"
+          >
+            <Maximize2 size={14} aria-hidden />
+            Expandir
+          </button>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor={id} className="text-sm font-medium text-[var(--color-text)]">
+          Descrição/Pauta <span className="text-[var(--color-text-subtle)]">(opcional)</span>
+        </label>
+        {renderToolbar(compactTextareaRef)}
+        <textarea
+          id={id}
+          ref={compactTextareaRef}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          placeholder={placeholder}
+          rows={rows}
+          aria-describedby={helperId}
+          className="w-full resize-y rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-input)] px-3 py-2 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus:border-[var(--color-primary)] focus:outline-none"
+        />
+        <p id={helperId} className="text-xs text-[var(--color-text-subtle)]">
+          Selecione um trecho e use os botões para aplicar negrito ou itálico.
+        </p>
+      </div>
+
+      <Dialog.Root open={expandedOpen} onOpenChange={setExpandedOpen}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 z-[60] bg-black/60 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+          <Dialog.Content
+            className="fixed inset-x-2 bottom-3 top-3 z-[60] flex min-w-0 flex-col overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-card)] shadow-lg focus:outline-none sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:max-h-[90vh] sm:w-[min(94vw,920px)] sm:-translate-x-1/2 sm:-translate-y-1/2"
+            aria-describedby={`${id}-expanded-description`}
+            onOpenAutoFocus={(event) => {
+              event.preventDefault()
+              expandedTextareaRef.current?.focus()
+            }}
+          >
+            <div className="flex min-w-0 items-start justify-between gap-3 border-b border-[var(--color-border)] px-4 py-4 sm:px-5">
+              <div className="min-w-0">
+                <Dialog.Title className="text-lg font-semibold text-[var(--color-text)]">
+                  Editar descrição/pauta
+                </Dialog.Title>
+                <p id={`${id}-expanded-description`} className="mt-1 text-sm text-[var(--color-text-muted)]">
+                  Use a área ampliada para escrever, revisar e formatar a pauta da reunião.
+                </p>
+              </div>
+              <Dialog.Close asChild>
+                <button
+                  type="button"
+                  className="rounded-[var(--radius-md)] p-2 text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text)] cursor-pointer"
+                  aria-label="Fechar editor expandido"
+                >
+                  <X size={18} />
+                </button>
+              </Dialog.Close>
+            </div>
+
+            <div className="grid min-h-0 flex-1 gap-4 overflow-y-auto px-4 py-4 sm:px-5 lg:grid-cols-[minmax(0,1.1fr)_minmax(280px,0.9fr)]">
+              <div className="flex min-h-0 flex-col gap-2">
+                {renderToolbar(expandedTextareaRef, true)}
+                <textarea
+                  id={`${id}-expanded-editor`}
+                  ref={expandedTextareaRef}
+                  value={value}
+                  onChange={(event) => onChange(event.target.value)}
+                  placeholder={placeholder}
+                  aria-label="Descrição ou pauta em editor expandido"
+                  aria-describedby={`${id}-expanded-description`}
+                  className="min-h-[320px] flex-1 resize-y rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-input)] px-4 py-3 text-base leading-relaxed text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus:border-[var(--color-primary)] focus:outline-none"
+                />
+              </div>
+
+              <section
+                id={previewId}
+                className="min-w-0 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-hover)]/35 p-4"
+                aria-label="Prévia formatada da descrição ou pauta"
+              >
+                <div className="mb-3 flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-[var(--color-text-subtle)]">
+                  <FileText size={14} aria-hidden />
+                  <span>Prévia</span>
+                </div>
+                {value.trim() ? (
+                  <AgendaFormattedText value={value} className="text-base" />
+                ) : (
+                  <p className="text-sm text-[var(--color-text-muted)]">
+                    A prévia formatada aparecerá aqui enquanto você escreve.
+                  </p>
+                )}
+              </section>
+            </div>
+
+            <div className="flex justify-end border-t border-[var(--color-border)] px-4 py-3 sm:px-5">
+              <Dialog.Close asChild>
+                <button
+                  type="button"
+                  className="inline-flex min-h-10 items-center justify-center rounded-[var(--radius-md)] bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[var(--color-primary-hover)] cursor-pointer"
+                >
+                  Concluir edição
+                </button>
+              </Dialog.Close>
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+    </div>
+  )
+}
+
 function MeetingCard({
   reuniao,
   today,
@@ -149,9 +392,7 @@ function MeetingCard({
             <FileText size={14} aria-hidden />
             <span>Descrição/Pauta</span>
           </div>
-          <p className="line-clamp-3 whitespace-pre-line text-sm leading-relaxed text-[var(--color-text-muted)] wrap-anywhere">
-            {reuniao.descricaoPauta}
-          </p>
+          <AgendaFormattedText value={reuniao.descricaoPauta} className="line-clamp-3" />
         </div>
       )}
     </button>
@@ -342,18 +583,12 @@ function MeetingDetailsDialog({
                   />
                 </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <label htmlFor="edit-descricaoPauta" className="text-sm font-medium text-[var(--color-text)]">
-                    Descrição/Pauta <span className="text-[var(--color-text-subtle)]">(opcional)</span>
-                  </label>
-                  <textarea
-                    id="edit-descricaoPauta"
-                    value={form.descricaoPauta ?? ''}
-                    onChange={(event) => setForm((current) => ({ ...current, descricaoPauta: event.target.value }))}
-                    rows={5}
-                    className="w-full resize-y rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-input)] px-3 py-2 text-sm text-[var(--color-text)] focus:border-[var(--color-primary)] focus:outline-none"
-                  />
-                </div>
+                <DescriptionPautaEditor
+                  id="edit-descricaoPauta"
+                  value={form.descricaoPauta ?? ''}
+                  onChange={(descricaoPauta) => setForm((current) => ({ ...current, descricaoPauta }))}
+                  rows={5}
+                />
 
                 <div className="flex min-w-0 flex-col-reverse gap-2 border-t border-[var(--color-border)] pt-4 sm:flex-row sm:justify-end">
                   <button
@@ -409,9 +644,7 @@ function MeetingDetailsDialog({
                     <span>Descrição/Pauta</span>
                   </div>
                   {reuniao.descricaoPauta ? (
-                    <p className="whitespace-pre-line text-sm leading-relaxed text-[var(--color-text-muted)] wrap-anywhere">
-                      {reuniao.descricaoPauta}
-                    </p>
+                    <AgendaFormattedText value={reuniao.descricaoPauta} />
                   ) : (
                     <p className="text-sm text-[var(--color-text-muted)]">
                       Nenhuma descrição ou pauta foi registrada para esta reunião.
@@ -757,19 +990,13 @@ export default function AgendaPage() {
               />
             </div>
 
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="descricaoPauta" className="text-sm font-medium text-[var(--color-text)]">
-                Descrição/Pauta <span className="text-[var(--color-text-subtle)]">(opcional)</span>
-              </label>
-              <textarea
-                id="descricaoPauta"
-                value={form.descricaoPauta ?? ''}
-                onChange={(event) => setForm((current) => ({ ...current, descricaoPauta: event.target.value }))}
-                placeholder="Registre os assuntos tratados, encaminhamentos ou observações da reunião..."
-                rows={4}
-                className="w-full resize-y rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-input)] px-3 py-2 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus:border-[var(--color-primary)] focus:outline-none"
-              />
-            </div>
+            <DescriptionPautaEditor
+              id="descricaoPauta"
+              value={form.descricaoPauta ?? ''}
+              onChange={(descricaoPauta) => setForm((current) => ({ ...current, descricaoPauta }))}
+              placeholder="Registre os assuntos tratados, encaminhamentos ou observações da reunião..."
+              rows={4}
+            />
 
             <button
               type="submit"

@@ -83,6 +83,8 @@ Saída esperada:
 🎉 Seed concluído com sucesso!
 ```
 
+> Segurança: o seed apaga e recria dados importados. Por isso, ele é bloqueado em produção, Render, Vercel, CI ou bancos remotos, exceto quando executado com `ALLOW_PRODUCTION_SEED=true`.
+
 ### 5. Iniciar o servidor
 
 ```bash
@@ -146,3 +148,15 @@ npm run dev
 | /importar | Upload de planilhas |
 | /power-bi | Catálogo Power BI |
 | /solucoes-digitais | Automações e soluções web |
+
+---
+
+## Segurança do Banco em Produção
+
+- Em produção, aplique mudanças de schema apenas com `npx prisma migrate deploy`.
+- Não rode `prisma migrate dev`, `prisma migrate reset`, `prisma db push` ou seed em produção.
+- O script `npm run db:check-migrations` bloqueia migrations com `DROP TABLE`, `DROP COLUMN`, `TRUNCATE` ou `DELETE FROM`.
+- O start do Render (`npm run start:render`) roda a checagem antes de aplicar migrations.
+- Imports de planilhas que substituem dados usam transação para evitar tabela apagada em caso de erro no meio do processo.
+- Antes de uma migration destrutiva intencional, gere backup do banco e rode com override explícito apenas naquele deploy: `ALLOW_DESTRUCTIVE_MIGRATIONS=true`.
+- Para liberar uma migration destrutiva autorizada no GitHub Actions, configure temporariamente a variável do repositório `ALLOW_DESTRUCTIVE_MIGRATIONS=true`; no Render, configure temporariamente a mesma variável de ambiente. Remova/desative após o deploy.
