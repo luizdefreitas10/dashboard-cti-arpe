@@ -39,14 +39,14 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: '/arpe-favicon.png', type: 'image/png', sizes: '64x64' },
-      { url: '/icons/icon-192.png', type: 'image/png', sizes: '192x192' },
-      { url: '/icons/icon-512.png', type: 'image/png', sizes: '512x512' },
+      { url: '/icons/arpe-mark-64.png', type: 'image/png', sizes: '64x64' },
+      { url: '/icons/arpe-mark-192.png', type: 'image/png', sizes: '192x192' },
+      { url: '/icons/arpe-mark-512.png', type: 'image/png', sizes: '512x512' },
     ],
-    shortcut: '/arpe-favicon.png',
+    shortcut: '/icons/arpe-mark-64.png',
     apple: [
-      { url: '/icons/icon-192.png', type: 'image/png', sizes: '192x192' },
-      { url: '/icons/icon-512.png', type: 'image/png', sizes: '512x512' },
+      { url: '/icons/arpe-mark-192.png', type: 'image/png', sizes: '192x192' },
+      { url: '/icons/arpe-mark-512.png', type: 'image/png', sizes: '512x512' },
     ],
   },
   openGraph: {
