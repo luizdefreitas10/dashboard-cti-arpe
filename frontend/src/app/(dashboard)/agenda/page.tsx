@@ -832,7 +832,6 @@ export default function AgendaPage() {
   }
 
   const hasFilters = Boolean(debouncedSearch || localFilter || dataInicio || dataFim)
-  const visibleTodayMeetings = reunioesHoje.slice(0, 3)
   const detailsOpen = Boolean(selectedMeeting)
 
   return (
@@ -871,9 +870,9 @@ export default function AgendaPage() {
           <div className="mt-5 grid min-w-0 gap-3 lg:grid-cols-3">
             {Array.from({ length: 3 }).map((_, index) => <MeetingCardSkeleton key={index} />)}
           </div>
-        ) : visibleTodayMeetings.length ? (
-          <div className="mt-5 grid min-w-0 gap-3 lg:grid-cols-3">
-            {visibleTodayMeetings.map((reuniao) => (
+        ) : reunioesHoje.length ? (
+          <div className="mt-5 grid min-w-0 items-stretch gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {reunioesHoje.map((reuniao) => (
               <MeetingCard key={reuniao.id} reuniao={reuniao} today={today} onSelect={setSelectedMeeting} />
             ))}
           </div>
