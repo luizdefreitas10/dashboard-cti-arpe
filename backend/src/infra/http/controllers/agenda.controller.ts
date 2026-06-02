@@ -28,6 +28,8 @@ const querySchema = z.object({
   size: z.coerce.number().int().positive().max(100).default(25),
   dataInicio: z.coerce.date().optional(),
   dataFim: z.coerce.date().optional(),
+  ocorridasAteData: z.coerce.date().optional(),
+  ocorridasAteHora: hourSchema.optional(),
   local: z.string().optional(),
   busca: z.string().optional(),
   ordem: z.enum(['asc', 'desc']).default('desc'),

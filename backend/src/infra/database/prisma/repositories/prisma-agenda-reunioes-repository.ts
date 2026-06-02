@@ -77,12 +77,27 @@ export class PrismaAgendaReunioesRepository implements AgendaReunioesRepository 
     filters: Partial<AgendaReuniaoFilters>,
   ): Prisma.AgendaReuniaoWhereInput {
     const where: Prisma.AgendaReuniaoWhereInput = {};
+    const and: Prisma.AgendaReuniaoWhereInput[] = [];
 
     if (filters.dataInicio || filters.dataFim) {
-      where.data = {
-        ...(filters.dataInicio ? { gte: filters.dataInicio } : {}),
-        ...(filters.dataFim ? { lte: filters.dataFim } : {}),
-      };
+      and.push({
+        data: {
+          ...(filters.dataInicio ? { gte: filters.dataInicio } : {}),
+          ...(filters.dataFim ? { lte: filters.dataFim } : {}),
+        },
+      });
+    }
+
+    if (filters.ocorridasAteData && filters.ocorridasAteHora) {
+      and.push({
+        OR: [
+          { data: { lt: filters.ocorridasAteData } },
+          {
+            data: filters.ocorridasAteData,
+            horaFim: { lte: filters.ocorridasAteHora },
+          },
+        ],
+      });
     }
 
     if (filters.local) {
@@ -95,6 +110,10 @@ export class PrismaAgendaReunioesRepository implements AgendaReunioesRepository 
         { local: { contains: filters.busca, mode: 'insensitive' } },
         { descricaoPauta: { contains: filters.busca, mode: 'insensitive' } },
       ];
+    }
+
+    if (and.length) {
+      where.AND = and;
     }
 
     return where;

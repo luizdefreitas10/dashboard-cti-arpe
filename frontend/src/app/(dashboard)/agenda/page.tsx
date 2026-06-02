@@ -6,6 +6,8 @@ import toast from 'react-hot-toast'
 import {
   Bold,
   CalendarDays,
+  CaseLower,
+  CaseUpper,
   ChevronLeft,
   ChevronRight,
   Clock3,
@@ -20,6 +22,7 @@ import {
   Save,
   Search,
   Trash2,
+  Underline,
   X,
 } from 'lucide-react'
 import { EmptyState } from '@/components/dashboard/empty-state'
@@ -39,6 +42,12 @@ function toDateInputValue(date = new Date()) {
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
   return `${year}-${month}-${day}`
+}
+
+function toTimeInputValue(date = new Date()) {
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  return `${hours}:${minutes}`
 }
 
 function addDaysToDateInput(value: string, days: number) {
@@ -123,9 +132,23 @@ function renderInlineMarkdown(text: string, keyPrefix: string): ReactNode[] {
       }
     }
 
+    if (text.startsWith('__', index)) {
+      const end = text.indexOf('__', index + 2)
+      if (end > index + 2) {
+        nodes.push(
+          <span key={`${keyPrefix}-${index}`} className="underline text-[var(--color-text)]">
+            {text.slice(index + 2, end)}
+          </span>,
+        )
+        index = end + 2
+        continue
+      }
+    }
+
     const nextBold = text.indexOf('**', index + 1)
     const nextItalic = text.indexOf('*', index + 1)
-    const candidates = [nextBold, nextItalic].filter((position) => position > index)
+    const nextUnderline = text.indexOf('__', index + 1)
+    const candidates = [nextBold, nextItalic, nextUnderline].filter((position) => position > index)
     const nextMarker = candidates.length ? Math.min(...candidates) : text.length
     nodes.push(text.slice(index, nextMarker))
     index = nextMarker
@@ -174,17 +197,12 @@ function DescriptionPautaEditor({
   const helperId = `${id}-helper`
   const previewId = `${id}-preview`
 
-  function applyFormat(marker: '**' | '*', fallback: string, textarea: HTMLTextAreaElement | null) {
-    if (!textarea) return
-
-    const start = textarea.selectionStart
-    const end = textarea.selectionEnd
-    const selectedText = value.slice(start, end)
-    const replacementText = selectedText || fallback
-    const nextValue = `${value.slice(0, start)}${marker}${replacementText}${marker}${value.slice(end)}`
-    const selectionStart = start + marker.length
-    const selectionEnd = selectionStart + replacementText.length
-
+  function updateTextareaSelection(
+    textarea: HTMLTextAreaElement,
+    nextValue: string,
+    selectionStart: number,
+    selectionEnd: number,
+  ) {
     onChange(nextValue)
     window.requestAnimationFrame(() => {
       textarea.focus()
@@ -192,12 +210,51 @@ function DescriptionPautaEditor({
     })
   }
 
+  function wrapSelection(
+    before: string,
+    after: string,
+    fallback: string,
+    textarea: HTMLTextAreaElement | null,
+  ) {
+    if (!textarea) return
+
+    const start = textarea.selectionStart
+    const end = textarea.selectionEnd
+    const selectedText = value.slice(start, end)
+    const replacementText = selectedText || fallback
+    const nextValue = `${value.slice(0, start)}${before}${replacementText}${after}${value.slice(end)}`
+    const selectionStart = start + before.length
+    const selectionEnd = selectionStart + replacementText.length
+
+    updateTextareaSelection(textarea, nextValue, selectionStart, selectionEnd)
+  }
+
+  function transformSelection(
+    transform: (text: string) => string,
+    textarea: HTMLTextAreaElement | null,
+  ) {
+    if (!textarea) return
+
+    const start = textarea.selectionStart
+    const end = textarea.selectionEnd
+    const selectedText = value.slice(start, end)
+    if (!selectedText) {
+      textarea.focus()
+      return
+    }
+
+    const replacementText = transform(selectedText)
+    const nextValue = `${value.slice(0, start)}${replacementText}${value.slice(end)}`
+
+    updateTextareaSelection(textarea, nextValue, start, start + replacementText.length)
+  }
+
   function renderToolbar(textareaRef: RefObject<HTMLTextAreaElement | null>, expanded = false) {
     return (
       <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
-          onClick={() => applyFormat('**', 'texto em negrito', textareaRef.current)}
+          onClick={() => wrapSelection('**', '**', 'texto em negrito', textareaRef.current)}
           className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-2.5 py-1.5 text-xs font-medium text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text)] cursor-pointer"
           aria-label="Aplicar negrito na descrição ou pauta"
         >
@@ -206,12 +263,39 @@ function DescriptionPautaEditor({
         </button>
         <button
           type="button"
-          onClick={() => applyFormat('*', 'texto em itálico', textareaRef.current)}
+          onClick={() => wrapSelection('*', '*', 'texto em itálico', textareaRef.current)}
           className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-2.5 py-1.5 text-xs font-medium text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text)] cursor-pointer"
           aria-label="Aplicar itálico na descrição ou pauta"
         >
           <Italic size={14} aria-hidden />
           Itálico
+        </button>
+        <button
+          type="button"
+          onClick={() => wrapSelection('__', '__', 'texto sublinhado', textareaRef.current)}
+          className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-2.5 py-1.5 text-xs font-medium text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text)] cursor-pointer"
+          aria-label="Sublinhar texto selecionado na descrição ou pauta"
+        >
+          <Underline size={14} aria-hidden />
+          Sublinhado
+        </button>
+        <button
+          type="button"
+          onClick={() => transformSelection((text) => text.toLocaleUpperCase('pt-BR'), textareaRef.current)}
+          className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-2.5 py-1.5 text-xs font-medium text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text)] cursor-pointer"
+          aria-label="Converter texto selecionado para maiúsculas"
+        >
+          <CaseUpper size={14} aria-hidden />
+          Maiúsculas
+        </button>
+        <button
+          type="button"
+          onClick={() => transformSelection((text) => text.toLocaleLowerCase('pt-BR'), textareaRef.current)}
+          className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-2.5 py-1.5 text-xs font-medium text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text)] cursor-pointer"
+          aria-label="Converter texto selecionado para minúsculas"
+        >
+          <CaseLower size={14} aria-hidden />
+          Minúsculas
         </button>
         {!expanded && (
           <button
@@ -246,7 +330,7 @@ function DescriptionPautaEditor({
           className="w-full resize-y rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-input)] px-3 py-2 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus:border-[var(--color-primary)] focus:outline-none"
         />
         <p id={helperId} className="text-xs text-[var(--color-text-subtle)]">
-          Selecione um trecho e use os botões para aplicar negrito ou itálico.
+          Selecione um trecho e use os botões para aplicar negrito, itálico, sublinhado ou ajustar maiúsculas/minúsculas.
         </p>
       </div>
 
@@ -728,7 +812,12 @@ export default function AgendaPage() {
     }
 
     try {
-      const filters: AgendaReuniaoFilters = { page, size }
+      const filters: AgendaReuniaoFilters = {
+        page,
+        size,
+        ocorridasAteData: today,
+        ocorridasAteHora: toTimeInputValue(),
+      }
       if (debouncedSearch) filters.busca = debouncedSearch
       if (localFilter.trim()) filters.local = localFilter.trim()
       if (dataInicio) filters.dataInicio = dataInicio
@@ -1013,7 +1102,7 @@ export default function AgendaPage() {
             <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
               <div className="min-w-0">
                 <p className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-subtle)]">Histórico</p>
-                <h2 className="mt-1 text-lg font-semibold text-[var(--color-text)]">Todas as reuniões</h2>
+                <h2 className="mt-1 text-lg font-semibold text-[var(--color-text)]">Reuniões ocorridas</h2>
               </div>
               <p className="text-sm text-[var(--color-text-muted)]">{formatNumber(total)} registro{total === 1 ? '' : 's'}</p>
             </div>
@@ -1116,7 +1205,7 @@ export default function AgendaPage() {
                 <EmptyState
                   icon={CalendarDays}
                   title="Nenhuma reunião encontrada"
-                  description="Registre uma nova reunião ou ajuste os filtros para consultar outro período."
+                  description="O histórico mostra apenas reuniões já ocorridas. Ajuste os filtros para consultar outro período."
                 />
               )}
 

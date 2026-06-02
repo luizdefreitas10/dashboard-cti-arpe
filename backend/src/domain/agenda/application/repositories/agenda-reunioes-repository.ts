@@ -5,6 +5,8 @@ export interface AgendaReuniaoFilters {
   size?: number;
   dataInicio?: Date;
   dataFim?: Date;
+  ocorridasAteData?: Date;
+  ocorridasAteHora?: string;
   local?: string;
   busca?: string;
   ordem?: 'asc' | 'desc';

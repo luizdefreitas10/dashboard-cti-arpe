@@ -27,6 +27,8 @@ export interface AgendaReuniaoFilters {
   size?: number
   dataInicio?: string
   dataFim?: string
+  ocorridasAteData?: string
+  ocorridasAteHora?: string
   local?: string
   busca?: string
   ordem?: 'asc' | 'desc'
