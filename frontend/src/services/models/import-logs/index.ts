@@ -7,6 +7,8 @@ export interface DataImportLog {
   filename: string | null
   rowsCount: number | null
   message: string | null
+  actorName: string | null
+  actorEmail: string | null
   createdAt: string
 }
 

@@ -9,6 +9,10 @@ interface PrismaAgendaReuniao {
   horaFim: string;
   local: string;
   descricaoPauta: string | null;
+  createdById?: string | null;
+  updatedById?: string | null;
+  createdBy?: { name: string } | null;
+  updatedBy?: { name: string } | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -23,6 +27,10 @@ export class PrismaAgendaReuniaoMapper {
         horaFim: raw.horaFim,
         local: raw.local,
         descricaoPauta: raw.descricaoPauta,
+        createdById: raw.createdById,
+        createdByName: raw.createdBy?.name ?? null,
+        updatedById: raw.updatedById,
+        updatedByName: raw.updatedBy?.name ?? null,
         createdAt: raw.createdAt,
         updatedAt: raw.updatedAt,
       },
@@ -39,6 +47,8 @@ export class PrismaAgendaReuniaoMapper {
       horaFim: reuniao.horaFim,
       local: reuniao.local,
       descricaoPauta: reuniao.descricaoPauta ?? null,
+      createdById: reuniao.createdById ?? null,
+      updatedById: reuniao.updatedById ?? null,
       createdAt: reuniao.createdAt ?? new Date(),
     };
   }

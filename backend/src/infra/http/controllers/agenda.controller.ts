@@ -16,6 +16,9 @@ import { CreateAgendaReuniaoUseCase } from '@/domain/agenda/application/use-case
 import { DeleteAgendaReuniaoUseCase } from '@/domain/agenda/application/use-cases/delete-agenda-reuniao';
 import { ListAgendaReunioesUseCase } from '@/domain/agenda/application/use-cases/list-agenda-reunioes';
 import { UpdateAgendaReuniaoUseCase } from '@/domain/agenda/application/use-cases/update-agenda-reuniao';
+import { CurrentUserDecorator } from '@/infra/auth/decorators/current-user';
+import { Public } from '@/infra/auth/decorators/public';
+import type { CurrentUser } from '@/infra/auth/types/current-user';
 import { ZodValidationPipe } from '../pipes/zod-validation-pipe';
 import { AgendaReuniaoPresenter } from '../presenters/agenda-reuniao-presenter';
 
@@ -67,6 +70,7 @@ export class AgendaController {
   ) {}
 
   @Get()
+  @Public()
   async list(@Query(new ZodValidationPipe(querySchema)) query: QueryParams) {
     const result = await this.listAgendaReunioesUseCase.execute(query);
     if (result.isLeft())
@@ -91,8 +95,14 @@ export class AgendaController {
   }
 
   @Post()
-  async create(@Body(new ZodValidationPipe(createSchema)) body: CreateBody) {
-    const result = await this.createAgendaReuniaoUseCase.execute(body);
+  async create(
+    @Body(new ZodValidationPipe(createSchema)) body: CreateBody,
+    @CurrentUserDecorator() user: CurrentUser,
+  ) {
+    const result = await this.createAgendaReuniaoUseCase.execute({
+      ...body,
+      createdById: user.sub,
+    });
 
     if (result.isLeft()) {
       throw new BadRequestException('Não foi possível registrar a reunião');
@@ -107,10 +117,12 @@ export class AgendaController {
   async update(
     @Param(new ZodValidationPipe(paramsSchema)) params: RouteParams,
     @Body(new ZodValidationPipe(createSchema)) body: CreateBody,
+    @CurrentUserDecorator() user: CurrentUser,
   ) {
     const result = await this.updateAgendaReuniaoUseCase.execute({
       id: params.id,
       ...body,
+      updatedById: user.sub,
     });
 
     if (result.isLeft()) {

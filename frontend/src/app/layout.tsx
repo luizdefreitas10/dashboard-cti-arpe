@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Source_Sans_3 } from 'next/font/google'
+import { AuthProvider } from '@/context/auth-context'
 import './globals.css'
 
 const APP_NAME = 'Dashboard CTI'
@@ -65,7 +66,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR" className={sourceSans.className}>
-      <body>{children}</body>
+      <body>
+        <AuthProvider>{children}</AuthProvider>
+      </body>
     </html>
   )
 }

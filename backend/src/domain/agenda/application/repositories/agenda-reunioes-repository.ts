@@ -24,6 +24,7 @@ export interface AgendaReuniaoUpdateData {
   horaFim: string;
   local: string;
   descricaoPauta?: string | null;
+  updatedById?: string | null;
 }
 
 export abstract class AgendaReunioesRepository {

@@ -7,6 +7,8 @@ import { memoryStorage } from 'multer'
 import * as XLSX from 'xlsx'
 import { PrismaService } from '@/infra/database/prisma/prisma.service'
 import { randomUUID } from 'crypto'
+import { CurrentUserDecorator } from '@/infra/auth/decorators/current-user'
+import type { CurrentUser } from '@/infra/auth/types/current-user'
 
 function cleanStr(val: unknown): string | null {
   if (val === null || val === undefined) return null
@@ -280,20 +282,27 @@ export class UploadController {
     filename?: string
     rowsCount?: number | null
     message: string
+    actor: CurrentUser
   }, client: Prisma.TransactionClient | PrismaService = this.prisma) {
-    await client.dataImportLog.create({
+    return client.dataImportLog.create({
       data: {
         tipo: input.tipo,
         filename: input.filename ?? null,
         rowsCount: input.rowsCount ?? null,
         message: input.message,
+        actorId: input.actor.sub,
+        actorName: input.actor.name,
+        actorEmail: input.actor.email,
       },
     })
   }
 
   @Post('atividades')
   @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
-  async uploadAtividades(@UploadedFile() file: Express.Multer.File) {
+  async uploadAtividades(
+    @UploadedFile() file: Express.Multer.File,
+    @CurrentUserDecorator() actor: CurrentUser,
+  ) {
     if (!file) throw new BadRequestException('Nenhum arquivo enviado')
 
     const wb = XLSX.read(file.buffer, { type: 'buffer' })
@@ -333,6 +342,7 @@ export class UploadController {
         filename: file.originalname,
         rowsCount: data.length,
         message: `${data.length} atividades importadas com sucesso`,
+        actor,
       }, tx)
     })
 
@@ -341,7 +351,10 @@ export class UploadController {
 
   @Post('bens')
   @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
-  async uploadBens(@UploadedFile() file: Express.Multer.File) {
+  async uploadBens(
+    @UploadedFile() file: Express.Multer.File,
+    @CurrentUserDecorator() actor: CurrentUser,
+  ) {
     if (!file) throw new BadRequestException('Nenhum arquivo enviado')
 
     const wb = XLSX.read(file.buffer, { type: 'buffer' })
@@ -452,9 +465,6 @@ export class UploadController {
         if (bensData.length > 0) {
           await tx.bem.createMany({ data: bensData, skipDuplicates: true })
         }
-        if (historicoRecords.length > 0) {
-          await tx.bemHistorico.createMany({ data: historicoRecords })
-        }
       }
       if (wsSw) {
         await tx.software.deleteMany()
@@ -474,12 +484,21 @@ export class UploadController {
           await tx.celular.createMany({ data: celularesData, skipDuplicates: true })
         }
       }
-      await this.logImport({
+      const importLog = await this.logImport({
         tipo: 'bens',
         filename: file.originalname,
         rowsCount: totals.bens + totals.softwares + totals.ramais + totals.celulares,
         message: msg,
+        actor,
       }, tx)
+      if (historicoRecords.length > 0) {
+        await tx.bemHistorico.createMany({
+          data: historicoRecords.map((record) => ({
+            ...record,
+            importLogId: importLog.id,
+          })),
+        })
+      }
     })
 
     return {
@@ -490,7 +509,10 @@ export class UploadController {
 
   @Post('power-bi')
   @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
-  async uploadPowerBi(@UploadedFile() file: Express.Multer.File) {
+  async uploadPowerBi(
+    @UploadedFile() file: Express.Multer.File,
+    @CurrentUserDecorator() actor: CurrentUser,
+  ) {
     if (!file) throw new BadRequestException('Nenhum arquivo enviado')
 
     const wb = XLSX.read(file.buffer, { type: 'buffer' })
@@ -567,6 +589,7 @@ export class UploadController {
         filename: file.originalname,
         rowsCount: data.length,
         message: msg,
+        actor,
       }, tx)
     })
 
@@ -580,7 +603,10 @@ export class UploadController {
 
   @Post('solucoes-digitais')
   @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
-  async uploadSolucoesDigitais(@UploadedFile() file: Express.Multer.File) {
+  async uploadSolucoesDigitais(
+    @UploadedFile() file: Express.Multer.File,
+    @CurrentUserDecorator() actor: CurrentUser,
+  ) {
     if (!file) throw new BadRequestException('Nenhum arquivo enviado')
 
     const wb = XLSX.read(file.buffer, { type: 'buffer', cellDates: true })
@@ -656,6 +682,7 @@ export class UploadController {
         filename: file.originalname,
         rowsCount: data.length,
         message: msg,
+        actor,
       }, tx)
     })
 
@@ -669,7 +696,10 @@ export class UploadController {
 
   @Post('contratos')
   @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
-  async uploadContratos(@UploadedFile() file: Express.Multer.File) {
+  async uploadContratos(
+    @UploadedFile() file: Express.Multer.File,
+    @CurrentUserDecorator() actor: CurrentUser,
+  ) {
     if (!file) throw new BadRequestException('Nenhum arquivo enviado')
 
     const wb = XLSX.read(file.buffer, { type: 'buffer', cellDates: true })
@@ -727,6 +757,7 @@ export class UploadController {
         filename: file.originalname,
         rowsCount: pagamentosData.length,
         message: msg,
+        actor,
       }, tx)
     })
 

@@ -1,7 +1,7 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
 import { getExecutiveOverview } from './actions'
-import { KpiCard, KpiCardSkeleton } from '@/components/dashboard/kpi-card'
+import { KpiCard } from '@/components/dashboard/kpi-card'
 import { AtividadesPorAnoChart } from '@/components/charts/charts-dynamic'
 import { DataFreshnessBanner } from '@/components/dashboard/data-freshness-banner'
 import { ErrorState } from '@/components/dashboard/error-state'
@@ -327,6 +327,9 @@ async function DashboardContent() {
                 >
                   {log.filename ?? '—'}
                 </p>
+                <p className="text-xs text-[var(--color-text-subtle)]">
+                  Responsável: {log.actorName ?? '—'}
+                </p>
               </li>
             ))}
           </ul>
@@ -337,6 +340,7 @@ async function DashboardContent() {
                   <th className="px-4 py-2 font-medium">Quando</th>
                   <th className="px-4 py-2 font-medium">Tipo</th>
                   <th className="px-4 py-2 font-medium">Arquivo</th>
+                  <th className="px-4 py-2 font-medium">Responsável</th>
                   <th className="px-4 py-2 font-medium text-right">Linhas</th>
                 </tr>
               </thead>
@@ -349,6 +353,9 @@ async function DashboardContent() {
                     <td className="px-4 py-2.5 text-[var(--color-text)]">{tipoImportLabel(log.tipo)}</td>
                     <td className="px-4 py-2.5 text-[var(--color-text-muted)] text-xs max-w-[200px] truncate" title={log.filename ?? ''}>
                       {log.filename ?? '—'}
+                    </td>
+                    <td className="px-4 py-2.5 text-[var(--color-text-muted)] text-xs max-w-[160px] truncate" title={log.actorEmail ?? ''}>
+                      {log.actorName ?? '—'}
                     </td>
                     <td className="px-4 py-2.5 text-right tabular-nums text-[var(--color-text-muted)]">
                       {log.rowsCount ?? '—'}

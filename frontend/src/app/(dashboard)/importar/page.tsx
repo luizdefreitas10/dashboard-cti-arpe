@@ -12,6 +12,8 @@ type ImportLogRow = {
   filename: string | null
   rowsCount: number | null
   message: string | null
+  actorName: string | null
+  actorEmail: string | null
   createdAt: string
 }
 
@@ -51,7 +53,7 @@ export default function ImportarPage() {
   const fetchLogs = useCallback(async () => {
     try {
       const base = getApiBaseUrl()
-      const res = await fetch(`${base}/import-logs`, { cache: 'no-store' })
+      const res = await fetch(`${base}/import-logs`, { cache: 'no-store', credentials: 'include' })
       if (!res.ok) throw new Error('fetch')
       const data = await res.json()
       setImportLogs(data.logs ?? [])
@@ -80,6 +82,7 @@ export default function ImportarPage() {
       const res = await fetch(`${getApiBaseUrl()}${endpoint}`, {
         method: 'POST',
         body: form,
+        credentials: 'include',
       })
 
       if (!res.ok) {
@@ -230,6 +233,7 @@ export default function ImportarPage() {
                   <th className="px-4 py-2 font-medium">Data</th>
                   <th className="px-4 py-2 font-medium">Tipo</th>
                   <th className="px-4 py-2 font-medium">Arquivo</th>
+                  <th className="px-4 py-2 font-medium">Responsável</th>
                   <th className="px-4 py-2 font-medium text-right">Linhas</th>
                 </tr>
               </thead>
@@ -242,6 +246,9 @@ export default function ImportarPage() {
                     <td className="px-4 py-2 text-[var(--color-text)]">{tipoLabel(log.tipo)}</td>
                     <td className="px-4 py-2 text-xs text-[var(--color-text-muted)] max-w-[180px] truncate" title={log.filename ?? ''}>
                       {log.filename ?? '—'}
+                    </td>
+                    <td className="px-4 py-2 text-xs text-[var(--color-text-muted)] max-w-[160px] truncate" title={log.actorEmail ?? ''}>
+                      {log.actorName ?? '—'}
                     </td>
                     <td className="px-4 py-2 text-right tabular-nums text-[var(--color-text-muted)]">{log.rowsCount ?? '—'}</td>
                   </tr>

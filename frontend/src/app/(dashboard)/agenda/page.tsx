@@ -479,6 +479,12 @@ function MeetingCard({
           <AgendaFormattedText value={reuniao.descricaoPauta} className="line-clamp-3" />
         </div>
       )}
+
+      {reuniao.createdByName && (
+        <p className="mt-3 text-xs text-[var(--color-text-subtle)]">
+          Registrada por {reuniao.createdByName}
+        </p>
+      )}
     </button>
   )
 }
@@ -735,6 +741,13 @@ function MeetingDetailsDialog({
                     </p>
                   )}
                 </div>
+
+                {(reuniao.createdByName || reuniao.updatedByName) && (
+                  <div className="mt-4 grid gap-2 text-xs text-[var(--color-text-subtle)] sm:grid-cols-2">
+                    <p>Registrada por: {reuniao.createdByName ?? '—'}</p>
+                    <p>Última edição por: {reuniao.updatedByName ?? '—'}</p>
+                  </div>
+                )}
               </>
             )}
           </div>

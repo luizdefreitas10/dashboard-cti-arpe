@@ -34,12 +34,20 @@ export function HistoricoDialog({ tombamento, open, onOpenChange }: HistoricoDia
 
   useEffect(() => {
     if (!open || !tombamento) return
-    setLoading(true)
-    BensService()
-      .getHistorico(tombamento)
-      .then((r) => setHistorico(r.historico ?? []))
-      .catch(() => setHistorico([]))
-      .finally(() => setLoading(false))
+
+    async function loadHistorico() {
+      setLoading(true)
+      try {
+        const response = await BensService().getHistorico(tombamento)
+        setHistorico(response.historico ?? [])
+      } catch {
+        setHistorico([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    void loadHistorico()
   }, [open, tombamento])
 
   return (
@@ -101,6 +109,7 @@ export function HistoricoDialog({ tombamento, open, onOpenChange }: HistoricoDia
                     )}
                     <p className="text-[11px] text-[var(--color-text-subtle)] mt-0.5">
                       {formatDate(h.createdAt)}
+                      {h.importLog?.actorName ? ` · Importado por ${h.importLog.actorName}` : ''}
                     </p>
                   </li>
                 ))}

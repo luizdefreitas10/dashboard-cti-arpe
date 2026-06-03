@@ -6,9 +6,13 @@ import { Footer } from '@/components/layout/footer'
 import { PwaInstallPrompt } from '@/components/layout/pwa-install-prompt'
 import { Toaster } from 'react-hot-toast'
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/context/auth-context'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const { user, loading } = useAuth()
+  const router = useRouter()
   const toggleSidebar = () => setSidebarOpen((prev) => !prev)
 
   useEffect(() => {
@@ -18,6 +22,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     window.addEventListener('keydown', onEscape)
     return () => window.removeEventListener('keydown', onEscape)
   }, [])
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace('/login')
+    }
+  }, [loading, router, user])
+
+  if (loading || !user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg)] px-4 text-sm text-[var(--color-text-muted)]">
+        Validando sessão...
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)]">

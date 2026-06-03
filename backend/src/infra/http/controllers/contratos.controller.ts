@@ -1,11 +1,13 @@
 import { Controller, Get, Header, Query } from '@nestjs/common'
 import { PrismaService } from '@/infra/database/prisma/prisma.service'
+import { Public } from '@/infra/auth/decorators/public'
 
 @Controller('contratos')
 export class ContratosController {
   constructor(private prisma: PrismaService) {}
 
   @Get()
+  @Public()
   @Header('Cache-Control', 'no-store, no-cache, must-revalidate')
   @Header('Pragma', 'no-cache')
   async list(
@@ -49,6 +51,7 @@ export class ContratosController {
   }
 
   @Get('resumo')
+  @Public()
   @Header('Cache-Control', 'no-store, no-cache, must-revalidate')
   @Header('Pragma', 'no-cache')
   async resumo(

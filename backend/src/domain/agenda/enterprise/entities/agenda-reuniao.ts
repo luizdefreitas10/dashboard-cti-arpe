@@ -7,6 +7,10 @@ export interface AgendaReuniaoProps {
   horaFim: string;
   local: string;
   descricaoPauta?: string | null;
+  createdById?: string | null;
+  createdByName?: string | null;
+  updatedById?: string | null;
+  updatedByName?: string | null;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -29,6 +33,18 @@ export class AgendaReuniao extends Entity<AgendaReuniaoProps> {
   }
   get descricaoPauta() {
     return this.props.descricaoPauta;
+  }
+  get createdById() {
+    return this.props.createdById;
+  }
+  get createdByName() {
+    return this.props.createdByName;
+  }
+  get updatedById() {
+    return this.props.updatedById;
+  }
+  get updatedByName() {
+    return this.props.updatedByName;
   }
   get createdAt() {
     return this.props.createdAt;

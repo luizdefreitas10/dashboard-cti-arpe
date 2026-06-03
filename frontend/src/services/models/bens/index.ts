@@ -77,6 +77,13 @@ export interface BemHistoricoItem {
   campo: string | null
   valorAnterior: string | null
   valorNovo: string | null
+  importLog: {
+    id: string
+    actorName: string | null
+    actorEmail: string | null
+    filename: string | null
+    createdAt: string
+  } | null
   createdAt: string
 }
 
