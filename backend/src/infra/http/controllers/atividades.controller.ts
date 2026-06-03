@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { ZodValidationPipe } from '../pipes/zod-validation-pipe'
 import { ListAtividadesUseCase } from '@/domain/atividades/application/use-cases/list-atividades'
 import { GetAtividadesStatsUseCase } from '@/domain/atividades/application/use-cases/get-atividades-stats'
+import { Public } from '@/infra/auth/decorators/public'
 import { AtividadePresenter } from '../presenters/atividade-presenter'
 
 const querySchema = z.object({
@@ -27,6 +28,7 @@ export class AtividadesController {
   ) {}
 
   @Get()
+  @Public()
   async list(@Query(new ZodValidationPipe(querySchema)) query: QueryParams) {
     const result = await this.listAtividadesUseCase.execute(query)
     if (result.isLeft()) return { atividades: [], total: 0 }
@@ -42,6 +44,7 @@ export class AtividadesController {
   }
 
   @Get('stats')
+  @Public()
   async stats(
     @Query('dataInicio') dataInicioQ?: string,
     @Query('dataFim') dataFimQ?: string,

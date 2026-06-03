@@ -1,10 +1,12 @@
 import { Controller, Get, Header } from '@nestjs/common'
+import { Public } from '@/infra/auth/decorators/public'
 
 /**
  * Endpoint leve para keep-alive (ex.: UptimeRobot a cada 10 min) e health checks.
  * Não consulta o banco — responde assim que o processo Node está de pé.
  */
 @Controller('health')
+@Public()
 export class HealthController {
   @Get()
   @Header('Cache-Control', 'no-store')

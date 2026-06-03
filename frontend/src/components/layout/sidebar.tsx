@@ -14,9 +14,11 @@ import {
   X,
   FileText,
   CalendarDays,
+  UserCog,
 } from 'lucide-react'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/context/auth-context'
 
 interface NavItem {
   label: string
@@ -24,6 +26,7 @@ interface NavItem {
   icon: React.ReactNode
   children?: { label: string; href: string }[]
   disabled?: boolean
+  adminOnly?: boolean
 }
 
 const navItems: NavItem[] = [
@@ -66,6 +69,12 @@ const navItems: NavItem[] = [
     label: 'Soluções Digitais',
     href: '/solucoes-digitais',
     icon: <Layers size={16} />,
+  },
+  {
+    label: 'Usuários',
+    href: '/usuarios',
+    icon: <UserCog size={16} />,
+    adminOnly: true,
   },
   {
     label: 'Importar Dados',
@@ -149,6 +158,9 @@ function NavGroup({ item, onNavigate }: { item: NavItem; onNavigate: () => void 
 }
 
 function SidebarContent({ onClose, showCloseButton }: { onClose: () => void; showCloseButton: boolean }) {
+  const { user } = useAuth()
+  const visibleItems = navItems.filter((item) => !item.adminOnly || user?.role === 'admin')
+
   return (
     <>
       <div className="px-5 py-4 border-b border-[var(--color-border)] relative">
@@ -181,7 +193,7 @@ function SidebarContent({ onClose, showCloseButton }: { onClose: () => void; sho
       </div>
 
       <nav className="flex-1 overflow-y-auto px-3 py-4 flex flex-col gap-1">
-        {navItems.map((item) => (
+        {visibleItems.map((item) => (
           <NavGroup key={item.label} item={item} onNavigate={onClose} />
         ))}
       </nav>

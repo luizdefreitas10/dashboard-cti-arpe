@@ -26,6 +26,27 @@ model Atividade {
   @@map("atividades")
 }
 
+/// Agentes da Coordenadoria de TI autorizados a operar o sistema
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  passwordHash String
+  role         String    @default("agent")
+  active       Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  agendaCreated AgendaReuniao[] @relation("AgendaCreatedBy")
+  agendaUpdated AgendaReuniao[] @relation("AgendaUpdatedBy")
+  importLogs    DataImportLog[]
+
+  @@index([role])
+  @@index([active])
+  @@map("users")
+}
+
 model AgendaReuniao {
   id         String   @id @default(cuid())
   tema       String
@@ -34,11 +55,17 @@ model AgendaReuniao {
   horaFim    String
   local      String
   descricaoPauta String?
+  createdById String?
+  updatedById String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+  createdBy  User?    @relation("AgendaCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy  User?    @relation("AgendaUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
 
   @@index([data, horaInicio])
   @@index([createdAt(sort: Desc)])
+  @@index([createdById])
+  @@index([updatedById])
   @@map("agenda_reunioes")
 }
 
@@ -66,8 +93,10 @@ model BemHistorico {
   valorNovo    String?
   importLogId  String?
   createdAt    DateTime @default(now())
+  importLog    DataImportLog? @relation(fields: [importLogId], references: [id], onDelete: SetNull)
 
   @@index([tombamento])
+  @@index([importLogId])
   @@index([createdAt(sort: Desc)])
   @@map("bens_historico")
 }
@@ -155,8 +184,14 @@ model DataImportLog {
   filename  String?
   rowsCount Int?
   message   String?
+  actorId   String?
+  actorName String?
+  actorEmail String?
   createdAt DateTime @default(now())
+  actor     User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  bemHistorico BemHistorico[]
 
+  @@index([actorId])
   @@index([createdAt(sort: Desc)])
   @@map("data_import_logs")
 }

@@ -5,6 +5,7 @@ import { ListBensUseCase } from '@/domain/bens/application/use-cases/list-bens'
 import { GetBensStatsUseCase } from '@/domain/bens/application/use-cases/get-bens-stats'
 import { BemPresenter } from '../presenters/bem-presenter'
 import { PrismaService } from '@/infra/database/prisma/prisma.service'
+import { Public } from '@/infra/auth/decorators/public'
 
 const querySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
@@ -32,6 +33,7 @@ export class BensController {
   ) {}
 
   @Get()
+  @Public()
   async list(@Query(new ZodValidationPipe(querySchema)) query: QueryParams) {
     const result = await this.listBensUseCase.execute(query)
     if (result.isLeft()) return { bens: [], total: 0 }
@@ -47,6 +49,7 @@ export class BensController {
   }
 
   @Get('stats')
+  @Public()
   async stats() {
     const result = await this.getBensStatsUseCase.execute()
     if (result.isLeft()) return {}
@@ -54,28 +57,43 @@ export class BensController {
   }
 
   @Get('softwares')
+  @Public()
   async softwares() {
     const softwares = await this.prisma.software.findMany({ orderBy: { nome: 'asc' } })
     return { softwares, total: softwares.length }
   }
 
   @Get('ramais')
+  @Public()
   async ramais() {
     const ramais = await this.prisma.ramal.findMany({ orderBy: { setor: 'asc' } })
     return { ramais, total: ramais.length }
   }
 
   @Get('celulares')
+  @Public()
   async celulares() {
     const celulares = await this.prisma.celular.findMany({ orderBy: { setor: 'asc' } })
     return { celulares, total: celulares.length }
   }
 
   @Get(':tombamento/historico')
+  @Public()
   async historico(@Param('tombamento') tombamento: string) {
     if (!tombamento?.trim()) return { historico: [] }
     const historico = await this.prisma.bemHistorico.findMany({
       where: { tombamento: tombamento.trim() },
+      include: {
+        importLog: {
+          select: {
+            id: true,
+            actorName: true,
+            actorEmail: true,
+            filename: true,
+            createdAt: true,
+          },
+        },
+      },
       orderBy: { createdAt: 'desc' },
       take: 50,
     })

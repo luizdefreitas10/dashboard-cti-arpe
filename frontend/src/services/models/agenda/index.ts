@@ -10,6 +10,10 @@ export interface AgendaReuniao {
   horaFim: string
   local: string
   descricaoPauta: string | null
+  createdById: string | null
+  createdByName: string | null
+  updatedById: string | null
+  updatedByName: string | null
   createdAt: string
   updatedAt: string
 }

@@ -28,6 +28,10 @@ export class PrismaAgendaReunioesRepository implements AgendaReunioesRepository 
         where,
         skip,
         take: size,
+        include: {
+          createdBy: { select: { name: true } },
+          updatedBy: { select: { name: true } },
+        },
         orderBy: [{ data: ordem }, { horaInicio: ordem }],
       }),
       this.prisma.agendaReuniao.count({ where }),
@@ -53,6 +57,10 @@ export class PrismaAgendaReunioesRepository implements AgendaReunioesRepository 
   ): Promise<AgendaReuniao | null> {
     const existing = await this.prisma.agendaReuniao.findUnique({
       where: { id },
+      include: {
+        createdBy: { select: { name: true } },
+        updatedBy: { select: { name: true } },
+      },
     });
 
     if (!existing) return null;
@@ -60,6 +68,10 @@ export class PrismaAgendaReunioesRepository implements AgendaReunioesRepository 
     const updated = await this.prisma.agendaReuniao.update({
       where: { id },
       data,
+      include: {
+        createdBy: { select: { name: true } },
+        updatedBy: { select: { name: true } },
+      },
     });
 
     return PrismaAgendaReuniaoMapper.toDomain(updated);

@@ -10,6 +10,10 @@ export class AgendaReuniaoPresenter {
       horaFim: reuniao.horaFim,
       local: reuniao.local,
       descricaoPauta: reuniao.descricaoPauta ?? null,
+      createdById: reuniao.createdById ?? null,
+      createdByName: reuniao.createdByName ?? null,
+      updatedById: reuniao.updatedById ?? null,
+      updatedByName: reuniao.updatedByName ?? null,
       createdAt: reuniao.createdAt,
       updatedAt: reuniao.updatedAt,
     };

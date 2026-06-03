@@ -10,6 +10,7 @@ interface CreateAgendaReuniaoInput {
   horaFim: string;
   local: string;
   descricaoPauta?: string;
+  createdById?: string;
 }
 
 type CreateAgendaReuniaoOutput = Either<null, { reuniao: AgendaReuniao }>;
@@ -28,6 +29,8 @@ export class CreateAgendaReuniaoUseCase {
       horaFim: input.horaFim,
       local: input.local.trim(),
       descricaoPauta: input.descricaoPauta?.trim() || null,
+      createdById: input.createdById ?? null,
+      updatedById: input.createdById ?? null,
     });
 
     const created = await this.agendaReunioesRepository.create(reuniao);

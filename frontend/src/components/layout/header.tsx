@@ -1,9 +1,10 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
-import { Menu, X } from 'lucide-react'
+import { LogOut, Menu, UserCircle, X } from 'lucide-react'
 import { ThemeSwitch } from '@/components/layout/theme-switch'
 import { Breadcrumb } from '@/components/layout/breadcrumb'
+import { useAuth } from '@/context/auth-context'
 
 const TITLES: Record<string, { title: string; subtitle: string }> = {
   '/dashboard': {
@@ -42,6 +43,10 @@ const TITLES: Record<string, { title: string; subtitle: string }> = {
     title: 'Importar Dados',
     subtitle: 'Atualizar dados a partir de planilhas',
   },
+  '/usuarios': {
+    title: 'Usuários',
+    subtitle: 'Gestão dos agentes da Coordenadoria de TI',
+  },
   '/agenda': {
     title: 'Agenda',
     subtitle: 'Registro e histórico de reuniões da CTI',
@@ -64,7 +69,13 @@ export function Header({
   isMenuOpen: boolean
 }) {
   const pathname = usePathname()
+  const { user, logout } = useAuth()
   const info = TITLES[pathname] ?? { title: 'Dashboard CTI', subtitle: 'Coordenadoria de TI' }
+
+  async function handleLogout() {
+    await logout()
+    window.location.href = '/login'
+  }
 
   return (
     <header className="h-16 shrink-0 border-b border-[var(--color-border)] flex items-center px-2.5 sm:px-4 md:px-6 bg-[var(--color-bg-sidebar)]/60 backdrop-blur-sm sticky top-0 z-50 overflow-hidden">
@@ -89,8 +100,25 @@ export function Header({
           </p>
         </div>
 
-        <div className="shrink-0 justify-self-end">
+        <div className="flex shrink-0 items-center gap-2 justify-self-end">
+          {user && (
+            <div className="hidden min-w-0 items-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-2.5 py-1.5 text-left sm:flex">
+              <UserCircle size={16} className="shrink-0 text-[var(--color-primary)]" aria-hidden />
+              <div className="min-w-0">
+                <p className="max-w-32 truncate text-xs font-semibold text-[var(--color-text)]">{user.name}</p>
+                <p className="text-[10px] uppercase tracking-wide text-[var(--color-text-subtle)]">{user.role === 'admin' ? 'Admin' : 'Agente'}</p>
+              </div>
+            </div>
+          )}
           <ThemeSwitch />
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-md border border-[var(--color-border)] bg-[var(--color-bg-card)] text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text)] cursor-pointer"
+            aria-label="Sair do sistema"
+          >
+            <LogOut size={16} aria-hidden />
+          </button>
         </div>
       </div>
     </header>

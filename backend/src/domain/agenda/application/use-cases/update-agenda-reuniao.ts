@@ -11,6 +11,7 @@ interface UpdateAgendaReuniaoInput {
   horaFim: string;
   local: string;
   descricaoPauta?: string;
+  updatedById?: string;
 }
 
 type UpdateAgendaReuniaoOutput = Either<
@@ -32,6 +33,7 @@ export class UpdateAgendaReuniaoUseCase {
       horaFim: input.horaFim,
       local: input.local.trim(),
       descricaoPauta: input.descricaoPauta?.trim() || null,
+      updatedById: input.updatedById ?? null,
     });
 
     if (!updated) {
