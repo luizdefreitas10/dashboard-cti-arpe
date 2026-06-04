@@ -7,6 +7,7 @@ import { DataFreshnessBanner } from '@/components/dashboard/data-freshness-banne
 import { ErrorState } from '@/components/dashboard/error-state'
 import { DashboardOverviewSkeleton } from '@/components/dashboard/dashboard-overview-skeleton'
 import { ContratosTelematicaOverviewSection } from '@/components/dashboard/contratos-telematica-overview-section'
+import { RecentImportLogs } from '@/components/dashboard/recent-import-logs'
 import {
   Activity,
   Server,
@@ -21,20 +22,9 @@ import {
   Upload,
   FileText,
 } from 'lucide-react'
-import { formatNumber, formatDate } from '@/lib/utils'
+import { formatNumber } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
-
-function tipoImportLabel(tipo: string) {
-  const m: Record<string, string> = {
-    atividades: 'Atividades',
-    bens: 'Bens / inventário',
-    power_bi: 'Power BI',
-    solucoes_digitais: 'Soluções digitais',
-    contratos: 'Contratos (telemática)',
-  }
-  return m[tipo] ?? tipo
-}
 
 function calcVariacaoAnoAno(porAno: { ano: string; total: number }[]) {
   if (!porAno || porAno.length < 2) return null
@@ -298,81 +288,7 @@ async function DashboardContent() {
         </div>
       </div>
 
-      {data.importLogs.length > 0 ? (
-        <section className="min-w-0 border border-[var(--color-border)] rounded-[var(--radius-lg)] overflow-hidden bg-[var(--color-bg-card)]">
-          <div className="px-3 py-3 sm:px-4 border-b border-[var(--color-border)]">
-            <h2 className="text-sm font-semibold text-[var(--color-text)]">Últimas importações</h2>
-            <p className="text-xs text-[var(--color-text-subtle)] mt-0.5 [overflow-wrap:anywhere] leading-relaxed">
-              Auditoria automática após cada upload bem-sucedido.
-            </p>
-          </div>
-          <ul className="sm:hidden divide-y divide-[var(--color-border)]">
-            {data.importLogs.map((log) => (
-              <li key={log.id} className="px-3 py-3 space-y-1.5">
-                <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5">
-                  <time
-                    className="text-xs text-[var(--color-text-muted)] tabular-nums"
-                    dateTime={log.createdAt}
-                  >
-                    {formatDate(log.createdAt)}
-                  </time>
-                  <span className="text-xs font-medium tabular-nums text-[var(--color-text-subtle)]">
-                    {log.rowsCount ?? '—'} linhas
-                  </span>
-                </div>
-                <p className="text-sm font-medium text-[var(--color-text)]">{tipoImportLabel(log.tipo)}</p>
-                <p
-                  className="text-xs text-[var(--color-text-muted)] break-all [overflow-wrap:anywhere]"
-                  title={log.filename ?? ''}
-                >
-                  {log.filename ?? '—'}
-                </p>
-                <p className="text-xs text-[var(--color-text-subtle)]">
-                  Responsável: {log.actorName ?? '—'}
-                </p>
-              </li>
-            ))}
-          </ul>
-          <div className="hidden sm:block overflow-x-auto">
-            <table className="w-full min-w-[520px] text-sm">
-              <thead>
-                <tr className="border-b border-[var(--color-border)] text-left text-xs text-[var(--color-text-subtle)] uppercase">
-                  <th className="px-4 py-2 font-medium">Quando</th>
-                  <th className="px-4 py-2 font-medium">Tipo</th>
-                  <th className="px-4 py-2 font-medium">Arquivo</th>
-                  <th className="px-4 py-2 font-medium">Responsável</th>
-                  <th className="px-4 py-2 font-medium text-right">Linhas</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.importLogs.map((log) => (
-                  <tr key={log.id} className="border-b border-[var(--color-border)]/80 hover:bg-[var(--color-bg-hover)]/50">
-                    <td className="px-4 py-2.5 text-[var(--color-text-muted)] tabular-nums whitespace-nowrap">
-                      {formatDate(log.createdAt)}
-                    </td>
-                    <td className="px-4 py-2.5 text-[var(--color-text)]">{tipoImportLabel(log.tipo)}</td>
-                    <td className="px-4 py-2.5 text-[var(--color-text-muted)] text-xs max-w-[200px] truncate" title={log.filename ?? ''}>
-                      {log.filename ?? '—'}
-                    </td>
-                    <td className="px-4 py-2.5 text-[var(--color-text-muted)] text-xs max-w-[160px] truncate" title={log.actorEmail ?? ''}>
-                      {log.actorName ?? '—'}
-                    </td>
-                    <td className="px-4 py-2.5 text-right tabular-nums text-[var(--color-text-muted)]">
-                      {log.rowsCount ?? '—'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      ) : (
-        <section className="min-w-0">
-          <p className="text-xs text-[var(--color-text-subtle)]">
-            Nenhuma importação registrada. Use a página <Link href="/importar" className="text-[var(--color-primary)] hover:underline">Importar Dados</Link> para enviar planilhas.
-          </p>
-        </section>
-      )}
+      <RecentImportLogs logs={data.importLogs} />
     </div>
   )
 }
