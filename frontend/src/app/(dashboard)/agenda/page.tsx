@@ -14,6 +14,7 @@ import {
   FileText,
   Filter,
   Italic,
+  Link2,
   Loader2,
   MapPin,
   Maximize2,
@@ -101,11 +102,66 @@ function extractErrorMessage(error: unknown) {
   return 'Não foi possível concluir a operação.'
 }
 
-function renderInlineMarkdown(text: string, keyPrefix: string): ReactNode[] {
+function normalizeHyperlinkUrl(rawUrl: string) {
+  const trimmedUrl = rawUrl.trim()
+  if (!trimmedUrl) return null
+  if (/\s/.test(trimmedUrl)) return null
+
+  const urlWithProtocol = /^[a-z][a-z\d+.-]*:/i.test(trimmedUrl)
+    ? trimmedUrl
+    : `https://${trimmedUrl}`
+
+  try {
+    const url = new URL(urlWithProtocol)
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return null
+    if (!url.hostname.includes('.') && url.hostname !== 'localhost') return null
+    return url.toString()
+  } catch {
+    return null
+  }
+}
+
+function renderInlineMarkdown(text: string, keyPrefix: string, interactiveLinks = true): ReactNode[] {
   const nodes: ReactNode[] = []
   let index = 0
 
   while (index < text.length) {
+    if (text[index] === '[') {
+      const labelEnd = text.indexOf(']', index + 1)
+      const urlStart = labelEnd >= 0 ? text.indexOf('(', labelEnd) : -1
+      const urlEnd = urlStart >= 0 ? text.indexOf(')', urlStart + 1) : -1
+
+      if (labelEnd > index + 1 && urlStart === labelEnd + 1 && urlEnd > urlStart + 1) {
+        const label = text.slice(index + 1, labelEnd)
+        const href = normalizeHyperlinkUrl(text.slice(urlStart + 1, urlEnd))
+
+        if (href) {
+          nodes.push(
+            interactiveLinks ? (
+              <a
+                key={`${keyPrefix}-${index}`}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-[var(--color-primary)] underline underline-offset-2 transition-colors hover:text-[var(--color-primary-hover)]"
+              >
+                {label}
+              </a>
+            ) : (
+              <span
+                key={`${keyPrefix}-${index}`}
+                className="font-medium text-[var(--color-primary)] underline underline-offset-2"
+              >
+                {label}
+              </span>
+            ),
+          )
+          index = urlEnd + 1
+          continue
+        }
+      }
+    }
+
     if (text.startsWith('**', index)) {
       const end = text.indexOf('**', index + 2)
       if (end > index + 2) {
@@ -148,7 +204,8 @@ function renderInlineMarkdown(text: string, keyPrefix: string): ReactNode[] {
     const nextBold = text.indexOf('**', index + 1)
     const nextItalic = text.indexOf('*', index + 1)
     const nextUnderline = text.indexOf('__', index + 1)
-    const candidates = [nextBold, nextItalic, nextUnderline].filter((position) => position > index)
+    const nextLink = text.indexOf('[', index + 1)
+    const candidates = [nextBold, nextItalic, nextUnderline, nextLink].filter((position) => position > index)
     const nextMarker = candidates.length ? Math.min(...candidates) : text.length
     nodes.push(text.slice(index, nextMarker))
     index = nextMarker
@@ -160,9 +217,11 @@ function renderInlineMarkdown(text: string, keyPrefix: string): ReactNode[] {
 function AgendaFormattedText({
   value,
   className,
+  interactiveLinks = true,
 }: {
   value: string
   className?: string
+  interactiveLinks?: boolean
 }) {
   const lines = value.split(/\r?\n/)
 
@@ -170,12 +229,19 @@ function AgendaFormattedText({
     <div className={cn('whitespace-pre-wrap text-sm leading-relaxed text-[var(--color-text-muted)] wrap-anywhere', className)}>
       {lines.map((line, lineIndex) => (
         <Fragment key={`${lineIndex}-${line}`}>
-          {renderInlineMarkdown(line, `line-${lineIndex}`)}
+          {renderInlineMarkdown(line, `line-${lineIndex}`, interactiveLinks)}
           {lineIndex < lines.length - 1 ? <br /> : null}
         </Fragment>
       ))}
     </div>
   )
+}
+
+type TextSelectionTarget = {
+  start: number
+  end: number
+  text: string
+  textarea: HTMLTextAreaElement
 }
 
 function DescriptionPautaEditor({
@@ -192,10 +258,17 @@ function DescriptionPautaEditor({
   rows?: number
 }) {
   const [expandedOpen, setExpandedOpen] = useState(false)
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false)
+  const [linkUrl, setLinkUrl] = useState('')
+  const [linkError, setLinkError] = useState('')
+  const [selectedLinkText, setSelectedLinkText] = useState('')
   const compactTextareaRef = useRef<HTMLTextAreaElement>(null)
   const expandedTextareaRef = useRef<HTMLTextAreaElement>(null)
+  const linkInputRef = useRef<HTMLInputElement>(null)
+  const pendingLinkSelectionRef = useRef<TextSelectionTarget | null>(null)
   const helperId = `${id}-helper`
   const previewId = `${id}-preview`
+  const linkDialogDescriptionId = `${id}-link-description`
 
   function updateTextareaSelection(
     textarea: HTMLTextAreaElement,
@@ -249,6 +322,94 @@ function DescriptionPautaEditor({
     updateTextareaSelection(textarea, nextValue, start, start + replacementText.length)
   }
 
+  function getTextareaSelection(textarea: HTMLTextAreaElement) {
+    const start = textarea.selectionStart
+    const end = textarea.selectionEnd
+    const rawSelectedText = value.slice(start, end)
+    const leadingWhitespaceLength = rawSelectedText.length - rawSelectedText.trimStart().length
+    const trailingWhitespaceLength = rawSelectedText.length - rawSelectedText.trimEnd().length
+    const selectionStart = start + leadingWhitespaceLength
+    const selectionEnd = end - trailingWhitespaceLength
+    const selectedText = value.slice(selectionStart, selectionEnd)
+
+    if (!selectedText) return null
+
+    return {
+      start: selectionStart,
+      end: selectionEnd,
+      text: selectedText,
+      textarea,
+    }
+  }
+
+  function applyHyperlink(selection: TextSelectionTarget, href: string) {
+    const replacementText = `[${selection.text}](${href})`
+    const nextValue = `${value.slice(0, selection.start)}${replacementText}${value.slice(selection.end)}`
+    const selectionStart = selection.start + 1
+    const selectionEnd = selectionStart + selection.text.length
+
+    setLinkDialogOpen(false)
+    setLinkError('')
+    setLinkUrl('')
+    updateTextareaSelection(selection.textarea, nextValue, selectionStart, selectionEnd)
+  }
+
+  function linkSelection(textarea: HTMLTextAreaElement | null) {
+    if (!textarea) return
+
+    const selection = getTextareaSelection(textarea)
+
+    if (!selection) {
+      textarea.focus()
+      toast.error('Selecione um trecho da descrição/pauta para criar o link.')
+      return
+    }
+
+    const selectedHref = normalizeHyperlinkUrl(selection.text)
+    if (selectedHref) {
+      applyHyperlink(selection, selectedHref)
+      return
+    }
+
+    pendingLinkSelectionRef.current = selection
+    setSelectedLinkText(selection.text)
+    setLinkUrl('')
+    setLinkError('')
+    setLinkDialogOpen(true)
+  }
+
+  function handleApplyLink(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+
+    const selection = pendingLinkSelectionRef.current
+    if (!selection) {
+      setLinkDialogOpen(false)
+      return
+    }
+
+    const href = normalizeHyperlinkUrl(linkUrl)
+    if (!href) {
+      setLinkError('Informe uma URL válida, como https://exemplo.com ou meet.google.com/abc-defg-hij.')
+      linkInputRef.current?.focus()
+      return
+    }
+
+    applyHyperlink(selection, href)
+    pendingLinkSelectionRef.current = null
+    setSelectedLinkText('')
+  }
+
+  function closeLinkDialog() {
+    setLinkDialogOpen(false)
+    setLinkUrl('')
+    setLinkError('')
+    setSelectedLinkText('')
+    window.requestAnimationFrame(() => {
+      pendingLinkSelectionRef.current?.textarea.focus()
+      pendingLinkSelectionRef.current = null
+    })
+  }
+
   function renderToolbar(textareaRef: RefObject<HTMLTextAreaElement | null>, expanded = false) {
     return (
       <div className="flex flex-wrap items-center gap-2">
@@ -278,6 +439,15 @@ function DescriptionPautaEditor({
         >
           <Underline size={14} aria-hidden />
           Sublinhado
+        </button>
+        <button
+          type="button"
+          onClick={() => linkSelection(textareaRef.current)}
+          className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-2.5 py-1.5 text-xs font-medium text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text)] cursor-pointer"
+          aria-label="Transformar texto selecionado em link"
+        >
+          <Link2 size={14} aria-hidden />
+          Link
         </button>
         <button
           type="button"
@@ -330,7 +500,7 @@ function DescriptionPautaEditor({
           className="w-full resize-y rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-input)] px-3 py-2 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus:border-[var(--color-primary)] focus:outline-none"
         />
         <p id={helperId} className="text-xs text-[var(--color-text-subtle)]">
-          Selecione um trecho e use os botões para aplicar negrito, itálico, sublinhado ou ajustar maiúsculas/minúsculas.
+          Selecione um trecho e use os botões para aplicar formatação, criar link ou ajustar maiúsculas/minúsculas.
         </p>
       </div>
 
@@ -351,7 +521,7 @@ function DescriptionPautaEditor({
                   Editar descrição/pauta
                 </Dialog.Title>
                 <p id={`${id}-expanded-description`} className="mt-1 text-sm text-[var(--color-text-muted)]">
-                  Use a área ampliada para escrever, revisar e formatar a pauta da reunião.
+                  Use a área ampliada para escrever, revisar, formatar e transformar trechos selecionados em links.
                 </p>
               </div>
               <Dialog.Close asChild>
@@ -409,6 +579,116 @@ function DescriptionPautaEditor({
                 </button>
               </Dialog.Close>
             </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+
+      <Dialog.Root
+        open={linkDialogOpen}
+        onOpenChange={(open) => {
+          if (open) {
+            setLinkDialogOpen(true)
+          } else {
+            closeLinkDialog()
+          }
+        }}
+      >
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 z-[70] bg-black/60 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+          <Dialog.Content
+            aria-describedby={linkDialogDescriptionId}
+            className="fixed left-3 right-3 top-1/2 z-[70] max-h-[calc(100dvh-2rem)] -translate-y-1/2 overflow-y-auto rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 shadow-lg focus:outline-none sm:left-1/2 sm:right-auto sm:w-[min(92vw,480px)] sm:-translate-x-1/2 sm:p-5"
+            onOpenAutoFocus={(event) => {
+              event.preventDefault()
+              linkInputRef.current?.focus()
+            }}
+            onCloseAutoFocus={(event) => {
+              event.preventDefault()
+              const selection = pendingLinkSelectionRef.current
+              window.requestAnimationFrame(() => selection?.textarea.focus())
+            }}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <Dialog.Title className="text-lg font-semibold text-[var(--color-text)]">
+                  Adicionar hyperlink
+                </Dialog.Title>
+                <Dialog.Description id={linkDialogDescriptionId} className="mt-1 text-sm text-[var(--color-text-muted)]">
+                  Informe a URL de destino para transformar o texto selecionado em um link clicável.
+                </Dialog.Description>
+              </div>
+              <button
+                type="button"
+                onClick={closeLinkDialog}
+                className="shrink-0 rounded-[var(--radius-md)] p-2 text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text)] cursor-pointer"
+                aria-label="Cancelar criação de link"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {selectedLinkText ? (
+              <div className="mt-4 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-hover)]/35 p-3">
+                <p className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-subtle)]">
+                  Texto selecionado
+                </p>
+                <p className="mt-1 max-h-20 overflow-y-auto text-sm text-[var(--color-text)] wrap-anywhere">
+                  {selectedLinkText}
+                </p>
+              </div>
+            ) : null}
+
+            <form onSubmit={handleApplyLink} className="mt-4 flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor={`${id}-link-url`} className="text-sm font-medium text-[var(--color-text)]">
+                  URL do link
+                </label>
+                <input
+                  id={`${id}-link-url`}
+                  ref={linkInputRef}
+                  type="text"
+                  inputMode="url"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  value={linkUrl}
+                  onChange={(event) => {
+                    setLinkUrl(event.target.value)
+                    if (linkError) setLinkError('')
+                  }}
+                  placeholder="https://meet.google.com/..."
+                  aria-invalid={Boolean(linkError)}
+                  aria-describedby={linkError ? `${id}-link-error` : undefined}
+                  className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-input)] px-3 py-2.5 text-base text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus:border-[var(--color-primary)] focus:outline-none"
+                />
+                {linkError ? (
+                  <p id={`${id}-link-error`} className="text-sm text-[var(--color-alta)]">
+                    {linkError}
+                  </p>
+                ) : (
+                  <p className="text-xs text-[var(--color-text-subtle)]">
+                    Você pode informar com ou sem https://. Apenas links http e https são aceitos.
+                  </p>
+                )}
+              </div>
+
+              <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <button
+                  type="button"
+                  onClick={closeLinkDialog}
+                  className="inline-flex min-h-11 w-full items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-border)] px-4 py-2 text-sm font-medium text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text)] cursor-pointer sm:w-auto"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[var(--color-primary-hover)] cursor-pointer sm:w-auto"
+                >
+                  <Link2 size={16} aria-hidden />
+                  Aplicar link
+                </button>
+              </div>
+            </form>
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog.Root>
@@ -476,7 +756,7 @@ function MeetingCard({
             <FileText size={14} aria-hidden />
             <span>Descrição/Pauta</span>
           </div>
-          <AgendaFormattedText value={reuniao.descricaoPauta} className="line-clamp-3" />
+          <AgendaFormattedText value={reuniao.descricaoPauta} className="line-clamp-3" interactiveLinks={false} />
         </div>
       )}
 

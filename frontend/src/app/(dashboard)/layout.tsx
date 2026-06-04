@@ -4,6 +4,7 @@ import { Sidebar } from '@/components/layout/sidebar'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { PwaInstallPrompt } from '@/components/layout/pwa-install-prompt'
+import { DashboardLoadingShell } from '@/components/layout/dashboard-loading-shell'
 import { Toaster } from 'react-hot-toast'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -30,11 +31,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [loading, router, user])
 
   if (loading || !user) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg)] px-4 text-sm text-[var(--color-text-muted)]">
-        Validando sessão...
-      </div>
-    )
+    return <DashboardLoadingShell />
   }
 
   return (

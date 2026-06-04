@@ -55,7 +55,7 @@ export async function getExecutiveOverview() {
       powerBiTotal: dashboards.length,
       powerBiConcluidos,
       pctWin11,
-      importLogs: logs.slice(0, 12),
+      importLogs: logs,
       contratosResumo,
     }
   } catch (error) {
