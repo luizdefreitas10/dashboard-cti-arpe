@@ -214,7 +214,7 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
       {/* Overlay mobile/tablet */}
       <div
         className={cn(
-          'fixed top-16 left-0 right-0 bottom-0 z-40 bg-black/40 transition-opacity duration-300 lg:hidden',
+          'fixed left-0 right-0 bottom-0 top-(--dashboard-header-offset) z-40 bg-black/40 transition-opacity duration-300 lg:hidden',
           open ? 'opacity-100' : 'pointer-events-none opacity-0',
         )}
         onClick={onClose}
@@ -225,7 +225,7 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
       {/* Drawer mobile/tablet - slide over content */}
       <aside
         className={cn(
-          'fixed left-0 top-16 z-50 flex h-[calc(100vh-4rem)] w-[min(78vw,320px)] flex-col border-r border-[var(--color-border)] bg-[var(--color-bg-sidebar)] transition-transform duration-300 lg:hidden',
+          'fixed left-0 top-(--dashboard-header-offset) z-50 flex h-[calc(100dvh-var(--dashboard-header-offset))] w-[min(78vw,320px)] flex-col border-r border-[var(--color-border)] bg-[var(--color-bg-sidebar)] transition-transform duration-300 lg:hidden',
           open ? 'translate-x-0' : '-translate-x-full pointer-events-none',
         )}
         aria-hidden={!open}
