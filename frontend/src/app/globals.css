@@ -45,6 +45,12 @@
   --space-section: 112px;
   --space-group: 64px;
   --space-element: 24px;
+
+  /* ─── iOS PWA safe areas ─── */
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --dashboard-header-height: 4rem;
+  --dashboard-header-offset: calc(var(--dashboard-header-height) + var(--safe-area-inset-top));
 }
 
 /* Tema claro (switch no header) - paleta ARPE light */

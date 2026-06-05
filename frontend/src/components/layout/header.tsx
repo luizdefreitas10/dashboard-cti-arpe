@@ -78,7 +78,7 @@ export function Header({
   }
 
   return (
-    <header className="h-16 shrink-0 border-b border-[var(--color-border)] flex items-center px-2.5 sm:px-4 md:px-6 bg-[var(--color-bg-sidebar)]/60 backdrop-blur-sm sticky top-0 z-50 overflow-hidden">
+    <header className="h-(--dashboard-header-offset) shrink-0 border-b border-[var(--color-border)] flex items-center px-2.5 pt-(--safe-area-inset-top) sm:px-4 md:px-6 bg-[var(--color-bg-sidebar)]/60 backdrop-blur-sm sticky top-0 z-50 overflow-hidden">
       <div className="grid w-full h-full min-h-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-1.5 sm:gap-3">
         <div className="hidden lg:block w-10 shrink-0" aria-hidden />
         <button

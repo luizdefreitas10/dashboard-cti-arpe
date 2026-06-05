@@ -42,7 +42,7 @@ function SidebarSkeleton() {
 function HeaderSkeleton() {
   return (
     <header
-      className="sticky top-0 z-50 flex h-16 shrink-0 items-center overflow-hidden border-b border-(--color-border) bg-(--color-bg-sidebar)/80 px-2.5 backdrop-blur-sm sm:px-4 md:px-6"
+      className="sticky top-0 z-50 flex h-(--dashboard-header-offset) shrink-0 items-center overflow-hidden border-b border-(--color-border) bg-(--color-bg-sidebar)/80 px-2.5 pt-(--safe-area-inset-top) backdrop-blur-sm sm:px-4 md:px-6"
       aria-hidden
     >
       <div className="grid h-full w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-1.5 sm:gap-3">
