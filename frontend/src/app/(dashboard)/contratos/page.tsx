@@ -8,6 +8,11 @@ import { CalendarClock, CheckCircle2, Search, AlertTriangle, Clock3, FileText, L
 import ContratosService, { ContratoServico, ContratoStatus, ContratosResumo } from '@/services/models/contratos'
 import { KpiCardSkeleton } from '@/components/dashboard/kpi-card'
 import { cn } from '@/lib/utils'
+import {
+  CONTRATO_PRESTADOR_FILTER_OPTIONS,
+  ContratoPrestadorFilter,
+  getContratoPrestadorIcon,
+} from '@/lib/contratos-prestadores'
 
 const MONTH_LABELS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
 /** Ano padrão ao abrir a tela; o usuário pode mudar para outro ano ou “todos”. */
@@ -19,12 +24,6 @@ const STATUS_META: Record<ContratoStatus, { label: string; className: string }> 
   A_VENCER: { label: 'A vencer', className: 'bg-amber-500/15 text-amber-400 border-amber-500/30' },
   VENCIDO: { label: 'Vencido', className: 'bg-rose-500/15 text-rose-400 border-rose-500/30' },
   SEM_STATUS: { label: 'Sem status', className: 'bg-slate-500/15 text-slate-300 border-slate-500/30' },
-}
-
-const PROVIDER_ICON: Record<'OI' | 'CLARO' | 'SIMPRESS', string> = {
-  OI: '/contratos/providers/oi.png',
-  CLARO: '/contratos/providers/simpress.png',
-  SIMPRESS: '/contratos/providers/claro.png',
 }
 
 function formatDateBr(value: string | null) {
@@ -114,7 +113,7 @@ export default function ContratosPage() {
   const [servicos, setServicos] = useState<ContratoServico[]>([])
   const [anosDisponiveis, setAnosDisponiveis] = useState<number[]>([])
   const [resumo, setResumo] = useState<ContratosResumo | null>(null)
-  const [prestador, setPrestador] = useState<'TODOS' | 'OI' | 'CLARO' | 'SIMPRESS'>('TODOS')
+  const [prestador, setPrestador] = useState<ContratoPrestadorFilter>('TODOS')
   const [status, setStatus] = useState<'TODOS' | ContratoStatus>('TODOS')
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
@@ -312,7 +311,9 @@ export default function ContratosPage() {
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          {(['TODOS', 'OI', 'CLARO', 'SIMPRESS'] as const).map((p) => (
+          {CONTRATO_PRESTADOR_FILTER_OPTIONS.map((p) => {
+            const icon = p !== 'TODOS' ? getContratoPrestadorIcon(p) : null
+            return (
             <button
               key={p}
               type="button"
@@ -325,14 +326,15 @@ export default function ContratosPage() {
                   : 'border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-text)]',
               )}
             >
-              {p !== 'TODOS' ? (
+              {icon ? (
                 <span className="relative w-4 h-4 shrink-0">
-                  <Image src={PROVIDER_ICON[p]} alt={`${p} logo`} fill className="object-contain" />
+                  <Image src={icon} alt={`${p} logo`} fill className="object-contain" />
                 </span>
               ) : null}
               {p === 'TODOS' ? 'Todos os prestadores' : p}
             </button>
-          ))}
+            )
+          })}
         </div>
       </div>
 
@@ -389,15 +391,17 @@ export default function ContratosPage() {
               </span>
             </div>
           ) : null}
-          {visibleServicos.map((s) => (
+          {visibleServicos.map((s) => {
+            const providerIcon = getContratoPrestadorIcon(s.prestador)
+            return (
             <section key={s.id} className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 flex flex-col gap-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-xs uppercase tracking-wide text-[var(--color-text-subtle)] inline-flex items-center gap-1.5">
-                    {s.prestador in PROVIDER_ICON ? (
+                    {providerIcon ? (
                       <span className="relative w-4 h-4 shrink-0">
                         <Image
-                          src={PROVIDER_ICON[s.prestador as 'OI' | 'CLARO' | 'SIMPRESS']}
+                          src={providerIcon}
                           alt={`${s.prestador} logo`}
                           fill
                           className="object-contain"
@@ -460,7 +464,8 @@ export default function ContratosPage() {
                 </p>
               ) : null}
             </section>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>

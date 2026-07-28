@@ -28,7 +28,7 @@ export function ContratosTelematicaOverviewSection({ resumo }: { resumo: Contrat
             </h2>
           </div>
           <p className="mt-2 text-xs text-[var(--color-text-muted)] leading-relaxed [overflow-wrap:anywhere] text-pretty">
-            Pagamentos por competência (OI, Claro, Simpress). Indicadores consolidados de todas as vigências
+            Pagamentos por competência (OI, Claro, Simpress, Método, Vectra e 1Telecom). Indicadores consolidados de todas as vigências
             importadas.
           </p>
         </div>
