@@ -274,7 +274,7 @@ export default function ImportarPage() {
     {
       label: 'Contratos de Telemática',
       eyebrow: 'Financeiro',
-      description: 'Atualiza as abas OI, CLARO e SIMPRESS com acompanhamento mensal por competência.',
+      description: 'Atualiza as abas OI, CLARO, SIMPRESS, MÉTODO, VECTRA e 1TELECOM com acompanhamento mensal por competência.',
       filename: 'Contratos Telemática.xlsx',
       endpoint: '/upload/contratos',
       state: contratos,

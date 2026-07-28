@@ -128,7 +128,7 @@ type ParsedContratoMensal = {
 }
 
 type ParsedContratoServico = {
-  prestador: 'OI' | 'CLARO' | 'SIMPRESS'
+  prestador: string
   nomeServico: string
   numeroReferencia: string | null
   dataInicio: Date | null
@@ -138,10 +138,15 @@ type ParsedContratoServico = {
 }
 
 type SectionSpec = {
-  prestador: 'OI' | 'CLARO' | 'SIMPRESS'
+  prestador: string
   nomeServico: string
   startCol: number
   hasObs: boolean
+}
+
+/** Aba com um único bloco de competências (layout CLARO / MÉTODO / VECTRA / 1TELECOM). */
+function singleProviderSheet(prestador: string, hasObs = true): SectionSpec[] {
+  return [{ prestador, nomeServico: prestador, startCol: 2, hasObs }]
 }
 
 function readCell(matrix: unknown[][], row1: number, col1: number): unknown {
@@ -209,7 +214,7 @@ function parseSectionsFromSheet(matrix: unknown[][], specs: SectionSpec[]): Pars
   return [...out.values()]
 }
 
-function parseContratosWorkbook(wb: XLSX.WorkBook): ParsedContratoServico[] {
+export function parseContratosWorkbook(wb: XLSX.WorkBook): ParsedContratoServico[] {
   const specsBySheet: Record<string, SectionSpec[]> = {
     OI: [
       { prestador: 'OI', nomeServico: 'OI 0800 EXTRA REDE', startCol: 2, hasObs: true },
@@ -220,6 +225,9 @@ function parseContratosWorkbook(wb: XLSX.WorkBook): ParsedContratoServico[] {
       { prestador: 'SIMPRESS', nomeServico: 'SIMPRESS PRETO E BRANCO', startCol: 2, hasObs: false },
       { prestador: 'SIMPRESS', nomeServico: 'SIMPRESS COLORIDA', startCol: 11, hasObs: false },
     ],
+    MÉTODO: singleProviderSheet('MÉTODO'),
+    VECTRA: singleProviderSheet('VECTRA'),
+    '1TELECOM': singleProviderSheet('1TELECOM'),
   }
 
   const parsed: ParsedContratoServico[] = []
@@ -705,7 +713,9 @@ export class UploadController {
     const wb = XLSX.read(file.buffer, { type: 'buffer', cellDates: true })
     const parsed = parseContratosWorkbook(wb)
     if (parsed.length === 0) {
-      throw new BadRequestException('Nenhum contrato válido encontrado nas abas OI, CLARO e SIMPRESS.')
+      throw new BadRequestException(
+        'Nenhum contrato válido encontrado nas abas OI, CLARO, SIMPRESS, MÉTODO, VECTRA e 1TELECOM.',
+      )
     }
 
     const contratosData = parsed.map((s) => ({
