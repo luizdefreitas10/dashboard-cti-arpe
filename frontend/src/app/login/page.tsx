@@ -131,13 +131,13 @@ export default function LoginPage() {
                 autoComplete={canBootstrap ? 'new-password' : 'current-password'}
                 value={form.password}
                 onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))}
-                minLength={canBootstrap ? 10 : 1}
+                minLength={canBootstrap ? 8 : 1}
                 className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-input)] px-3 py-2 text-sm text-[var(--color-text)] focus:border-[var(--color-primary)] focus:outline-none"
                 required
               />
               {canBootstrap && (
                 <p className="text-xs text-[var(--color-text-subtle)]">
-                  Use pelo menos 10 caracteres.
+                  Use pelo menos 8 caracteres.
                 </p>
               )}
             </div>
