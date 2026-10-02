@@ -8,12 +8,25 @@ import { cn, formatDate } from '@/lib/utils'
 import UsersService, { SystemUser } from '@/services/models/users'
 import type { UserRole } from '@/services/models/auth'
 
+const MIN_PASSWORD_LENGTH = 8
+
 function extractMessage(error: unknown) {
   if (error && typeof error === 'object' && 'message' in error) {
     const message = (error as { message?: unknown }).message
     if (typeof message === 'string') return message
   }
   return 'Não foi possível concluir a operação.'
+}
+
+function validateNewPassword(password: string): string | null {
+  if (password.length < MIN_PASSWORD_LENGTH) {
+    return `A senha deve ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres.`
+  }
+  return null
+}
+
+function isPasswordReady(password: string | undefined) {
+  return Boolean(password?.trim() && password.trim().length >= MIN_PASSWORD_LENGTH)
 }
 
 const emptyCreateForm = {
@@ -70,6 +83,15 @@ export default function UsuariosPage() {
     const next = editing[id]
     if (!next) return
 
+    const newPassword = passwords[id]?.trim() ?? ''
+    if (newPassword) {
+      const passwordError = validateNewPassword(newPassword)
+      if (passwordError) {
+        toast.error(passwordError)
+        return
+      }
+    }
+
     setSaving(true)
     try {
       await usersService.update(id, {
@@ -78,7 +100,15 @@ export default function UsuariosPage() {
         role: next.role,
         active: next.active,
       })
-      toast.success('Usuário atualizado com sucesso.')
+
+      if (newPassword) {
+        await usersService.resetPassword(id, newPassword)
+        setPasswords((current) => ({ ...current, [id]: '' }))
+        toast.success('Usuário e senha atualizados com sucesso.')
+      } else {
+        toast.success('Usuário atualizado com sucesso.')
+      }
+
       await fetchUsers()
     } catch (error) {
       toast.error(extractMessage(error))
@@ -91,6 +121,12 @@ export default function UsuariosPage() {
     const password = passwords[id]?.trim()
     if (!password) {
       toast.error('Informe a nova senha.')
+      return
+    }
+
+    const passwordError = validateNewPassword(password)
+    if (passwordError) {
+      toast.error(passwordError)
       return
     }
 
@@ -151,7 +187,7 @@ export default function UsuariosPage() {
             value={createForm.password}
             onChange={(event) => setCreateForm((current) => ({ ...current, password: event.target.value }))}
             placeholder="Senha inicial"
-            minLength={10}
+            minLength={8}
             className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-input)] px-3 py-2 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus:border-[var(--color-primary)] focus:outline-none"
             required
           />
@@ -242,14 +278,14 @@ export default function UsuariosPage() {
                         type="password"
                         value={passwords[item.id] ?? ''}
                         onChange={(event) => setPasswords((current) => ({ ...current, [item.id]: event.target.value }))}
-                        placeholder="Nova senha"
-                        minLength={10}
+                        placeholder="Nova senha (mín. 8 caracteres)"
+                        autoComplete="new-password"
                         className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-input)] px-3 py-2 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus:border-[var(--color-primary)] focus:outline-none"
                       />
                       <button
                         type="button"
                         onClick={() => handleResetPassword(item.id)}
-                        disabled={saving || !(passwords[item.id]?.trim())}
+                        disabled={saving || !isPasswordReady(passwords[item.id])}
                         className={cn(
                           'inline-flex min-h-9 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 py-2 text-xs font-medium transition-colors cursor-pointer',
                           'text-[var(--color-text-muted)] hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text)] disabled:cursor-not-allowed disabled:opacity-50',

@@ -34,7 +34,7 @@ const loginSchema = z.object({
 const bootstrapSchema = z.object({
   name: z.string().trim().min(2, 'Informe o nome'),
   email: z.string().trim().email('Informe um e-mail válido'),
-  password: z.string().min(10, 'A senha deve ter pelo menos 10 caracteres'),
+  password: z.string().min(8, 'A senha deve ter pelo menos 8 caracteres'),
 });
 
 type LoginBody = z.infer<typeof loginSchema>;

@@ -27,7 +27,7 @@ const paramsSchema = z.object({
 const createUserSchema = z.object({
   name: z.string().trim().min(2, 'Informe o nome'),
   email: z.string().trim().email('Informe um e-mail válido'),
-  password: z.string().min(10, 'A senha deve ter pelo menos 10 caracteres'),
+  password: z.string().min(8, 'A senha deve ter pelo menos 8 caracteres'),
   role: roleSchema.default('agent'),
   active: z.boolean().default(true),
 });
@@ -40,7 +40,7 @@ const updateUserSchema = z.object({
 });
 
 const resetPasswordSchema = z.object({
-  password: z.string().min(10, 'A senha deve ter pelo menos 10 caracteres'),
+  password: z.string().min(8, 'A senha deve ter pelo menos 8 caracteres'),
 });
 
 type RouteParams = z.infer<typeof paramsSchema>;
@@ -80,6 +80,23 @@ export class UsersController {
     return { user: UserPresenter.toHTTP(result.value.user) };
   }
 
+  @Patch(':id/password')
+  async resetPassword(
+    @Param(new ZodValidationPipe(paramsSchema)) params: RouteParams,
+    @Body(new ZodValidationPipe(resetPasswordSchema)) body: ResetPasswordBody,
+  ) {
+    const result = await this.resetUserPasswordUseCase.execute({
+      id: params.id,
+      password: body.password,
+    });
+
+    if (result.isLeft()) {
+      throw new NotFoundException('Usuário não encontrado');
+    }
+
+    return { user: UserPresenter.toHTTP(result.value.user) };
+  }
+
   @Patch(':id')
   async update(
     @Param(new ZodValidationPipe(paramsSchema)) params: RouteParams,
@@ -100,23 +117,6 @@ export class UsersController {
       throw new BadRequestException(
         'Mantenha pelo menos um administrador ativo no sistema',
       );
-    }
-
-    return { user: UserPresenter.toHTTP(result.value.user) };
-  }
-
-  @Patch(':id/password')
-  async resetPassword(
-    @Param(new ZodValidationPipe(paramsSchema)) params: RouteParams,
-    @Body(new ZodValidationPipe(resetPasswordSchema)) body: ResetPasswordBody,
-  ) {
-    const result = await this.resetUserPasswordUseCase.execute({
-      id: params.id,
-      password: body.password,
-    });
-
-    if (result.isLeft()) {
-      throw new NotFoundException('Usuário não encontrado');
     }
 
     return { user: UserPresenter.toHTTP(result.value.user) };
