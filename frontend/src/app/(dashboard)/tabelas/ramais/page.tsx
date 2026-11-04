@@ -62,10 +62,10 @@ export default function TabelaRamaisPage() {
               <tr key={r.id} className="border-b border-[var(--color-border)] hover:bg-[var(--color-bg-hover)] transition-colors">
                 <td className="px-4 py-3 font-medium text-[var(--color-text)]">{r.setor}</td>
                 <td className="px-4 py-3 text-center">
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400 font-medium">{r.digital}</span>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--color-info-soft)] text-[var(--color-info)] font-medium">{r.digital}</span>
                 </td>
                 <td className="px-4 py-3 text-center">
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-violet-500/15 text-violet-400 font-medium">{r.analogico}</span>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--chart-5)]/15 text-[var(--chart-5)] font-medium">{r.analogico}</span>
                 </td>
                 <td className="px-4 py-3 text-center font-semibold text-[var(--color-text)]">{r.total}</td>
                 <td className="px-4 py-3 text-[var(--color-text-muted)] text-xs max-w-xs truncate">{r.descricao ?? '—'}</td>

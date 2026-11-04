@@ -6,8 +6,8 @@ interface Props {
   data: { setor: string; digital: number; analogico: number }[]
 }
 
-const DIGITAL_COLOR = '#3b82f6'
-const ANALOGICO_COLOR = '#8b5cf6'
+const DIGITAL_COLOR = 'var(--chart-1)'
+const ANALOGICO_COLOR = 'var(--chart-3)'
 
 export function RamaisPorSetorChart({ data }: Props) {
   return (

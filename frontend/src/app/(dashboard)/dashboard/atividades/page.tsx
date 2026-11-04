@@ -24,7 +24,7 @@ function ChartCard({ title, hint, children, className = '' }: { title: string; h
   return (
     <div className={`bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-6 ${className}`}>
       <div className="mb-4">
-        <p className="text-sm font-semibold text-[var(--color-text)]">{title}</p>
+        <h2 className="font-display text-sm font-bold text-[var(--color-text)]">{title}</h2>
         {hint ? <p className="text-[11px] text-[var(--color-text-subtle)] mt-1">{hint}</p> : null}
       </div>
       {children}
@@ -95,7 +95,7 @@ async function DashboardAtividadesContent({ ano }: { ano?: string }) {
           title="Categorias"
           value={stats.porCategoria.length}
           icon={<TrendingUp size={18} />}
-          color="#1e5a8e"
+          color="var(--chart-5)"
           subtitle="Tipos distintos de atividade"
           tooltip="Quantidade de categorias únicas"
         />
@@ -103,7 +103,7 @@ async function DashboardAtividadesContent({ ano }: { ano?: string }) {
           title="Responsável mais ativo"
           value={topResponsavel?.responsavel ?? '—'}
           icon={<Users size={18} />}
-          color="#10b981"
+          color="var(--color-success)"
           subtitle={topResponsavel ? `${topResponsavel.total} atividades` : ''}
           tooltip="Quem registrou mais atividades no período"
         />
@@ -111,7 +111,7 @@ async function DashboardAtividadesContent({ ano }: { ano?: string }) {
           title="Setor com mais demandas"
           value={topSetor?.setor ?? '—'}
           icon={<Building2 size={18} />}
-          color="#f97316"
+          color="var(--color-warning)"
           subtitle={topSetor ? `${topSetor.total} chamados` : ''}
           tooltip="Setor que mais solicitou atendimento"
         />

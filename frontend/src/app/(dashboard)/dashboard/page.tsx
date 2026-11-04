@@ -84,7 +84,7 @@ async function DashboardContent() {
           title="Bens patrimoniais"
           value={formatNumber(b.totalBens)}
           icon={<Server size={18} />}
-          color="#1e5a8e"
+          color="var(--chart-5)"
           subtitle={`${formatNumber(b.totalSoftwares)} softwares`}
           tooltip="Equipamentos e softwares inventariados"
           href="/dashboard/bens"
@@ -93,7 +93,7 @@ async function DashboardContent() {
           title="Soluções digitais"
           value={formatNumber(data.solucoesTotal)}
           icon={<Layers size={18} />}
-          color="#10b981"
+          color="var(--color-success)"
           subtitle={`${data.solucoesConcluidas} concluídas · ${data.solucoesEmAndamento} em andamento`}
           tooltip="Automações e projetos web desenvolvidos pela CTI"
           href="/solucoes-digitais"
@@ -102,7 +102,7 @@ async function DashboardContent() {
           title="Dashboards Power BI"
           value={formatNumber(data.powerBiTotal)}
           icon={<ExternalLink size={18} />}
-          color="#f97316"
+          color="var(--color-warning)"
           subtitle={`${data.powerBiConcluidos} em produção`}
           tooltip="Relatórios e dashboards externos"
           href="/power-bi"
@@ -115,7 +115,7 @@ async function DashboardContent() {
           title="Maior demanda (setor)"
           value={topSetor?.setor ?? '—'}
           icon={<Activity size={18} />}
-          color="#06b6d4"
+          color="var(--color-accent)"
           subtitle={topSetor ? `${formatNumber(topSetor.total)} atividades` : ''}
           tooltip="Setor com mais atividades registradas"
         />
@@ -129,7 +129,7 @@ async function DashboardContent() {
               : '—'
           }
           icon={<Activity size={18} />}
-          color="#eab308"
+          color="var(--color-warning)"
           subtitle={topCat ? `${formatNumber(topCat.total)} registros` : ''}
           tooltip="Tipo de atividade mais frequente"
         />
@@ -137,7 +137,7 @@ async function DashboardContent() {
           title="Ramais (total)"
           value={formatNumber(b.totalRamais)}
           icon={<Phone size={18} />}
-          color="#a855f7"
+          color="var(--chart-5)"
           subtitle="Telefonia por setor"
           tooltip="Ramais digitais e analógicos"
           href="/tabelas/ramais"
@@ -146,7 +146,7 @@ async function DashboardContent() {
           title="Celulares"
           value={formatNumber(b.totalCelulares)}
           icon={<Smartphone size={18} />}
-          color="#14b8a6"
+          color="var(--color-success)"
           subtitle="Inventário móvel"
           tooltip="Celulares corporativos"
           href="/tabelas/celulares"
@@ -164,8 +164,8 @@ async function DashboardContent() {
       ) : null}
 
       {criticidade > 0 ? (
-        <div className="flex min-w-0 items-start gap-2.5 sm:gap-3 rounded-[var(--radius-lg)] border border-amber-500/25 bg-amber-500/5 px-3 py-3 sm:px-4">
-          <AlertTriangle className="text-amber-400 shrink-0 mt-0.5" size={18} />
+        <div className="flex min-w-0 items-start gap-2.5 sm:gap-3 rounded-[var(--radius-lg)] border border-[var(--color-warning)]/25 bg-[var(--color-warning-soft)] px-3 py-3 sm:px-4">
+          <AlertTriangle className="text-[var(--color-warning)] shrink-0 mt-0.5" size={18} />
           <p className="min-w-0 text-sm text-[var(--color-text-muted)] [overflow-wrap:anywhere] text-pretty leading-relaxed">
             <strong className="text-[var(--color-text)]">{criticidade}</strong> bens com campo{' '}
             <em>criticidade</em> preenchido — revise na{' '}
@@ -179,16 +179,16 @@ async function DashboardContent() {
 
       <div className="grid grid-cols-1 min-w-0 lg:grid-cols-2 gap-4 sm:gap-6">
         <div className="min-w-0 overflow-hidden bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 sm:p-6">
-          <p className="text-sm font-semibold text-[var(--color-text)] mb-3 sm:mb-4 [overflow-wrap:anywhere]">
+          <h2 className="font-display text-sm font-bold text-[var(--color-text)] mb-3 sm:mb-4 [overflow-wrap:anywhere]">
             Volume de atividades por ano
-          </p>
+          </h2>
           <div className="min-w-0 w-full">
             <AtividadesPorAnoChart data={a.porAno ?? []} />
           </div>
         </div>
         <div className="min-w-0 bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 sm:p-6 flex flex-col gap-3 sm:gap-4">
           <div>
-            <p className="text-sm font-semibold text-[var(--color-text)]">Atalhos</p>
+            <h2 className="font-display text-sm font-bold text-[var(--color-text)]">Atalhos</h2>
             <p className="text-xs text-[var(--color-text-subtle)] mt-1 leading-relaxed">
               Acesso rápido aos módulos do painel
             </p>
@@ -201,56 +201,48 @@ async function DashboardContent() {
                   title: 'Dashboard de atividades',
                   hint: 'Gráficos e indicadores detalhados',
                   icon: BarChart3,
-                  accent: 'text-sky-400 bg-sky-500/10 border-sky-500/20',
                 },
                 {
                   href: '/dashboard/bens',
                   title: 'Dashboard de bens',
                   hint: 'Patrimônio e telefonia',
                   icon: Server,
-                  accent: 'text-violet-400 bg-violet-500/10 border-violet-500/20',
                 },
                 {
                   href: '/tabelas/atividades',
                   title: 'Tabela de atividades',
                   hint: 'Listagem com filtros',
                   icon: TableProperties,
-                  accent: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
                 },
                 {
                   href: '/tabelas/celulares',
                   title: 'Tabela de celulares',
                   hint: 'Inventário corporativo',
                   icon: Smartphone,
-                  accent: 'text-orange-400 bg-orange-500/10 border-orange-500/20',
                 },
                 {
                   href: '/importar',
                   title: 'Importar planilhas',
                   hint: 'Atualizar dados da CTI',
                   icon: Upload,
-                  accent: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
                 },
                 {
                   href: '/power-bi',
                   title: 'Catálogo Power BI',
                   hint: 'Relatórios e dashboards externos',
                   icon: ExternalLink,
-                  accent: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20',
                 },
                 {
                   href: '/contratos',
                   title: 'Contratos de telemática',
                   hint: 'Pagamentos por prestador e competência',
                   icon: FileText,
-                  accent: 'text-sky-400 bg-sky-500/10 border-sky-500/20',
                 },
                 {
                   href: '/solucoes-digitais',
                   title: 'Soluções digitais CTI',
                   hint: 'Automações e projetos web',
                   icon: Layers,
-                  accent: 'text-teal-400 bg-teal-500/10 border-teal-500/20',
                 },
               ] as const
             ).map((item) => {
@@ -262,7 +254,7 @@ async function DashboardContent() {
                     className="group flex min-h-[44px] items-center gap-2 sm:gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)]/40 px-2.5 py-2.5 sm:px-3 sm:py-2.5 transition-all duration-200 hover:border-[var(--color-primary)]/35 hover:bg-[var(--color-bg-hover)]/80 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]/40 focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--color-bg-card)] touch-manipulation active:bg-[var(--color-bg-hover)]/60"
                   >
                     <span
-                      className={`flex size-8 sm:size-9 shrink-0 items-center justify-center rounded-lg border ${item.accent}`}
+                      className="flex size-8 sm:size-9 shrink-0 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-primary)]/15 bg-[var(--color-primary)]/10 text-[var(--color-primary)] transition-colors group-hover:bg-[var(--color-primary)] group-hover:text-[var(--color-on-primary)]"
                       aria-hidden
                     >
                       <Icon className="size-[17px] sm:size-[18px]" strokeWidth={1.75} />

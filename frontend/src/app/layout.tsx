@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Source_Sans_3 } from 'next/font/google'
+import { Inter, Montserrat } from 'next/font/google'
 import Script from 'next/script'
 import { AuthProvider } from '@/context/auth-context'
 import './globals.css'
@@ -22,9 +22,17 @@ const THEME_INITIALIZER = `
 })();
 `
 
-const sourceSans = Source_Sans_3({
+const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
+  variable: '--font-inter',
+})
+
+const montserrat = Montserrat({
+  subsets: ['latin'],
+  display: 'swap',
+  weight: ['600', '700', '800'],
+  variable: '--font-montserrat',
 })
 
 export const viewport: Viewport = {
@@ -32,8 +40,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: 'cover',
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f5f7fa' },
-    { media: '(prefers-color-scheme: dark)', color: '#0c1018' },
+    { media: '(prefers-color-scheme: light)', color: '#f1f5f9' },
+    { media: '(prefers-color-scheme: dark)', color: '#0f172a' },
   ],
 }
 
@@ -80,7 +88,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR" className={sourceSans.className} suppressHydrationWarning>
+    <html lang="pt-BR" className={`${inter.variable} ${montserrat.variable}`} suppressHydrationWarning>
       <body>
         <Script id="theme-initializer" strategy="beforeInteractive">
           {THEME_INITIALIZER}

@@ -3,207 +3,120 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import {
-  BarChart3,
-  TableProperties,
-  Upload,
-  ExternalLink,
-  Layers,
-  Activity,
-  ChevronDown,
-  X,
-  FileText,
-  CalendarDays,
-  UserCog,
-} from 'lucide-react'
-import { useState } from 'react'
+import { ShieldCheck, UserCircle2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/context/auth-context'
+import { isNavLinkActive, visibleSections } from '@/lib/navigation'
 
-interface NavItem {
-  label: string
-  href?: string
-  icon: React.ReactNode
-  children?: { label: string; href: string }[]
-  disabled?: boolean
-  adminOnly?: boolean
-}
-
-const navItems: NavItem[] = [
-  {
-    label: 'Dashboards',
-    icon: <BarChart3 size={16} />,
-    children: [
-      { label: 'Visão geral', href: '/dashboard' },
-      { label: 'Atividades', href: '/dashboard/atividades' },
-      { label: 'Bens Patrimoniais', href: '/dashboard/bens' },
-    ],
-  },
-  {
-    label: 'Tabelas',
-    icon: <TableProperties size={16} />,
-    children: [
-      { label: 'Atividades', href: '/tabelas/atividades' },
-      { label: 'Bens', href: '/tabelas/bens' },
-      { label: 'Softwares', href: '/tabelas/softwares' },
-      { label: 'Ramais', href: '/tabelas/ramais' },
-      { label: 'Celulares', href: '/tabelas/celulares' },
-    ],
-  },
-  {
-    label: 'Contratos',
-    href: '/contratos',
-    icon: <FileText size={16} />,
-  },
-  {
-    label: 'Agenda',
-    href: '/agenda',
-    icon: <CalendarDays size={16} />,
-  },
-  {
-    label: 'Power BI',
-    href: '/power-bi',
-    icon: <ExternalLink size={16} />,
-  },
-  {
-    label: 'Soluções Digitais',
-    href: '/solucoes-digitais',
-    icon: <Layers size={16} />,
-  },
-  {
-    label: 'Usuários',
-    href: '/usuarios',
-    icon: <UserCog size={16} />,
-    adminOnly: true,
-  },
-  {
-    label: 'Importar Dados',
-    href: '/importar',
-    icon: <Upload size={16} />,
-  },
-]
-
-function childMatchesPath(pathname: string, childHref: string) {
-  if (pathname === childHref) return true
-  if (childHref === '/dashboard') return pathname === '/dashboard'
-  return pathname.startsWith(`${childHref}/`)
-}
-
-function NavGroup({ item, onNavigate }: { item: NavItem; onNavigate: () => void }) {
-  const pathname = usePathname()
-  const [open, setOpen] = useState(
-    item.children?.some((c) => childMatchesPath(pathname, c.href)) ?? false,
-  )
-
-  if (item.href) {
-    return (
-      <Link
-        href={item.disabled ? '#' : item.href}
-        onClick={() => {
-          if (!item.disabled) onNavigate()
-        }}
-        className={cn(
-          'flex items-center gap-3 px-3 py-2 rounded-[var(--radius-md)] text-sm transition-colors cursor-pointer',
-          pathname === item.href
-            ? 'bg-[var(--color-primary)]/10 text-[var(--color-primary)]'
-            : 'text-[var(--color-text-muted)] hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text)]',
-          item.disabled && 'opacity-40 pointer-events-none',
-        )}
-      >
-        {item.icon}
-        <span>{item.label}</span>
-        {item.disabled && (
-          <span className="ml-auto text-[10px] bg-[var(--color-border)] text-[var(--color-text-subtle)] px-1.5 py-0.5 rounded">
-            Em breve
-          </span>
-        )}
-      </Link>
-    )
-  }
-
+function SidebarBrand() {
   return (
-    <div>
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-[var(--color-text-muted)] hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text)] transition-colors cursor-pointer"
-      >
-        {item.icon}
-        <span className="flex-1 text-left">{item.label}</span>
-        <ChevronDown
-          size={14}
-          className={cn('transition-transform duration-200', open && 'rotate-180')}
-        />
-      </button>
-      {open && (
-        <div className="ml-5 mt-0.5 border-l border-[var(--color-border)] pl-3 flex flex-col gap-0.5">
-          {item.children?.map((child) => (
-            <Link
-              key={child.href}
-              href={child.href}
-              onClick={() => onNavigate()}
-              className={cn(
-                'flex items-center gap-2 px-2 py-1.5 rounded-sm text-sm transition-colors cursor-pointer',
-                childMatchesPath(pathname, child.href)
-                  ? 'text-[var(--color-primary)]'
-                  : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]',
-              )}
-            >
-              {child.label}
-            </Link>
-          ))}
-        </div>
-      )}
+    <div className="px-5 pt-5 pb-4">
+      <Link href="/dashboard" className="flex items-center gap-3 rounded-[var(--radius-md)]" aria-label="Ir para a visão geral">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-[10px] bg-white shadow-[var(--shadow-sm)] ring-1 ring-[var(--color-border)]">
+          <Image src="/arpe-drawer-logo.svg" alt="" width={30} height={18} className="h-auto w-[30px]" priority />
+        </span>
+        <span className="min-w-0">
+          <span className="block font-display text-[15px] font-bold leading-tight tracking-[0.01em] text-[var(--color-text)]">
+            Dashboard CTI
+          </span>
+          <span className="block text-[11px] leading-tight text-[var(--color-text-subtle)]">
+            Coordenadoria de TI · ARPE
+          </span>
+        </span>
+      </Link>
+      <div className="arpe-tricolor mt-4" aria-hidden />
     </div>
   )
 }
 
-function SidebarContent({ onClose, showCloseButton }: { onClose: () => void; showCloseButton: boolean }) {
+function SidebarNav({ onNavigate }: { onNavigate: () => void }) {
+  const pathname = usePathname()
   const { user } = useAuth()
-  const visibleItems = navItems.filter((item) => !item.adminOnly || user?.role === 'admin')
+  const sections = visibleSections(user?.role === 'admin')
 
   return (
-    <>
-      <div className="px-5 py-4 border-b border-[var(--color-border)] relative">
-        {showCloseButton && (
-          <button
-            type="button"
-            aria-label="Fechar menu"
-            onClick={onClose}
-            className="absolute right-3 top-3 w-9 h-9 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-hover)] cursor-pointer flex items-center justify-center"
+    <nav className="flex-1 overflow-y-auto px-3 pb-4" aria-label="Navegação principal">
+      {sections.map((section) => (
+        <div key={section.id} className="mt-3 first:mt-1">
+          <p
+            id={`nav-section-${section.id}`}
+            className="px-3 pb-1.5 pt-2 text-[10.5px] font-semibold uppercase tracking-[0.09em] text-[var(--color-text-subtle)]"
           >
-            <X size={18} />
-          </button>
-        )}
-        <div className="flex items-center gap-3 pr-10">
-          <div className="relative w-8 h-8 shrink-0 rounded-[var(--radius-md)] overflow-hidden border border-[var(--color-border)] bg-[var(--color-bg-card)] flex items-center justify-center">
-            <Image
-              src="/arpe-drawer-logo.svg"
-              alt="ARPE"
-              width={32}
-              height={32}
-              className="object-contain object-center p-0.5"
-              priority
-            />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-[var(--color-text)] leading-tight">Dashboard CTI</p>
-            <p className="text-[11px] text-[var(--color-text-subtle)] leading-tight">Coord. de TI · ARPE</p>
-          </div>
+            {section.label}
+          </p>
+          <ul className="flex flex-col gap-0.5" aria-labelledby={`nav-section-${section.id}`}>
+            {section.items.map((item) => {
+              const active = isNavLinkActive(pathname, item.href)
+              const Icon = item.icon
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    onClick={onNavigate}
+                    aria-current={active ? 'page' : undefined}
+                    className={cn(
+                      'group relative flex min-h-10 items-center gap-3 rounded-[var(--radius-md)] px-3 py-2 text-[13.5px] transition-colors',
+                      active
+                        ? 'bg-[var(--color-nav-active-bg)] font-semibold text-[var(--color-nav-active-text)]'
+                        : 'font-medium text-[var(--color-nav-text)] hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text)]',
+                    )}
+                  >
+                    <span
+                      aria-hidden
+                      className={cn(
+                        'absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-[var(--color-primary)] transition-opacity',
+                        active ? 'opacity-100' : 'opacity-0',
+                      )}
+                    />
+                    <Icon
+                      size={17}
+                      strokeWidth={active ? 2.2 : 1.8}
+                      aria-hidden
+                      className={cn(
+                        'shrink-0 transition-colors',
+                        active ? 'text-[var(--color-primary)]' : 'text-[var(--color-text-subtle)] group-hover:text-[var(--color-text-muted)]',
+                      )}
+                    />
+                    <span className="truncate">{item.label}</span>
+                  </Link>
+                </li>
+              )
+            })}
+          </ul>
         </div>
-      </div>
+      ))}
+    </nav>
+  )
+}
 
-      <nav className="flex-1 overflow-y-auto px-3 py-4 flex flex-col gap-1">
-        {visibleItems.map((item) => (
-          <NavGroup key={item.label} item={item} onNavigate={onClose} />
-        ))}
-      </nav>
+function SidebarFooter() {
+  const { user } = useAuth()
+  if (!user) return null
+  const isAdmin = user.role === 'admin'
 
-      <div className="px-5 py-4 border-t border-[var(--color-border)]">
-        <div className="flex items-center gap-2 text-[var(--color-text-subtle)]">
-          <Activity size={12} />
-          <span className="text-[11px]">v1.0.0</span>
-        </div>
+  return (
+    <div className="border-t border-[var(--color-border)] px-4 py-3">
+      <div className="flex items-center gap-3 rounded-[var(--radius-md)] px-1 py-1">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)]/12 text-[var(--color-primary)]">
+          {isAdmin ? <ShieldCheck size={17} aria-hidden /> : <UserCircle2 size={17} aria-hidden />}
+        </span>
+        <span className="min-w-0">
+          <span className="block truncate text-[13px] font-semibold text-[var(--color-text)]">{user.name}</span>
+          <span className="block text-[10.5px] uppercase tracking-[0.08em] text-[var(--color-text-subtle)]">
+            {isAdmin ? 'Administrador' : 'Agente'}
+          </span>
+        </span>
       </div>
+    </div>
+  )
+}
+
+function SidebarContent({ onNavigate }: { onNavigate: () => void }) {
+  return (
+    <>
+      <SidebarBrand />
+      <SidebarNav onNavigate={onNavigate} />
+      <SidebarFooter />
     </>
   )
 }
@@ -211,10 +124,9 @@ function SidebarContent({ onClose, showCloseButton }: { onClose: () => void; sho
 export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
   return (
     <>
-      {/* Overlay mobile/tablet */}
       <div
         className={cn(
-          'fixed left-0 right-0 bottom-0 top-(--dashboard-header-offset) z-40 bg-black/40 transition-opacity duration-300 lg:hidden',
+          'fixed inset-x-0 bottom-0 top-(--dashboard-header-offset) z-40 bg-[var(--arpe-night)]/50 backdrop-blur-[2px] transition-opacity duration-300 lg:hidden',
           open ? 'opacity-100' : 'pointer-events-none opacity-0',
         )}
         onClick={onClose}
@@ -222,24 +134,24 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
         aria-hidden={!open}
       />
 
-      {/* Drawer mobile/tablet - slide over content */}
       <aside
+        id="mobile-navigation"
         className={cn(
-          'fixed left-0 top-(--dashboard-header-offset) z-50 flex h-[calc(100dvh-var(--dashboard-header-offset))] w-[min(78vw,320px)] flex-col border-r border-[var(--color-border)] bg-[var(--color-bg-sidebar)] transition-transform duration-300 lg:hidden',
+          'fixed left-0 top-(--dashboard-header-offset) z-50 flex h-[calc(100dvh-var(--dashboard-header-offset))] w-[min(84vw,var(--sidebar-width))] flex-col border-r border-[var(--color-border)] bg-[var(--color-bg-sidebar)] shadow-[var(--shadow-lg)] transition-transform duration-300 lg:hidden',
           open ? 'translate-x-0' : '-translate-x-full pointer-events-none',
         )}
         aria-hidden={!open}
-        aria-label="Menu principal (mobile)"
-      >
-        <SidebarContent onClose={onClose} showCloseButton />
-      </aside>
-
-      {/* Sidebar fixa em desktop (lg+) - sempre visível */}
-      <aside
-        className="hidden lg:flex fixed left-0 top-0 z-30 h-screen w-60 flex-col border-r border-[var(--color-border)] bg-[var(--color-bg-sidebar)]"
+        inert={!open}
         aria-label="Menu principal"
       >
-        <SidebarContent onClose={() => {}} showCloseButton={false} />
+        <SidebarContent onNavigate={onClose} />
+      </aside>
+
+      <aside
+        className="hidden lg:flex fixed left-0 top-0 z-30 h-screen w-(--sidebar-width) flex-col border-r border-[var(--color-border)] bg-[var(--color-bg-sidebar)]"
+        aria-label="Menu principal"
+      >
+        <SidebarContent onNavigate={() => {}} />
       </aside>
     </>
   )

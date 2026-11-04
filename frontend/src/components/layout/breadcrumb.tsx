@@ -3,58 +3,44 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ChevronRight } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { findNavContext } from '@/lib/navigation'
 
-/** Último item = página atual (sem href); demais com link quando aplicável */
 type Crumb = { label: string; href?: string }
 
 function trailForPath(pathname: string): Crumb[] {
-  const home: Crumb = { label: 'Início', href: '/dashboard' }
+  const context = findNavContext(pathname)
+  if (!context || context.item.href === '/dashboard') return []
 
-  const map: Record<string, Crumb[]> = {
-    '/dashboard/atividades': [home, { label: 'Atividades' }],
-    '/dashboard/bens': [home, { label: 'Bens' }],
-    '/tabelas/atividades': [home, { label: 'Atividades' }],
-    '/tabelas/bens': [home, { label: 'Tabelas', href: '/tabelas/atividades' }, { label: 'Bens' }],
-    '/tabelas/softwares': [home, { label: 'Tabelas', href: '/tabelas/atividades' }, { label: 'Softwares' }],
-    '/tabelas/ramais': [home, { label: 'Tabelas', href: '/tabelas/atividades' }, { label: 'Ramais' }],
-    '/tabelas/celulares': [home, { label: 'Tabelas', href: '/tabelas/atividades' }, { label: 'Celulares' }],
-    '/importar': [home, { label: 'Importar' }],
-    '/usuarios': [home, { label: 'Usuários' }],
-    '/contratos': [home, { label: 'Contratos' }],
-    '/agenda': [home, { label: 'Agenda' }],
-    '/power-bi': [home, { label: 'Power BI' }],
-    '/solucoes-digitais': [home, { label: 'Soluções digitais' }],
-  }
-
-  return map[pathname] ?? []
+  const { section, item } = context
+  const sectionHref = section.href && section.href !== item.href ? section.href : undefined
+  return [{ label: section.label, href: sectionHref }, { label: item.label }]
 }
 
-export function Breadcrumb({ className = '' }: { className?: string }) {
+export function Breadcrumb({ className }: { className?: string }) {
   const pathname = usePathname()
   const trail = trailForPath(pathname)
 
-  if (trail.length <= 1) return null
+  if (trail.length === 0) return null
 
   return (
-    <nav
-      aria-label="Trilha de navegação"
-      className={`flex flex-wrap items-center justify-center gap-1 text-[11px] text-[var(--color-text-subtle)] mb-0.5 ${className}`}
-    >
-      <ol className="flex flex-wrap items-center gap-1 list-none m-0 p-0" style={{ listStyle: 'none' }}>
-        {trail.map((c, i) => {
+    <nav aria-label="Trilha de navegação" className={cn('min-w-0 text-[11px] leading-tight text-[var(--color-text-subtle)]', className)}>
+      <ol className="m-0 flex min-w-0 list-none items-center gap-1 p-0">
+        {trail.map((crumb, i) => {
           const isLast = i === trail.length - 1
-          const showLink = Boolean(c.href) && !isLast
-
           return (
-            <li key={`${pathname}-crumb-${i}`} className="flex items-center gap-1">
-              {i > 0 ? <ChevronRight size={12} className="opacity-50 shrink-0" aria-hidden /> : null}
-              {showLink ? (
-                <Link href={c.href!} className="hover:text-[var(--color-primary)] transition-colors whitespace-nowrap">
-                  {c.label}
+            <li key={`${crumb.label}-${i}`} className="flex min-w-0 items-center gap-1">
+              {i > 0 ? <ChevronRight size={11} className="shrink-0 opacity-60" aria-hidden /> : null}
+              {crumb.href && !isLast ? (
+                <Link href={crumb.href} className="whitespace-nowrap transition-colors hover:text-[var(--color-primary)]">
+                  {crumb.label}
                 </Link>
               ) : (
-                <span className="text-[var(--color-text-muted)] font-medium whitespace-nowrap" aria-current="page">
-                  {c.label}
+                <span
+                  className={cn('truncate whitespace-nowrap', isLast && 'font-medium text-[var(--color-text-muted)]')}
+                  aria-current={isLast ? 'page' : undefined}
+                >
+                  {crumb.label}
                 </span>
               )}
             </li>

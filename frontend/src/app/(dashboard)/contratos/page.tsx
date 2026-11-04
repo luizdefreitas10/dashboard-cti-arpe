@@ -20,10 +20,10 @@ const DEFAULT_CONTRATOS_ANO = 2026
 /** Atraso após parar de digitar na busca antes de consultar a API (evita skeleton a cada tecla). */
 const SEARCH_DEBOUNCE_MS = 400
 const STATUS_META: Record<ContratoStatus, { label: string; className: string }> = {
-  PAGO: { label: 'Pago', className: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' },
-  A_VENCER: { label: 'A vencer', className: 'bg-amber-500/15 text-amber-400 border-amber-500/30' },
-  VENCIDO: { label: 'Vencido', className: 'bg-rose-500/15 text-rose-400 border-rose-500/30' },
-  SEM_STATUS: { label: 'Sem status', className: 'bg-slate-500/15 text-slate-300 border-slate-500/30' },
+  PAGO: { label: 'Pago', className: 'bg-[var(--color-success-soft)] text-[var(--color-success)] border-[var(--color-success)]/30' },
+  A_VENCER: { label: 'A vencer', className: 'bg-[var(--color-warning-soft)] text-[var(--color-warning)] border-[var(--color-warning)]/30' },
+  VENCIDO: { label: 'Vencido', className: 'bg-[var(--color-danger-soft)] text-[var(--color-danger)] border-[var(--color-danger)]/30' },
+  SEM_STATUS: { label: 'Sem status', className: 'bg-[var(--color-neutral)]/15 text-[var(--color-neutral)] border-[var(--color-neutral)]/30' },
 }
 
 function formatDateBr(value: string | null) {
@@ -253,9 +253,9 @@ export default function ContratosPage() {
         ) : (
           <>
             <KpiCard label="Serviços" value={resumo?.totalServicos ?? 0} icon={<FileText size={15} />} colorClass="border-[var(--color-border)] text-[var(--color-text-subtle)]" />
-            <KpiCard label="Pago" value={resumo?.byStatus.PAGO ?? 0} icon={<CheckCircle2 size={15} />} colorClass="border-emerald-500/30 text-emerald-400" />
-            <KpiCard label="A vencer" value={resumo?.byStatus.A_VENCER ?? 0} icon={<Clock3 size={15} />} colorClass="border-amber-500/30 text-amber-400" />
-            <KpiCard label="Vencido" value={resumo?.byStatus.VENCIDO ?? 0} icon={<AlertTriangle size={15} />} colorClass="border-rose-500/30 text-rose-400" />
+            <KpiCard label="Pago" value={resumo?.byStatus.PAGO ?? 0} icon={<CheckCircle2 size={15} />} colorClass="border-[var(--color-success)]/30 text-[var(--color-success)]" />
+            <KpiCard label="A vencer" value={resumo?.byStatus.A_VENCER ?? 0} icon={<Clock3 size={15} />} colorClass="border-[var(--color-warning)]/30 text-[var(--color-warning)]" />
+            <KpiCard label="Vencido" value={resumo?.byStatus.VENCIDO ?? 0} icon={<AlertTriangle size={15} />} colorClass="border-[var(--color-danger)]/30 text-[var(--color-danger)]" />
           </>
         )}
       </div>

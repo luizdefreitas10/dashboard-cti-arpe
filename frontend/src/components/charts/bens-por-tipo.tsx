@@ -3,19 +3,22 @@
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 import { HARDWARE_COLORS, getColor } from '@/lib/chart-colors'
 import { formatNumber } from '@/lib/utils'
+import type { ChartTooltipProps } from '@/components/charts/chart-tooltip'
 
 interface Props {
   data: { tipo: string; total: number }[]
 }
 
-const CustomTooltip = ({ active, payload }: any) => {
+const CustomTooltip = ({ active, payload }: ChartTooltipProps) => {
   if (!active || !payload?.length) return null
+  const item = payload[0]
+  const percent = item.payload?.percent
   return (
     <div className="bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-[var(--radius-md)] px-3 py-2 text-sm shadow-xl">
-      <p className="text-[var(--color-text)] font-semibold">{payload[0].name}</p>
-      <p className="text-[var(--color-text-muted)]">{formatNumber(payload[0].value)} equipamentos</p>
-      {payload[0].payload?.percent != null && (
-        <p className="text-[var(--color-text-subtle)]">{payload[0].payload.percent}%</p>
+      <p className="text-[var(--color-text)] font-semibold">{item.name}</p>
+      <p className="text-[var(--color-text-muted)]">{formatNumber(Number(item.value ?? 0))} equipamentos</p>
+      {typeof percent === 'number' && (
+        <p className="text-[var(--color-text-subtle)]">{percent}%</p>
       )}
     </div>
   )

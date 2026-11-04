@@ -15,7 +15,7 @@ export function ContratosTelematicaOverviewSection({ resumo }: { resumo: Contrat
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <span
-              className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-sky-500/20 bg-sky-500/10 text-sky-400"
+              className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-[var(--color-info)]/20 bg-[var(--color-info-soft)] text-[var(--color-info)]"
               aria-hidden
             >
               <FileText className="size-[18px]" strokeWidth={1.75} />
@@ -74,8 +74,8 @@ export function ContratosTelematicaOverviewSection({ resumo }: { resumo: Contrat
                 {formatNumber(resumo.totalServicos)}
               </p>
             </div>
-            <div className="rounded-[var(--radius-md)] border border-emerald-500/20 bg-emerald-500/5 p-3 sm:p-4">
-              <p className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-emerald-400/90">
+            <div className="rounded-[var(--radius-md)] border border-[var(--color-success)]/20 bg-[var(--color-success-soft)] p-3 sm:p-4">
+              <p className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-[var(--color-success)]/90">
                 <CheckCircle2 className="size-3.5 shrink-0" aria-hidden />
                 Pago
               </p>
@@ -83,8 +83,8 @@ export function ContratosTelematicaOverviewSection({ resumo }: { resumo: Contrat
                 {formatNumber(resumo.byStatus.PAGO)}
               </p>
             </div>
-            <div className="rounded-[var(--radius-md)] border border-amber-500/20 bg-amber-500/5 p-3 sm:p-4">
-              <p className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-amber-400/90">
+            <div className="rounded-[var(--radius-md)] border border-[var(--color-warning)]/20 bg-[var(--color-warning-soft)] p-3 sm:p-4">
+              <p className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-[var(--color-warning)]/90">
                 <Clock3 className="size-3.5 shrink-0" aria-hidden />
                 A vencer
               </p>
@@ -92,8 +92,8 @@ export function ContratosTelematicaOverviewSection({ resumo }: { resumo: Contrat
                 {formatNumber(resumo.byStatus.A_VENCER)}
               </p>
             </div>
-            <div className="rounded-[var(--radius-md)] border border-rose-500/20 bg-rose-500/5 p-3 sm:p-4">
-              <p className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-rose-400/90">
+            <div className="rounded-[var(--radius-md)] border border-[var(--color-danger)]/20 bg-[var(--color-danger-soft)] p-3 sm:p-4">
+              <p className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-[var(--color-danger)]/90">
                 <AlertTriangle className="size-3.5 shrink-0" aria-hidden />
                 Vencido
               </p>

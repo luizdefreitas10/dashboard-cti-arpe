@@ -1,50 +1,98 @@
 @import "tailwindcss";
 
+/* `dark:` segue o tema escolhido no switch, não a preferência do sistema operacional */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@theme inline {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-montserrat), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
 :root {
-  /* Fonte institucional: Source Sans 3 (via next/font no layout) */
-  /* ─── Paleta ARPE (inspirada em arpe.pe.gov.br e arpe-grafite) ─── */
-  --color-primary: #1e5a8e;
-  --color-primary-hover: #164a75;
-  --color-accent: #2d7ab5;
+  /* ─── Identidade ARPE (cti-arpe.vercel.app) ─── */
+  --arpe-blue: #0b2160;
+  --arpe-night: #0f172a;
+  --arpe-circuit: #1e3a5f;
+  --arpe-red: #e6021d;
+  --arpe-yellow: #fdca02;
+  --arpe-green: #40e001;
+  --arpe-slate: #334155;
+  --arpe-gray: #64748b;
+  --arpe-mist: #f1f5f9;
+  --arpe-tricolor: linear-gradient(90deg, var(--arpe-red) 0 33.33%, var(--arpe-yellow) 33.33% 66.66%, var(--arpe-green) 66.66% 100%);
+  --arpe-tricolor-soft: linear-gradient(90deg, var(--arpe-red), var(--arpe-yellow), var(--arpe-green));
 
-  /* ─── Fundos ─── */
-  --color-bg: #0c1018;
-  --color-bg-sidebar: #111820;
-  --color-bg-card: #161d28;
-  --color-bg-hover: #1c2432;
-  --color-bg-input: #1c2432;
-  --color-border: rgba(255, 255, 255, 0.06);
-  --color-border-strong: rgba(255, 255, 255, 0.12);
+  /* ─── Tema escuro (padrão antes da hidratação) ─── */
+  --color-primary: #3b6fd4;
+  --color-primary-hover: #5a86dc;
+  --color-on-primary: #f8fafc;
+  --color-accent: #93c5fd;
 
-  /* ─── Textos ─── */
+  --color-bg: #0f172a;
+  --color-bg-sidebar: #0b1220;
+  --color-bg-card: #162033;
+  --color-bg-hover: #1a2740;
+  --color-bg-input: #1a2740;
+  --color-border: rgba(241, 245, 249, 0.08);
+  --color-border-strong: rgba(241, 245, 249, 0.16);
+
   --color-text: #f1f5f9;
-  --color-text-muted: #94a3b8;
-  --color-text-subtle: #64748b;
+  --color-text-muted: #a3b1c6;
+  --color-text-subtle: #7c8aa0;
 
-  /* ─── Status / Prioridade ─── */
-  --color-alta: #f87171;
-  --color-media: #fbbf24;
-  --color-baixa: #34d399;
+  --color-nav-text: #cbd5e1;
+  --color-nav-active-bg: rgba(59, 111, 212, 0.16);
+  --color-nav-active-text: #f8fafc;
+  --color-kpi-value: #dbe7ff;
 
-  /* ─── Categorias ─── */
-  --color-cat-1: #1e5a8e;
-  --color-cat-2: #8b5cf6;
-  --color-cat-3: #10b981;
-  --color-cat-4: #f97316;
-  --color-cat-5: #f43f5e;
-  --color-cat-6: #06b6d4;
-  --color-cat-7: #eab308;
+  /* ─── Status semânticos ─── */
+  --color-success: #5ee62a;
+  --color-warning: #fdca02;
+  --color-danger: #ff5468;
+  --color-info: #93c5fd;
+  --color-neutral: #94a3b8;
+  --color-success-soft: rgba(64, 224, 1, 0.1);
+  --color-warning-soft: rgba(253, 202, 2, 0.1);
+  --color-danger-soft: rgba(230, 2, 29, 0.14);
+  --color-info-soft: rgba(147, 197, 253, 0.1);
+
+  /* ─── Prioridade ─── */
+  --color-alta: var(--color-danger);
+  --color-media: var(--color-warning);
+  --color-baixa: var(--color-success);
+
+  /* ─── Paleta de gráficos (ARPE: azuis predominantes + tricolor como destaque) ─── */
+  --chart-1: #3b6fd4;
+  --chart-2: #e6021d;
+  --chart-3: #fdca02;
+  --chart-4: #40e001;
+  --chart-5: #8fb0ec;
+  --chart-6: #64748b;
+  --chart-7: #ff7a8a;
+  --chart-8: #2a4f8f;
+  --chart-9: #ffe066;
+  --chart-10: #9cf06e;
+  --chart-11: #c7d6f5;
+  --chart-12: #94a3b8;
+  --chart-muted: rgba(59, 111, 212, 0.28);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.32);
+  --shadow-lg: 0 20px 48px rgba(0, 0, 0, 0.45);
 
   /* ─── Radius ─── */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
   --radius-xl: 20px;
 
   /* ─── Spacing ─── */
   --space-section: 112px;
   --space-group: 64px;
   --space-element: 24px;
+
+  /* ─── Layout ─── */
+  --sidebar-width: 17rem;
 
   /* ─── iOS PWA safe areas ─── */
   --safe-area-inset-top: env(safe-area-inset-top, 0px);
@@ -53,23 +101,56 @@
   --dashboard-header-offset: calc(var(--dashboard-header-height) + var(--safe-area-inset-top));
 }
 
-/* Tema claro (switch no header) - paleta ARPE light */
 html[data-theme="light"] {
-  --color-primary: #1e5a8e;
-  --color-primary-hover: #164a75;
-  --color-accent: #2d7ab5;
+  --color-primary: #0b2160;
+  --color-primary-hover: #081845;
+  --color-on-primary: #ffffff;
+  --color-accent: #1e3a5f;
 
-  --color-bg: #f5f7fa;
+  --color-bg: #f1f5f9;
   --color-bg-sidebar: #ffffff;
   --color-bg-card: #ffffff;
-  --color-bg-hover: #e8eef5;
-  --color-bg-input: #f1f5f9;
-  --color-border: rgba(15, 23, 42, 0.10);
-  --color-border-strong: rgba(15, 23, 42, 0.18);
+  --color-bg-hover: #e8eef7;
+  --color-bg-input: #f8fafc;
+  --color-border: rgba(11, 33, 96, 0.12);
+  --color-border-strong: rgba(11, 33, 96, 0.22);
 
   --color-text: #0f172a;
   --color-text-muted: #475569;
   --color-text-subtle: #64748b;
+
+  --color-nav-text: #334155;
+  --color-nav-active-bg: rgba(11, 33, 96, 0.08);
+  --color-nav-active-text: #0b2160;
+  --color-kpi-value: #0b2160;
+
+  --color-success: #15803d;
+  --color-warning: #a16207;
+  --color-danger: #c10019;
+  --color-info: #0b2160;
+  --color-neutral: #64748b;
+  --color-success-soft: rgba(64, 224, 1, 0.12);
+  --color-warning-soft: rgba(253, 202, 2, 0.18);
+  --color-danger-soft: rgba(230, 2, 29, 0.08);
+  --color-info-soft: rgba(11, 33, 96, 0.06);
+
+  --chart-1: #0b2160;
+  --chart-2: #e6021d;
+  --chart-3: #e0b000;
+  --chart-4: #34b800;
+  --chart-5: #4a74c9;
+  --chart-6: #64748b;
+  --chart-7: #ff6b7d;
+  --chart-8: #1e3a5f;
+  --chart-9: #f5d64a;
+  --chart-10: #7bd94a;
+  --chart-11: #9db5e6;
+  --chart-12: #94a3b8;
+  --chart-muted: rgba(11, 33, 96, 0.16);
+
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.08);
+  --shadow-lg: 0 20px 48px rgba(15, 23, 42, 0.14);
 }
 
 /* Só box-sizing aqui: margin em * sem @layer sobrescreve utilitários (ex.: mx-auto) do Tailwind */
@@ -91,12 +172,21 @@ body {
   margin: 0;
   background-color: var(--color-bg);
   color: var(--color-text);
-  font-family: inherit;
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   /* iPhone com notch / home indicator — evita conteúdo colado nas bordas */
   padding-left: env(safe-area-inset-left, 0px);
   padding-right: env(safe-area-inset-right, 0px);
+}
+
+@layer base {
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
 }
 
 /* ─── Scrollbar personalizada ─── */
@@ -105,7 +195,7 @@ body {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--color-bg-sidebar);
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
   background: var(--color-border-strong);
@@ -128,4 +218,66 @@ body {
 }
 .text-subtle {
   color: var(--color-text-subtle);
+}
+
+/* ─── Assinaturas visuais ARPE ─── */
+.arpe-tricolor {
+  height: 3px;
+  border-radius: 999px;
+  background: var(--arpe-tricolor);
+}
+
+.arpe-circuit {
+  background-image:
+    linear-gradient(90deg, transparent 0 23px, rgba(147, 197, 253, 0.07) 23px 24px),
+    linear-gradient(0deg, transparent 0 23px, rgba(147, 197, 253, 0.05) 23px 24px);
+  background-size: 24px 24px;
+}
+
+.arpe-chip {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: var(--arpe-night);
+  border: 1px solid rgba(241, 245, 249, 0.14);
+}
+
+.arpe-chip::before {
+  content: "";
+  position: absolute;
+  inset: 22%;
+  background: linear-gradient(135deg, var(--arpe-red) 33%, var(--arpe-yellow) 33% 66%, var(--arpe-green) 66%);
+  clip-path: polygon(50% 6%, 94% 92%, 6% 92%);
+}
+
+/* Linha tricolor no topo de cartões de destaque */
+.arpe-accent-top {
+  position: relative;
+  overflow: hidden;
+}
+
+.arpe-accent-top::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: var(--arpe-tricolor-soft);
+  opacity: 0.9;
+}
+
+/* Superfície padrão de cartões/painéis */
+.arpe-surface {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+  }
 }

@@ -43,21 +43,21 @@ export function KpiCard({
         </p>
         <div
           className="w-9 h-9 shrink-0 rounded-[var(--radius-md)] flex items-center justify-center"
-          style={{ backgroundColor: `${color}18` }}
+          style={{ backgroundColor: `color-mix(in srgb, ${color} 14%, transparent)` }}
         >
           <span style={{ color }}>{icon}</span>
         </div>
       </div>
       <div className="min-w-0">
         <div className="flex items-baseline gap-2 flex-wrap">
-          <p className="text-2xl sm:text-3xl font-bold text-[var(--color-text)] tabular-nums [overflow-wrap:anywhere] break-words">
+          <p className="font-display text-2xl sm:text-[1.75rem] font-extrabold leading-tight text-[var(--color-kpi-value)] tabular-nums [overflow-wrap:anywhere] break-words">
             {numericValue}
           </p>
           {hasVariation && (
             <span
               className={cn(
                 'inline-flex items-center gap-0.5 text-xs font-medium',
-                variationPositive ? 'text-emerald-500' : 'text-red-400',
+                variationPositive ? 'text-[var(--color-success)]' : 'text-[var(--color-danger)]',
               )}
             >
               {variationPositive ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
@@ -79,8 +79,8 @@ export function KpiCard({
   )
 
   const cardClass = cn(
-    'min-w-0 bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 sm:p-5 md:p-6 flex flex-col gap-3 sm:gap-4 transition-colors',
-    href && 'hover:border-[var(--color-primary)]/30 cursor-pointer',
+    'arpe-surface arpe-accent-top min-w-0 p-4 sm:p-5 md:p-6 flex flex-col gap-3 sm:gap-4 transition-[border-color,box-shadow,transform] duration-200',
+    href && 'hover:border-[var(--color-primary)]/35 hover:shadow-[var(--shadow-md)] hover:-translate-y-0.5 cursor-pointer',
     className,
   )
 
@@ -101,7 +101,7 @@ export function KpiCard({
 
 export function KpiCardSkeleton() {
   return (
-    <div className="bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-5 flex flex-col gap-3 animate-pulse">
+    <div className="arpe-surface p-5 flex flex-col gap-3 animate-pulse">
       <div className="flex items-center justify-between">
         <div className="h-4 w-32 bg-[var(--color-bg-hover)] rounded" />
         <div className="w-9 h-9 bg-[var(--color-bg-hover)] rounded-[var(--radius-md)]" />

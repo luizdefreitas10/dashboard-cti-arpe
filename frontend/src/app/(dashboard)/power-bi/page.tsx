@@ -28,8 +28,8 @@ function StatusBadge({ status }: { status: string }) {
       className={cn(
         'absolute top-3 right-3 z-10 text-[10px] font-semibold uppercase tracking-wide px-2 py-1 rounded-md shadow-sm',
         emAndamento
-          ? 'bg-amber-500/90 text-amber-950'
-          : 'bg-emerald-500/90 text-emerald-950',
+          ? 'bg-[var(--arpe-yellow)] text-[var(--arpe-night)]'
+          : 'bg-[var(--arpe-green)] text-[var(--arpe-night)]',
       )}
     >
       {emAndamento ? 'Em andamento' : 'Concluído'}
@@ -59,7 +59,7 @@ function DashboardCard({ d }: { d: PowerBiDashboard }) {
 
   const cardClassName = cn(
     'group flex flex-col rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-card)] overflow-hidden',
-    'transition-all duration-200 hover:border-[var(--color-primary)]/40 hover:shadow-lg hover:shadow-black/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)]',
+    'transition-all duration-200 hover:border-[var(--color-primary)]/40 hover:shadow-[var(--shadow-md)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)]',
     'cursor-pointer',
   )
 
@@ -77,9 +77,9 @@ function DashboardCard({ d }: { d: PowerBiDashboard }) {
             onError={onImgError}
           />
         ) : emAndamento ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-amber-500/15 border-b-2 border-amber-500/40">
-            <BarChart3 size={52} className="text-amber-500/70 mb-3" />
-            <span className="text-sm font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[var(--color-warning-soft)] border-b-2 border-[var(--color-warning)]/40">
+            <BarChart3 size={52} className="text-[var(--color-warning)]/70 mb-3" />
+            <span className="text-sm font-bold uppercase tracking-wider text-[var(--color-warning)]">
               Dashboard em produção
             </span>
             <span className="text-xs text-[var(--color-text-subtle)] mt-1.5 text-center px-4">
@@ -248,12 +248,12 @@ export default function PowerBiPage() {
           </div>
           <div className="w-px h-4 bg-[var(--color-border)]" />
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">{concluidos}</span>
+            <span className="text-sm font-semibold text-[var(--color-success)]">{concluidos}</span>
             <span className="text-sm text-[var(--color-text-muted)]">concluído(s)</span>
           </div>
           <div className="w-px h-4 bg-[var(--color-border)]" />
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-amber-600 dark:text-amber-400">{andamento}</span>
+            <span className="text-sm font-semibold text-[var(--color-warning)]">{andamento}</span>
             <span className="text-sm text-[var(--color-text-muted)]">em andamento</span>
           </div>
           <button
@@ -304,7 +304,7 @@ export default function PowerBiPage() {
               className={cn(
                 'px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
                 statusFilter === value
-                  ? 'bg-[var(--color-primary)] text-white'
+                  ? 'bg-[var(--color-primary)] text-[var(--color-on-primary)]'
                   : 'bg-[var(--color-bg-card)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-bg-hover)]',
               )}
             >

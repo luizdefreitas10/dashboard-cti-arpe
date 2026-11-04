@@ -92,7 +92,7 @@ export function RecentImportLogs({
     <section className="min-w-0 overflow-hidden rounded-lg border border-(--color-border) bg-(--color-bg-card)">
       <div className="flex flex-col gap-2 border-b border-(--color-border) px-3 py-3 sm:flex-row sm:items-start sm:justify-between sm:px-4">
         <div>
-          <h2 className="text-sm font-semibold text-(--color-text)">{title}</h2>
+          <h2 className="font-display text-sm font-bold text-(--color-text)">{title}</h2>
           <p className="mt-0.5 text-xs leading-relaxed text-(--color-text-subtle) wrap-anywhere">
             {description}
           </p>

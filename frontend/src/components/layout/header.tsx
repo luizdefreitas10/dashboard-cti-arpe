@@ -5,61 +5,10 @@ import { LogOut, Menu, UserCircle, X } from 'lucide-react'
 import { ThemeSwitch } from '@/components/layout/theme-switch'
 import { Breadcrumb } from '@/components/layout/breadcrumb'
 import { useAuth } from '@/context/auth-context'
+import { findNavContext } from '@/lib/navigation'
 
-const TITLES: Record<string, { title: string; subtitle: string }> = {
-  '/dashboard': {
-    title: 'Visão geral',
-    subtitle: 'Indicadores executivos da CTI',
-  },
-  '/dashboard/atividades': {
-    title: 'Dashboard de Atividades',
-    subtitle: 'Visão geral das atividades da CTI',
-  },
-  '/dashboard/bens': {
-    title: 'Dashboard de Bens',
-    subtitle: 'Monitoramento do patrimônio de TI',
-  },
-  '/tabelas/atividades': {
-    title: 'Tabela de Atividades',
-    subtitle: 'Listagem completa com filtros avançados',
-  },
-  '/tabelas/bens': {
-    title: 'Tabela de Bens',
-    subtitle: 'Inventário patrimonial de hardware',
-  },
-  '/tabelas/softwares': {
-    title: 'Ativos de Software',
-    subtitle: 'Softwares inventariados na CTI',
-  },
-  '/tabelas/ramais': {
-    title: 'Ramais Telefônicos',
-    subtitle: 'Monitoramento de telefones por setor',
-  },
-  '/tabelas/celulares': {
-    title: 'Celulares corporativos',
-    subtitle: 'Inventário com IMEI protegido',
-  },
-  '/importar': {
-    title: 'Importar Dados',
-    subtitle: 'Atualizar dados a partir de planilhas',
-  },
-  '/usuarios': {
-    title: 'Usuários',
-    subtitle: 'Gestão dos agentes da Coordenadoria de TI',
-  },
-  '/agenda': {
-    title: 'Agenda',
-    subtitle: 'Registro e histórico de reuniões da CTI',
-  },
-  '/power-bi': {
-    title: 'Power BI',
-    subtitle: 'Dashboards externos da CTI',
-  },
-  '/solucoes-digitais': {
-    title: 'Soluções Digitais',
-    subtitle: 'Automações e soluções web desenvolvidas pela CTI',
-  },
-}
+const iconButtonClass =
+  'inline-flex size-10 shrink-0 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-card)] text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text)] cursor-pointer touch-manipulation'
 
 export function Header({
   onMenuToggle,
@@ -70,7 +19,9 @@ export function Header({
 }) {
   const pathname = usePathname()
   const { user, logout } = useAuth()
-  const info = TITLES[pathname] ?? { title: 'Dashboard CTI', subtitle: 'Coordenadoria de TI' }
+  const context = findNavContext(pathname)
+  const title = context?.item.title ?? 'Dashboard CTI'
+  const subtitle = context?.item.subtitle ?? 'Coordenadoria de TI'
 
   async function handleLogout() {
     await logout()
@@ -78,45 +29,39 @@ export function Header({
   }
 
   return (
-    <header className="h-(--dashboard-header-offset) shrink-0 border-b border-[var(--color-border)] flex items-center px-2.5 pt-(--safe-area-inset-top) sm:px-4 md:px-6 bg-[var(--color-bg-sidebar)]/60 backdrop-blur-sm sticky top-0 z-50 overflow-hidden">
-      <div className="grid w-full h-full min-h-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-1.5 sm:gap-3">
-        <div className="hidden lg:block w-10 shrink-0" aria-hidden />
+    <header className="sticky top-0 z-50 shrink-0 border-b border-[var(--color-border)] bg-[var(--color-bg-sidebar)]/85 pt-(--safe-area-inset-top) backdrop-blur-md">
+      <div className="flex h-(--dashboard-header-height) items-center gap-2 px-3 sm:gap-3 sm:px-5 lg:px-8">
         <button
           type="button"
           aria-label={isMenuOpen ? 'Fechar menu' : 'Abrir menu'}
-          className="flex lg:hidden items-center justify-center min-h-11 min-w-11 sm:min-h-10 sm:min-w-10 shrink-0 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-hover)] cursor-pointer touch-manipulation"
+          aria-expanded={isMenuOpen}
+          aria-controls="mobile-navigation"
+          className={`${iconButtonClass} lg:hidden`}
           onClick={onMenuToggle}
         >
-          {isMenuOpen ? <X size={18} /> : <Menu size={18} />}
+          {isMenuOpen ? <X size={18} aria-hidden /> : <Menu size={18} aria-hidden />}
         </button>
 
-        <div className="min-w-0 min-h-0 flex flex-col items-center justify-center text-center gap-0 px-1 py-0.5 leading-tight">
-          <Breadcrumb />
-          <h1 className="text-sm sm:text-base font-semibold text-[var(--color-text)] leading-tight max-w-[min(100%,20rem)] sm:max-w-md md:max-w-xl truncate">
-            {info.title}
-          </h1>
-          <p className="text-[10px] sm:text-xs text-[var(--color-text-subtle)] leading-tight max-w-[min(100%,22rem)] sm:max-w-lg md:max-w-2xl truncate">
-            {info.subtitle}
-          </p>
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+          <span className="arpe-tricolor hidden w-10 shrink-0 md:block" aria-hidden />
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <Breadcrumb className="hidden sm:block" />
+            <h1 className="truncate font-display text-[15px] font-bold leading-tight text-[var(--color-text)] sm:text-[17px]">
+              {title}
+            </h1>
+            <p className="hidden truncate text-[11.5px] leading-tight text-[var(--color-text-subtle)] sm:block">{subtitle}</p>
+          </div>
         </div>
 
-        <div className="flex shrink-0 items-center gap-2 justify-self-end">
+        <div className="flex shrink-0 items-center gap-2">
           {user && (
-            <div className="hidden min-w-0 items-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-2.5 py-1.5 text-left sm:flex">
-              <UserCircle size={16} className="shrink-0 text-[var(--color-primary)]" aria-hidden />
-              <div className="min-w-0">
-                <p className="max-w-32 truncate text-xs font-semibold text-[var(--color-text)]">{user.name}</p>
-                <p className="text-[10px] uppercase tracking-wide text-[var(--color-text-subtle)]">{user.role === 'admin' ? 'Admin' : 'Agente'}</p>
-              </div>
+            <div className="hidden min-w-0 items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-bg-card)] py-1 pl-1.5 pr-3 md:flex lg:hidden">
+              <UserCircle size={18} className="shrink-0 text-[var(--color-primary)]" aria-hidden />
+              <span className="max-w-32 truncate text-xs font-semibold text-[var(--color-text)]">{user.name}</span>
             </div>
           )}
           <ThemeSwitch />
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-md border border-[var(--color-border)] bg-[var(--color-bg-card)] text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text)] cursor-pointer"
-            aria-label="Sair do sistema"
-          >
+          <button type="button" onClick={handleLogout} className={iconButtonClass} aria-label="Sair do sistema" title="Sair do sistema">
             <LogOut size={16} aria-hidden />
           </button>
         </div>

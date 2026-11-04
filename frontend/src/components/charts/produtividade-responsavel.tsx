@@ -2,17 +2,20 @@
 
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 import { PALETTE } from '@/lib/chart-colors'
+import type { ChartTooltipProps } from '@/components/charts/chart-tooltip'
 
 interface Props {
   data: { responsavel: string; total: number }[]
 }
 
-const CustomTooltip = ({ active, payload }: any) => {
+const CustomTooltip = ({ active, payload }: ChartTooltipProps) => {
   if (!active || !payload?.length) return null
+  const item = payload[0]
+  const responsavel = item.payload?.responsavel
   return (
     <div className="bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-[var(--radius-md)] px-3 py-2 text-sm shadow-xl">
-      <p className="text-[var(--color-text)] font-semibold">{payload[0].payload.responsavel}</p>
-      <p className="text-[var(--color-text-muted)]">{payload[0].value} atividades</p>
+      <p className="text-[var(--color-text)] font-semibold">{typeof responsavel === 'string' ? responsavel : item.name}</p>
+      <p className="text-[var(--color-text-muted)]">{item.value} atividades</p>
     </div>
   )
 }

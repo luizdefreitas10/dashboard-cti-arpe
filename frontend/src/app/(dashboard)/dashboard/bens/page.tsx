@@ -17,7 +17,7 @@ export const dynamic = 'force-dynamic'
 function ChartCard({ title, children, className = '' }: { title: string; children: React.ReactNode; className?: string }) {
   return (
     <div className={`bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-6 ${className}`}>
-      <p className="text-sm font-semibold text-[var(--color-text)] mb-5">{title}</p>
+      <h2 className="font-display text-sm font-bold text-[var(--color-text)] mb-5">{title}</h2>
       {children}
     </div>
   )
@@ -55,7 +55,7 @@ async function DashboardBensContent() {
           title="Softwares"
           value={stats.totalSoftwares}
           icon={<Cpu size={18} />}
-          color="#1e5a8e"
+          color="var(--chart-5)"
           subtitle="Ativos de software"
           tooltip="Softwares licenciados e inventariados"
           href="/tabelas/softwares"
@@ -64,7 +64,7 @@ async function DashboardBensContent() {
           title="Ramais"
           value={stats.totalRamais}
           icon={<Phone size={18} />}
-          color="#10b981"
+          color="var(--color-success)"
           subtitle={`${totalRamaisDigital} digitais · ${totalRamaisAnalogico} analógicos`}
           tooltip="Ramais telefônicos por setor"
           href="/tabelas/ramais"
@@ -73,7 +73,7 @@ async function DashboardBensContent() {
           title="Celulares"
           value={stats.totalCelulares}
           icon={<Smartphone size={18} />}
-          color="#f97316"
+          color="var(--color-warning)"
           subtitle="Celulares corporativos"
           tooltip="Inventário de dispositivos móveis"
           href="/tabelas/celulares"
@@ -81,8 +81,8 @@ async function DashboardBensContent() {
       </div>
 
       {criticidade > 0 ? (
-        <div className="flex items-start gap-3 rounded-[var(--radius-lg)] border border-amber-500/25 bg-amber-500/5 px-4 py-3">
-          <AlertTriangle className="text-amber-400 shrink-0 mt-0.5" size={18} />
+        <div className="flex items-start gap-3 rounded-[var(--radius-lg)] border border-[var(--color-warning)]/25 bg-[var(--color-warning-soft)] px-4 py-3">
+          <AlertTriangle className="text-[var(--color-warning)] shrink-0 mt-0.5" size={18} />
           <p className="text-sm text-[var(--color-text-muted)]">
             <strong className="text-[var(--color-text)]">{criticidade}</strong> bens com criticidade registrada no
             inventário —{' '}

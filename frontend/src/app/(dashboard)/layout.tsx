@@ -38,15 +38,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div className="min-h-screen bg-[var(--color-bg)]">
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <div className="flex min-h-screen w-full min-w-0 max-w-[100vw] flex-col overflow-x-clip lg:pl-60">
+      <div className="flex min-h-screen w-full min-w-0 max-w-[100vw] flex-col overflow-x-clip lg:pl-(--sidebar-width)">
         <a
           href="#main-content"
-          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-[var(--color-primary)] focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-white focus:outline-none focus:ring-2 focus:ring-white"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-[var(--color-primary)] focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-[var(--color-on-primary)] focus:outline-none focus:ring-2 focus:ring-white"
         >
           Pular para o conteúdo principal
         </a>
         <Header onMenuToggle={toggleSidebar} isMenuOpen={sidebarOpen} />
-        <main id="main-content" className="flex-1 w-full min-w-0 max-w-full p-3 sm:p-6 lg:p-8" tabIndex={-1}>
+        <main id="main-content" className="mx-auto w-full min-w-0 max-w-[1600px] flex-1 p-3 sm:p-6 lg:p-8" tabIndex={-1}>
           {children}
         </main>
         <Footer />
@@ -60,7 +60,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             color: 'var(--color-text)',
             border: '1px solid var(--color-border)',
             borderRadius: 'var(--radius-md)',
+            boxShadow: 'var(--shadow-md)',
+            fontSize: '0.875rem',
           },
+          success: { iconTheme: { primary: 'var(--color-success)', secondary: 'var(--color-bg-card)' } },
+          error: { iconTheme: { primary: 'var(--color-danger)', secondary: 'var(--color-bg-card)' } },
         }}
       />
       <PwaInstallPrompt />
