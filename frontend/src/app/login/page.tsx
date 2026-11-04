@@ -1,12 +1,12 @@
 'use client'
 
 import { FormEvent, useEffect, useMemo, useState } from 'react'
-import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import toast, { Toaster } from 'react-hot-toast'
 import { Loader2, LockKeyhole, ShieldCheck } from 'lucide-react'
 import { useAuth } from '@/context/auth-context'
 import { ThemeSwitch } from '@/components/layout/theme-switch'
+import { CtiLogo, CtiSymbol, JointSignature } from '@/components/brand/cti-brand'
 import AuthService from '@/services/models/auth'
 
 function extractMessage(error: unknown) {
@@ -70,24 +70,17 @@ export default function LoginPage() {
   return (
     <main className="grid min-h-dvh bg-[var(--color-bg)] lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
       <section
-        className="arpe-circuit relative hidden flex-col justify-between overflow-hidden bg-[var(--arpe-night)] p-10 text-white lg:flex xl:p-14"
+        className="arpe-trilhas relative hidden flex-col justify-between overflow-hidden bg-[var(--arpe-night)] bg-cover p-10 text-white lg:flex xl:p-14"
         aria-label="Identificação institucional"
       >
         <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(30,58,95,0.9),transparent_55%),radial-gradient(circle_at_90%_0%,rgba(230,2,29,0.14),transparent_40%)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_45%,rgba(15,23,42,0.92),rgba(15,23,42,0.55)_45%,transparent_75%)]"
           aria-hidden
         />
-        <div className="relative flex items-center gap-3">
-          <span className="flex size-12 items-center justify-center rounded-[12px] bg-white shadow-[var(--shadow-md)]">
-            <Image src="/arpe-drawer-logo.svg" alt="" width={36} height={22} className="h-auto w-9" priority />
-          </span>
-          <div>
-            <p className="font-display text-lg font-bold leading-tight">Dashboard CTI</p>
-            <p className="text-xs text-white/70">Coordenadoria de Tecnologia da Informação · ARPE</p>
-          </div>
-        </div>
+        <JointSignature tone="negative" className="relative" />
 
         <div className="relative max-w-lg">
+          <CtiSymbol size={104} decorative priority className="mb-8" />
           <div className="arpe-tricolor mb-6 w-24" aria-hidden />
           <h2 className="font-display text-4xl font-extrabold leading-[1.1] xl:text-5xl">
             Tecnologia a serviço da regulação de Pernambuco.
@@ -107,13 +100,10 @@ export default function LoginPage() {
           <ThemeSwitch />
         </div>
         <div className="mb-8 flex flex-col items-center gap-3 text-center lg:hidden">
-          <span className="flex size-12 items-center justify-center rounded-[12px] bg-white shadow-[var(--shadow-md)] ring-1 ring-[var(--color-border)]">
-            <Image src="/arpe-drawer-logo.svg" alt="" width={36} height={22} className="h-auto w-9" priority />
-          </span>
-          <div>
-            <p className="font-display text-lg font-bold text-[var(--color-text)]">Dashboard CTI</p>
-            <p className="text-xs text-[var(--color-text-subtle)]">Coordenadoria de TI · ARPE</p>
-          </div>
+          <CtiLogo className="h-11 w-auto" priority />
+          <p className="text-[10.5px] font-semibold uppercase tracking-[0.12em] text-[var(--color-text-subtle)]">
+            Dashboard de gestão
+          </p>
         </div>
 
         <div className="arpe-surface arpe-accent-top w-full max-w-md p-6 shadow-[var(--shadow-lg)] sm:p-8">

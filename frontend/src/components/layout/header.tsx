@@ -1,9 +1,11 @@
 'use client'
 
+import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { LogOut, Menu, UserCircle, X } from 'lucide-react'
 import { ThemeSwitch } from '@/components/layout/theme-switch'
 import { Breadcrumb } from '@/components/layout/breadcrumb'
+import { CtiSymbol } from '@/components/brand/cti-brand'
 import { useAuth } from '@/context/auth-context'
 import { findNavContext } from '@/lib/navigation'
 
@@ -43,7 +45,10 @@ export function Header({
         </button>
 
         <div className="flex min-w-0 flex-1 items-center gap-3">
-          <span className="arpe-tricolor hidden w-10 shrink-0 md:block" aria-hidden />
+          <Link href="/dashboard" aria-label="CTI — ir para a visão geral" className="shrink-0 rounded-[var(--radius-sm)] lg:hidden">
+            <CtiSymbol size={30} decorative />
+          </Link>
+          <span className="arpe-tricolor hidden w-10 shrink-0 lg:block" aria-hidden />
           <div className="flex min-w-0 flex-col gap-0.5">
             <Breadcrumb className="hidden sm:block" />
             <h1 className="truncate font-display text-[15px] font-bold leading-tight text-[var(--color-text)] sm:text-[17px]">

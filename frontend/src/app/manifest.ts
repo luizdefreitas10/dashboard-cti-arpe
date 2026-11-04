@@ -16,19 +16,19 @@ export default function manifest(): MetadataRoute.Manifest {
     categories: ['business', 'productivity', 'utilities'],
     icons: [
       {
-        src: '/icons/arpe-mark-192.png',
+        src: '/icons/cti-simbolo-192.png',
         sizes: '192x192',
         type: 'image/png',
         purpose: 'any',
       },
       {
-        src: '/icons/arpe-mark-512.png',
+        src: '/icons/cti-simbolo-512.png',
         sizes: '512x512',
         type: 'image/png',
         purpose: 'any',
       },
       {
-        src: '/icons/arpe-mark-512.png',
+        src: '/icons/cti-maskable-512.png',
         sizes: '512x512',
         type: 'image/png',
         purpose: 'maskable',

@@ -1,10 +1,12 @@
 import Link from 'next/link'
 import { WifiOff } from 'lucide-react'
+import { CtiLogo } from '@/components/brand/cti-brand'
 
 export default function OfflinePage() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[var(--color-bg)] px-4 py-10 text-[var(--color-text)]">
-      <section className="w-full max-w-md rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-6 text-center shadow-lg">
+    <main className="flex min-h-screen flex-col items-center justify-center gap-8 bg-[var(--color-bg)] px-4 py-10 text-[var(--color-text)]">
+      <CtiLogo className="h-10 w-auto" priority />
+      <section className="arpe-accent-top w-full max-w-md rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-6 text-center shadow-lg">
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-[var(--color-primary)]/30 bg-[var(--color-primary)]/10 text-[var(--color-primary)]">
           <WifiOff size={22} aria-hidden />
         </div>

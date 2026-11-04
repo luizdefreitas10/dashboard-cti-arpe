@@ -63,15 +63,13 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: '/icons/arpe-mark-64.png', type: 'image/png', sizes: '64x64' },
-      { url: '/icons/arpe-mark-192.png', type: 'image/png', sizes: '192x192' },
-      { url: '/icons/arpe-mark-512.png', type: 'image/png', sizes: '512x512' },
+      { url: '/brand/cti-simbolo.svg', type: 'image/svg+xml' },
+      { url: '/icons/cti-simbolo-32.png', type: 'image/png', sizes: '32x32' },
+      { url: '/icons/cti-simbolo-64.png', type: 'image/png', sizes: '64x64' },
+      { url: '/icons/cti-simbolo-192.png', type: 'image/png', sizes: '192x192' },
     ],
-    shortcut: '/icons/arpe-mark-64.png',
-    apple: [
-      { url: '/icons/arpe-mark-192.png', type: 'image/png', sizes: '192x192' },
-      { url: '/icons/arpe-mark-512.png', type: 'image/png', sizes: '512x512' },
-    ],
+    shortcut: '/icons/cti-simbolo-64.png',
+    apple: [{ url: '/icons/cti-apple-touch-180.png', type: 'image/png', sizes: '180x180' }],
   },
   openGraph: {
     type: 'website',

@@ -1,3 +1,5 @@
+import { CtiLogo, CtiSymbol } from '@/components/brand/cti-brand'
+
 function SkeletonBlock({ className = '' }: { className?: string }) {
   return (
     <div
@@ -13,15 +15,12 @@ function SidebarSkeleton() {
       className="hidden lg:flex fixed left-0 top-0 z-30 h-screen w-(--sidebar-width) flex-col border-r border-(--color-border) bg-(--color-bg-sidebar)"
       aria-hidden
     >
-      <div className="px-5 pt-5 pb-4">
-        <div className="flex items-center gap-3">
-          <SkeletonBlock className="h-10 w-10 shrink-0" />
-          <div className="flex-1 space-y-2">
-            <SkeletonBlock className="h-3.5 w-28" />
-            <SkeletonBlock className="h-2.5 w-24" />
-          </div>
+      <div className="px-5 pt-6 pb-4">
+        <CtiLogo className="h-10 w-auto" priority />
+        <div className="mt-4 flex items-center gap-2.5">
+          <span className="arpe-tricolor w-8 shrink-0 opacity-60" />
+          <SkeletonBlock className="h-2.5 w-28" />
         </div>
-        <div className="arpe-tricolor mt-4 opacity-60" />
       </div>
 
       <div className="flex flex-1 flex-col gap-2 px-3 py-4">
@@ -47,7 +46,10 @@ function HeaderSkeleton() {
       aria-hidden
     >
       <div className="grid h-full w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 sm:gap-3">
-        <SkeletonBlock className="h-10 w-10 shrink-0 lg:hidden" />
+        <div className="flex items-center gap-2 lg:hidden">
+          <SkeletonBlock className="h-10 w-10 shrink-0" />
+          <CtiSymbol size={30} decorative />
+        </div>
         <span className="hidden lg:block" />
 
         <div className="flex min-w-0 flex-col items-start justify-center gap-1 px-1">

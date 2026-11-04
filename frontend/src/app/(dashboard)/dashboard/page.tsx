@@ -8,6 +8,7 @@ import { ErrorState } from '@/components/dashboard/error-state'
 import { DashboardOverviewSkeleton } from '@/components/dashboard/dashboard-overview-skeleton'
 import { ContratosTelematicaOverviewSection } from '@/components/dashboard/contratos-telematica-overview-section'
 import { RecentImportLogs } from '@/components/dashboard/recent-import-logs'
+import { CtiSymbol } from '@/components/brand/cti-brand'
 import {
   Activity,
   Server,
@@ -56,16 +57,31 @@ async function DashboardContent() {
 
   return (
     <div className="flex w-full min-w-0 max-w-full flex-col gap-6 sm:gap-8">
-      <div className="min-w-0">
-        <p className="text-sm text-[var(--color-text-muted)] leading-relaxed [overflow-wrap:anywhere] text-pretty">
-          Visão executiva da <strong className="text-[var(--color-text)]">Coordenadoria de TI</strong>: indicadores
-          cruzados de atividades, patrimônio, soluções, contratos de telemática e importações recentes. Use os atalhos
-          para aprofundar em cada módulo.
-        </p>
-        <div className="mt-4">
-          <DataFreshnessBanner dataMinima={a.dataMinimaAtividade} dataMaxima={a.dataMaximaAtividade} />
+      <section className="arpe-trilhas-auto relative min-w-0 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-card)] bg-right-top shadow-[var(--shadow-sm)]">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,var(--color-bg-card)_0%,var(--color-bg-card)_30%,color-mix(in_srgb,var(--color-bg-card)_45%,transparent)_60%,transparent_85%)]"
+        />
+        <div className="relative flex min-w-0 items-start gap-4 p-5 sm:gap-5 sm:p-6">
+          <CtiSymbol size={60} decorative className="hidden sm:block" />
+          <div className="min-w-0 max-w-3xl">
+            <p className="text-[10.5px] font-semibold uppercase tracking-[0.12em] text-[var(--color-text-subtle)]">
+              Coordenadoria de Tecnologia da Informação
+            </p>
+            <h2 className="mt-1 font-display text-xl font-extrabold leading-tight text-[var(--color-text)] sm:text-2xl">
+              Visão executiva da CTI
+            </h2>
+            <div className="arpe-tricolor mt-3 w-16" aria-hidden />
+            <p className="mt-3 text-sm text-[var(--color-text-muted)] leading-relaxed [overflow-wrap:anywhere] text-pretty">
+              Indicadores cruzados de atividades, patrimônio, soluções, contratos de telemática e importações recentes.
+              Use os atalhos para aprofundar em cada módulo.
+            </p>
+            <div className="mt-4">
+              <DataFreshnessBanner dataMinima={a.dataMinimaAtividade} dataMaxima={a.dataMaximaAtividade} />
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
 
       {/* KPIs principais — hierarquia: 1 destaque + 3 secundários */}
       <div className="grid grid-cols-1 min-w-0 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">

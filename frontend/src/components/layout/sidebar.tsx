@@ -1,30 +1,25 @@
 'use client'
 
-import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ShieldCheck, UserCircle2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { CtiLogo } from '@/components/brand/cti-brand'
 import { useAuth } from '@/context/auth-context'
 import { isNavLinkActive, visibleSections } from '@/lib/navigation'
 
 function SidebarBrand() {
   return (
-    <div className="px-5 pt-5 pb-4">
-      <Link href="/dashboard" className="flex items-center gap-3 rounded-[var(--radius-md)]" aria-label="Ir para a visão geral">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-[10px] bg-white shadow-[var(--shadow-sm)] ring-1 ring-[var(--color-border)]">
-          <Image src="/arpe-drawer-logo.svg" alt="" width={30} height={18} className="h-auto w-[30px]" priority />
-        </span>
-        <span className="min-w-0">
-          <span className="block font-display text-[15px] font-bold leading-tight tracking-[0.01em] text-[var(--color-text)]">
-            Dashboard CTI
-          </span>
-          <span className="block text-[11px] leading-tight text-[var(--color-text-subtle)]">
-            Coordenadoria de TI · ARPE
-          </span>
-        </span>
+    <div className="px-5 pt-6 pb-4">
+      <Link href="/dashboard" className="block w-fit rounded-[var(--radius-md)]" aria-label="CTI — ir para a visão geral">
+        <CtiLogo className="h-10 w-auto" priority />
       </Link>
-      <div className="arpe-tricolor mt-4" aria-hidden />
+      <div className="mt-4 flex items-center gap-2.5">
+        <span className="arpe-tricolor w-8 shrink-0" aria-hidden />
+        <span className="text-[10.5px] font-semibold uppercase tracking-[0.12em] text-[var(--color-text-subtle)]">
+          Dashboard de gestão
+        </span>
+      </div>
     </div>
   )
 }
