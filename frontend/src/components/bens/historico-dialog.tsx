@@ -92,9 +92,9 @@ export function HistoricoDialog({ tombamento, open, onOpenChange }: HistoricoDia
                     <span
                       className={`
                         inline-block px-1.5 py-0.5 rounded text-xs font-medium mb-1
-                        ${h.operacao === 'criado' ? 'bg-emerald-500/15 text-emerald-400' : ''}
-                        ${h.operacao === 'alterado' ? 'bg-amber-500/15 text-amber-400' : ''}
-                        ${h.operacao === 'removido' ? 'bg-red-500/15 text-red-400' : ''}
+                        ${h.operacao === 'criado' ? 'bg-[var(--color-success-soft)] text-[var(--color-success)]' : ''}
+                        ${h.operacao === 'alterado' ? 'bg-[var(--color-warning-soft)] text-[var(--color-warning)]' : ''}
+                        ${h.operacao === 'removido' ? 'bg-[var(--color-danger-soft)] text-[var(--color-danger)]' : ''}
                       `}
                     >
                       {OPERACAO_LABEL[h.operacao] ?? h.operacao}
@@ -102,9 +102,9 @@ export function HistoricoDialog({ tombamento, open, onOpenChange }: HistoricoDia
                     {h.campo && (
                       <p className="text-[var(--color-text-muted)]">
                         {CAMPO_LABEL[h.campo] ?? h.campo}:{' '}
-                        <span className="text-red-400/90 line-through">{h.valorAnterior ?? '—'}</span>
+                        <span className="text-[var(--color-danger)]/90 line-through">{h.valorAnterior ?? '—'}</span>
                         {' → '}
-                        <span className="text-emerald-400/90">{h.valorNovo ?? '—'}</span>
+                        <span className="text-[var(--color-success)]/90">{h.valorNovo ?? '—'}</span>
                       </p>
                     )}
                     <p className="text-[11px] text-[var(--color-text-subtle)] mt-0.5">

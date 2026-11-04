@@ -1,50 +1,43 @@
+/** Cores dos gráficos apontam para tokens CSS, então acompanham o tema claro/escuro. */
+const chart = (n: number) => `var(--chart-${n})`
+
 export const CATEGORY_COLORS: Record<string, string> = {
-  'Suporte Técnico e Helpdesk': '#3b82f6',
-  'Instalação e Configuração de Software/Hardware': '#8b5cf6',
-  'Suporte Administrativo': '#10b981',
-  'Administração de Rede e Servidor': '#f97316',
-  'Administração de Usuários e Acessos': '#f43f5e',
-  'Administração de Usuários e Acessórios': '#f43f5e',
-  'Suporte de Telemática (Telefonia)': '#06b6d4',
-  'Suporte de Telemática': '#06b6d4',
-  'Desenvolvimento de Software': '#eab308',
-  default: '#64748b',
+  'Suporte Técnico e Helpdesk': chart(1),
+  'Instalação e Configuração de Software/Hardware': chart(5),
+  'Suporte Administrativo': chart(4),
+  'Administração de Rede e Servidor': chart(3),
+  'Administração de Usuários e Acessos': chart(2),
+  'Administração de Usuários e Acessórios': chart(2),
+  'Suporte de Telemática (Telefonia)': chart(8),
+  'Suporte de Telemática': chart(8),
+  'Desenvolvimento de Software': chart(7),
+  default: chart(6),
 }
 
 export const PRIORITY_COLORS: Record<string, string> = {
-  Alta: '#f87171',
-  Média: '#fbbf24',
-  Baixa: '#34d399',
+  Alta: 'var(--color-alta)',
+  Média: 'var(--color-media)',
+  Baixa: 'var(--color-baixa)',
 }
 
 export const HARDWARE_COLORS: Record<string, string> = {
-  Monitor: '#3b82f6',
-  'Computador Desktop': '#8b5cf6',
-  Microcomputador: '#06b6d4',
-  Notebook: '#10b981',
-  'Notebook Novo': '#10b981',
-  'Notebook Antigo': '#059669',
-  Switch: '#f97316',
-  Tablet: '#eab308',
-  Câmera: '#f43f5e',
-  default: '#64748b',
+  Monitor: chart(1),
+  'Computador Desktop': chart(5),
+  Microcomputador: chart(8),
+  Notebook: chart(4),
+  'Notebook Novo': chart(4),
+  'Notebook Antigo': chart(10),
+  Switch: chart(3),
+  Tablet: chart(9),
+  Câmera: chart(2),
+  default: chart(6),
 }
 
-export const PALETTE = [
-  '#3b82f6',
-  '#8b5cf6',
-  '#10b981',
-  '#f97316',
-  '#f43f5e',
-  '#06b6d4',
-  '#eab308',
-  '#ec4899',
-  '#14b8a6',
-  '#a855f7',
-  '#f59e0b',
-  '#22c55e',
-]
+export const PALETTE = Array.from({ length: 12 }, (_, i) => chart(i + 1))
+
+export const CHART_NEUTRAL = chart(6)
+export const CHART_MUTED = 'var(--chart-muted)'
 
 export function getColor(key: string, map: Record<string, string>): string {
-  return map[key] ?? map.default ?? '#64748b'
+  return map[key] ?? map.default ?? CHART_NEUTRAL
 }

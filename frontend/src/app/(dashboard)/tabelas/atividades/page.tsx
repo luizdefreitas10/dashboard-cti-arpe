@@ -10,9 +10,9 @@ import { Search, Download, ChevronLeft, ChevronRight, X, Filter } from 'lucide-r
 import toast from 'react-hot-toast'
 
 const PRIORITY_COLORS: Record<string, string> = {
-  Alta: 'bg-red-500/15 text-red-400',
-  Média: 'bg-amber-500/15 text-amber-400',
-  Baixa: 'bg-emerald-500/15 text-emerald-400',
+  Alta: 'bg-[var(--color-danger-soft)] text-[var(--color-danger)]',
+  Média: 'bg-[var(--color-warning-soft)] text-[var(--color-warning)]',
+  Baixa: 'bg-[var(--color-success-soft)] text-[var(--color-success)]',
 }
 
 const columns: ColumnDef<Atividade>[] = [
@@ -35,7 +35,7 @@ const columns: ColumnDef<Atividade>[] = [
     header: 'Estado',
     cell: ({ getValue }) => {
       const v = String(getValue() ?? '—')
-      return <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-medium">{v}</span>
+      return <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--color-success-soft)] text-[var(--color-success)] font-medium">{v}</span>
     },
   },
   { accessorKey: 'observacao', header: 'Observação', cell: ({ getValue }) => <span className="text-[var(--color-text-subtle)] text-xs truncate max-w-[140px] inline-block" title={String(getValue() ?? '')}>{String(getValue() ?? '—')}</span> },

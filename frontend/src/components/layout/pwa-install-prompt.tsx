@@ -143,7 +143,7 @@ export function PwaInstallPrompt() {
         <button
           type="button"
           onClick={handleInstall}
-          className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[var(--color-primary-hover)]"
+          className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-[var(--color-on-primary)] transition-colors hover:bg-[var(--color-primary-hover)]"
         >
           <Download size={16} aria-hidden />
           {content.action}

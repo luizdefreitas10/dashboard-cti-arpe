@@ -22,6 +22,8 @@ const withPWA = withPWAInit({
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   turbopack: {},
+  // Embutido no bundle, o proxy-from-env do axios chama url.parse() e o Node emite DEP0169
+  serverExternalPackages: ['axios'],
 }
 
 export default withPWA(nextConfig)

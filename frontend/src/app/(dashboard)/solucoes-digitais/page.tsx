@@ -104,7 +104,7 @@ function SolucaoCard({ item }: { item: SolucaoDigital }) {
         <span
           className={cn(
             'text-[10px] font-semibold uppercase tracking-wide px-2 py-1 rounded-md shadow-sm',
-            isWeb ? 'bg-sky-500/90 text-white' : 'bg-violet-500/90 text-white',
+            isWeb ? 'bg-[var(--arpe-blue)] text-white' : 'bg-[var(--arpe-circuit)] text-white',
           )}
         >
           {tipoLabel}
@@ -112,7 +112,7 @@ function SolucaoCard({ item }: { item: SolucaoDigital }) {
         <span
           className={cn(
             'text-[10px] font-semibold uppercase tracking-wide px-2 py-1 rounded-md shadow-sm',
-            concluida ? 'bg-emerald-500/90 text-emerald-950' : 'bg-amber-500/90 text-amber-950',
+            concluida ? 'bg-[var(--arpe-green)] text-[var(--arpe-night)]' : 'bg-[var(--arpe-yellow)] text-[var(--arpe-night)]',
           )}
         >
           {concluida ? 'Concluída' : 'Em andamento'}
@@ -243,7 +243,7 @@ function SolucaoCard({ item }: { item: SolucaoDigital }) {
                   <ExternalLink size={12} />
                 </a>
               ) : (
-                <p className="text-xs text-amber-600 dark:text-amber-400">
+                <p className="text-xs text-[var(--color-warning)]">
                   Link de produção não disponível
                 </p>
               )}
@@ -277,13 +277,13 @@ function SolucaoCard({ item }: { item: SolucaoDigital }) {
                   href={item.urlProducao!}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 w-full py-3 rounded-[var(--radius-md)] text-sm font-medium bg-[var(--color-primary)] text-white hover:opacity-95 transition-opacity"
+                  className="flex items-center justify-center gap-2 w-full py-3 rounded-[var(--radius-md)] text-sm font-medium bg-[var(--color-primary)] text-[var(--color-on-primary)] hover:opacity-95 transition-opacity"
                 >
                   <ExternalLink size={16} />
                   Abrir em produção
                 </a>
               ) : (
-                <p className="text-[11px] text-center text-[var(--color-text-muted)] py-3 px-3 rounded-md bg-amber-500/10 border border-amber-500/25">
+                <p className="text-[11px] text-center text-[var(--color-text-muted)] py-3 px-3 rounded-md bg-[var(--color-warning-soft)] border border-[var(--color-warning)]/25">
                   Solução ainda não disponível para uso.
                 </p>
               )}
@@ -383,16 +383,16 @@ export default function SolucoesDigitaisPage() {
           <span className="font-semibold text-[var(--color-text)]">{stats.total}</span>
           <span className="text-[var(--color-text-muted)]">total</span>
           <span className="w-px h-4 bg-[var(--color-border)] mx-1" />
-          <span className="font-semibold text-violet-600 dark:text-violet-400">{stats.auto}</span>
+          <span className="font-semibold text-[var(--chart-5)]">{stats.auto}</span>
           <span className="text-[var(--color-text-muted)]">automações</span>
           <span className="w-px h-4 bg-[var(--color-border)] mx-1" />
-          <span className="font-semibold text-sky-600 dark:text-sky-400">{stats.web}</span>
+          <span className="font-semibold text-[var(--color-info)]">{stats.web}</span>
           <span className="text-[var(--color-text-muted)]">web</span>
           <span className="w-px h-4 bg-[var(--color-border)] mx-1" />
-          <span className="font-semibold text-emerald-600 dark:text-emerald-400">{stats.conc}</span>
+          <span className="font-semibold text-[var(--color-success)]">{stats.conc}</span>
           <span className="text-[var(--color-text-muted)]">concl.</span>
           <span className="w-px h-4 bg-[var(--color-border)] mx-1" />
-          <span className="font-semibold text-amber-600 dark:text-amber-400">{stats.and}</span>
+          <span className="font-semibold text-[var(--color-warning)]">{stats.and}</span>
           <span className="text-[var(--color-text-muted)]">andamento</span>
           <button
             type="button"
@@ -442,7 +442,7 @@ export default function SolucoesDigitaisPage() {
               className={cn(
                 'px-3 py-1.5 text-xs font-medium rounded-md transition-colors',
                 filtroTipo === v
-                  ? 'bg-[var(--color-primary)] text-white'
+                  ? 'bg-[var(--color-primary)] text-[var(--color-on-primary)]'
                   : 'bg-[var(--color-bg-card)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-text)]',
               )}
             >
@@ -466,7 +466,7 @@ export default function SolucoesDigitaisPage() {
               className={cn(
                 'px-3 py-1.5 text-xs font-medium rounded-md transition-colors',
                 filtroStatus === v
-                  ? 'bg-[var(--color-primary)] text-white'
+                  ? 'bg-[var(--color-primary)] text-[var(--color-on-primary)]'
                   : 'bg-[var(--color-bg-card)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-text)]',
               )}
             >

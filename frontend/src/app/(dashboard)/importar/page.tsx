@@ -55,8 +55,8 @@ function ImportStatus({ state }: { state: UploadState }) {
     <div
       className={cn(
         'inline-flex max-w-full items-center gap-2 rounded-full border px-2.5 py-1 text-xs font-medium',
-        isSuccess && 'border-emerald-500/25 bg-emerald-500/10 text-emerald-500',
-        isError && 'border-red-500/25 bg-red-500/10 text-red-400',
+        isSuccess && 'border-[var(--color-success)]/25 bg-[var(--color-success-soft)] text-[var(--color-success)]',
+        isError && 'border-[var(--color-danger)]/25 bg-[var(--color-danger-soft)] text-[var(--color-danger)]',
         state.status === 'uploading' && 'border-(--color-border) bg-(--color-bg-hover) text-(--color-text-muted)',
       )}
     >
@@ -148,7 +148,7 @@ function ImportHistorySkeleton() {
       <div className="flex items-center gap-3 border-b border-(--color-border) px-4 py-3">
         <History size={16} className="text-(--color-primary)" aria-hidden />
         <div>
-          <p className="text-sm font-semibold text-(--color-text)">Histórico de importações</p>
+          <h2 className="font-display text-sm font-bold text-(--color-text)">Histórico de importações</h2>
           <p className="text-xs text-(--color-text-subtle)">Carregando auditoria dos uploads...</p>
         </div>
       </div>
@@ -312,9 +312,9 @@ export default function ImportarPage() {
           <p className="text-xs font-semibold uppercase tracking-wide text-(--color-primary)">
             Central de importação
           </p>
-          <h1 className="mt-2 text-2xl font-semibold text-(--color-text) sm:text-3xl">
+          <h2 className="mt-2 font-display text-2xl font-bold text-(--color-text) sm:text-3xl">
             Atualize os dados do dashboard
-          </h1>
+          </h2>
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-(--color-text-muted) text-pretty">
             Envie a planilha correspondente a cada módulo. Cada importação substitui a base anterior,
             registra auditoria e atualiza os indicadores relacionados.
@@ -337,8 +337,8 @@ export default function ImportarPage() {
         </div>
       </section>
 
-      <section className="grid gap-3 rounded-lg border border-amber-500/25 bg-amber-500/10 p-4 text-sm text-(--color-text) sm:grid-cols-[auto_minmax(0,1fr)]">
-        <AlertCircle size={18} className="mt-0.5 shrink-0 text-amber-500" aria-hidden />
+      <section className="grid gap-3 rounded-lg border border-[var(--color-warning)]/25 bg-[var(--color-warning-soft)] p-4 text-sm text-(--color-text) sm:grid-cols-[auto_minmax(0,1fr)]">
+        <AlertCircle size={18} className="mt-0.5 shrink-0 text-[var(--color-warning)]" aria-hidden />
         <div>
           <p className="font-semibold">A importação substitui os dados anteriores do módulo selecionado.</p>
           <p className="mt-1 text-(--color-text-muted)">
@@ -393,7 +393,7 @@ export default function ImportarPage() {
               <div className="flex items-start gap-3">
                 <History size={18} className="mt-0.5 shrink-0 text-(--color-primary)" aria-hidden />
                 <div>
-                  <p className="text-sm font-semibold text-(--color-text)">Histórico de importações</p>
+                  <h2 className="font-display text-sm font-bold text-(--color-text)">Histórico de importações</h2>
                   <p className="mt-1 text-sm text-(--color-text-muted)">
                     Nenhum registro ainda. Após a primeira importação neste ambiente, o histórico aparecerá aqui.
                   </p>

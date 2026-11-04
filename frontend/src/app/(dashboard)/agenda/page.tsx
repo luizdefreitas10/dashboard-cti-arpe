@@ -573,7 +573,7 @@ function DescriptionPautaEditor({
               <Dialog.Close asChild>
                 <button
                   type="button"
-                  className="inline-flex min-h-10 items-center justify-center rounded-[var(--radius-md)] bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[var(--color-primary-hover)] cursor-pointer"
+                  className="inline-flex min-h-10 items-center justify-center rounded-[var(--radius-md)] bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-[var(--color-on-primary)] transition-colors hover:bg-[var(--color-primary-hover)] cursor-pointer"
                 >
                   Concluir edição
                 </button>
@@ -682,7 +682,7 @@ function DescriptionPautaEditor({
                 </button>
                 <button
                   type="submit"
-                  className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[var(--color-primary-hover)] cursor-pointer sm:w-auto"
+                  className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-[var(--color-on-primary)] transition-colors hover:bg-[var(--color-primary-hover)] cursor-pointer sm:w-auto"
                 >
                   <Link2 size={16} aria-hidden />
                   Aplicar link
@@ -714,7 +714,7 @@ function MeetingCard({
       className={cn(
         'w-full min-w-0 overflow-hidden rounded-[var(--radius-lg)] border bg-[var(--color-bg-card)] p-3 text-left transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)] sm:p-4',
         highlighted
-          ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/10'
+          ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/[0.05] shadow-[var(--shadow-md)]'
           : 'border-[var(--color-border)] hover:border-[var(--color-border-strong)]',
       )}
     >
@@ -982,7 +982,7 @@ function MeetingDetailsDialog({
                   <button
                     type="submit"
                     disabled={busy}
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[var(--color-primary-hover)] disabled:cursor-not-allowed disabled:opacity-70 cursor-pointer sm:w-auto"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-[var(--color-on-primary)] transition-colors hover:bg-[var(--color-primary-hover)] disabled:cursor-not-allowed disabled:opacity-70 cursor-pointer sm:w-auto"
                   >
                     {busy ? <Loader2 size={16} className="animate-spin" aria-hidden /> : <Save size={16} aria-hidden />}
                     {busy ? 'Salvando...' : 'Salvar alterações'}
@@ -1221,10 +1221,10 @@ export default function AgendaPage() {
       <section
         aria-live="polite"
         className={cn(
-          'min-w-0 max-w-full overflow-hidden rounded-[var(--radius-xl)] border p-4 sm:p-5',
+          'min-w-0 max-w-full overflow-hidden rounded-[var(--radius-xl)] border bg-[var(--color-bg-card)] p-4 shadow-[var(--shadow-sm)] sm:p-5',
           reunioesHoje.length
-            ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/10'
-            : 'border-[var(--color-border)] bg-[var(--color-bg-card)]',
+            ? 'arpe-accent-top border-[var(--color-primary)]/35'
+            : 'border-[var(--color-border)]',
         )}
       >
         <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -1233,7 +1233,7 @@ export default function AgendaPage() {
               <CalendarDays size={18} className="text-[var(--color-primary)]" aria-hidden />
               <span>Reuniões de hoje</span>
             </div>
-            <h2 className="mt-2 text-xl font-semibold text-[var(--color-text)] wrap-anywhere sm:text-2xl">
+            <h2 className="mt-2 text-xl font-bold text-[var(--color-text)] wrap-anywhere sm:text-2xl">
               {loading ? 'Carregando agenda...' : todayMeetingsHeading(reunioesHoje.length)}
             </h2>
             <p className="mt-1 max-w-2xl text-sm text-[var(--color-text-muted)] wrap-anywhere">
@@ -1382,7 +1382,7 @@ export default function AgendaPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="mt-1 inline-flex min-h-11 items-center justify-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[var(--color-primary-hover)] disabled:cursor-not-allowed disabled:opacity-70 cursor-pointer"
+              className="mt-1 inline-flex min-h-11 items-center justify-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-[var(--color-on-primary)] transition-colors hover:bg-[var(--color-primary-hover)] disabled:cursor-not-allowed disabled:opacity-70 cursor-pointer"
             >
               {submitting ? <Loader2 size={16} className="animate-spin" aria-hidden /> : <Plus size={16} aria-hidden />}
               {submitting ? 'Registrando...' : 'Registrar reunião'}

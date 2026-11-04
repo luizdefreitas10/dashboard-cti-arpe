@@ -19,10 +19,10 @@ export function HeatmapDiasChart({ data }: Props) {
   function getColor(val: number) {
     if (val === 0) return 'bg-[var(--color-border)]'
     const pct = val / max
-    if (pct < 0.25) return 'bg-blue-900/40'
-    if (pct < 0.5) return 'bg-blue-700/50'
-    if (pct < 0.75) return 'bg-blue-500/60'
-    return 'bg-blue-400'
+    if (pct < 0.25) return 'bg-(--color-primary)/20'
+    if (pct < 0.5) return 'bg-(--color-primary)/45'
+    if (pct < 0.75) return 'bg-(--color-primary)/70'
+    return 'bg-(--color-primary)'
   }
 
   return (
@@ -70,7 +70,7 @@ export function HeatmapDiasChart({ data }: Props) {
         ))}
         <div className="flex items-center gap-2 ml-[72px] mt-3" aria-hidden>
           <span className="text-[10px] text-[var(--color-text-subtle)]">Menos</span>
-          {['bg-[var(--color-border)]', 'bg-blue-900/40', 'bg-blue-700/50', 'bg-blue-500/60', 'bg-blue-400'].map(
+          {['bg-[var(--color-border)]', 'bg-(--color-primary)/20', 'bg-(--color-primary)/45', 'bg-(--color-primary)/70', 'bg-(--color-primary)'].map(
             (c, i) => <div key={i} className={`w-4 h-4 rounded-sm ${c}`} />,
           )}
           <span className="text-[10px] text-[var(--color-text-subtle)]">Mais</span>

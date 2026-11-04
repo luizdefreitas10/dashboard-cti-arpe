@@ -23,7 +23,7 @@ function makeColumns(onHistorico: (tombamento: string) => void): ColumnDef<Bem>[
       header: 'Sistema Operacional',
       cell: ({ getValue }) => {
         const v = String(getValue() ?? '—')
-        const color = v.includes('11') ? 'bg-emerald-500/15 text-emerald-400' : v.includes('10') ? 'bg-amber-500/15 text-amber-400' : 'bg-[var(--color-border)] text-[var(--color-text-muted)]'
+        const color = v.includes('11') ? 'bg-[var(--color-success-soft)] text-[var(--color-success)]' : v.includes('10') ? 'bg-[var(--color-warning-soft)] text-[var(--color-warning)]' : 'bg-[var(--color-border)] text-[var(--color-text-muted)]'
         return <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium', color)}>{v}</span>
       },
     },
@@ -32,7 +32,7 @@ function makeColumns(onHistorico: (tombamento: string) => void): ColumnDef<Bem>[
       header: 'Criticidade',
       cell: ({ getValue }) => {
         const v = String(getValue() ?? '—')
-        return <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium', v === 'QUEIMOU' ? 'bg-red-500/15 text-red-400' : 'bg-[var(--color-border)] text-[var(--color-text-subtle)]')}>{v}</span>
+        return <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium', v === 'QUEIMOU' ? 'bg-[var(--color-danger-soft)] text-[var(--color-danger)]' : 'bg-[var(--color-border)] text-[var(--color-text-subtle)]')}>{v}</span>
       },
     },
     {
@@ -198,7 +198,7 @@ function TabelaBensContent() {
         <button onClick={() => setShowFilters((v) => !v)} className={cn('flex items-center gap-2 px-3 py-2 text-sm rounded-[var(--radius-md)] border transition-colors cursor-pointer', showFilters ? 'bg-[var(--color-primary)]/10 border-[var(--color-primary)] text-[var(--color-primary)]' : 'bg-[var(--color-bg-card)] border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-text)]')}>
           <Filter size={14} /> Filtros {hasFilters && <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-primary)]" />}
         </button>
-        {hasFilters && <button onClick={() => router.push(pathname)} className="flex items-center gap-1 px-3 py-2 text-sm rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-card)] text-[var(--color-text-muted)] hover:text-red-400 cursor-pointer transition-colors"><X size={14} /> Limpar</button>}
+        {hasFilters && <button onClick={() => router.push(pathname)} className="flex items-center gap-1 px-3 py-2 text-sm rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-card)] text-[var(--color-text-muted)] hover:text-[var(--color-danger)] cursor-pointer transition-colors"><X size={14} /> Limpar</button>}
         <div className="ml-auto flex items-center gap-2">
           <span className="text-sm text-[var(--color-text-muted)]">{formatNumber(total)} registros</span>
           <button onClick={handleExport} disabled={exporting} className="flex items-center gap-2 px-3 py-2 text-sm rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-card)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] cursor-pointer transition-colors disabled:opacity-60 disabled:cursor-not-allowed"><Download size={14} /> {exporting ? 'Exportando...' : 'CSV'}</button>

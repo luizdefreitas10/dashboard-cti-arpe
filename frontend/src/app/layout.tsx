@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Source_Sans_3 } from 'next/font/google'
+import { Inter, Montserrat } from 'next/font/google'
 import Script from 'next/script'
 import { AuthProvider } from '@/context/auth-context'
 import './globals.css'
@@ -22,9 +22,17 @@ const THEME_INITIALIZER = `
 })();
 `
 
-const sourceSans = Source_Sans_3({
+const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
+  variable: '--font-inter',
+})
+
+const montserrat = Montserrat({
+  subsets: ['latin'],
+  display: 'swap',
+  weight: ['600', '700', '800'],
+  variable: '--font-montserrat',
 })
 
 export const viewport: Viewport = {
@@ -32,8 +40,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: 'cover',
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f5f7fa' },
-    { media: '(prefers-color-scheme: dark)', color: '#0c1018' },
+    { media: '(prefers-color-scheme: light)', color: '#f1f5f9' },
+    { media: '(prefers-color-scheme: dark)', color: '#0f172a' },
   ],
 }
 
@@ -55,15 +63,13 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: '/icons/arpe-mark-64.png', type: 'image/png', sizes: '64x64' },
-      { url: '/icons/arpe-mark-192.png', type: 'image/png', sizes: '192x192' },
-      { url: '/icons/arpe-mark-512.png', type: 'image/png', sizes: '512x512' },
+      { url: '/brand/cti-simbolo.svg', type: 'image/svg+xml' },
+      { url: '/icons/cti-simbolo-32.png', type: 'image/png', sizes: '32x32' },
+      { url: '/icons/cti-simbolo-64.png', type: 'image/png', sizes: '64x64' },
+      { url: '/icons/cti-simbolo-192.png', type: 'image/png', sizes: '192x192' },
     ],
-    shortcut: '/icons/arpe-mark-64.png',
-    apple: [
-      { url: '/icons/arpe-mark-192.png', type: 'image/png', sizes: '192x192' },
-      { url: '/icons/arpe-mark-512.png', type: 'image/png', sizes: '512x512' },
-    ],
+    shortcut: '/icons/cti-simbolo-64.png',
+    apple: [{ url: '/icons/cti-apple-touch-180.png', type: 'image/png', sizes: '180x180' }],
   },
   openGraph: {
     type: 'website',
@@ -80,7 +86,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR" className={sourceSans.className} suppressHydrationWarning>
+    <html lang="pt-BR" className={`${inter.variable} ${montserrat.variable}`} suppressHydrationWarning>
       <body>
         <Script id="theme-initializer" strategy="beforeInteractive">
           {THEME_INITIALIZER}

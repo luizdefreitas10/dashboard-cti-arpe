@@ -20,8 +20,8 @@ export function ErrorState({
       className={`flex flex-col items-center justify-center py-12 px-6 text-center min-h-[40vh] ${className}`}
       role="alert"
     >
-      <div className="w-14 h-14 rounded-full bg-red-500/10 flex items-center justify-center mb-4">
-        <AlertCircle size={24} className="text-red-400" strokeWidth={1.5} />
+      <div className="w-14 h-14 rounded-full bg-[var(--color-danger-soft)] flex items-center justify-center mb-4">
+        <AlertCircle size={24} className="text-[var(--color-danger)]" strokeWidth={1.5} />
       </div>
       <p className="text-sm font-medium text-[var(--color-text)]">{title}</p>
       <p className="text-xs text-[var(--color-text-muted)] mt-1 max-w-md [overflow-wrap:anywhere] text-pretty">

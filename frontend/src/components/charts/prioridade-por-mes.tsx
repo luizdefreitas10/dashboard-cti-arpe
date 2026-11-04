@@ -1,7 +1,7 @@
 'use client'
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
-import { PRIORITY_COLORS } from '@/lib/chart-colors'
+import { CHART_NEUTRAL, PRIORITY_COLORS } from '@/lib/chart-colors'
 import { formatMonth } from '@/lib/utils'
 
 interface Props {
@@ -42,7 +42,7 @@ export function PrioridadePorMesChart({ data }: Props) {
         <Bar dataKey="Média" fill={PRIORITY_COLORS.Média} radius={[2, 2, 0, 0]} />
         <Bar dataKey="Baixa" fill={PRIORITY_COLORS.Baixa} radius={[2, 2, 0, 0]} />
         {data.some((d) => (d.Outras ?? 0) > 0) ? (
-          <Bar dataKey="Outras" fill="#64748b" radius={[2, 2, 0, 0]} />
+          <Bar dataKey="Outras" fill={CHART_NEUTRAL} radius={[2, 2, 0, 0]} />
         ) : null}
       </BarChart>
     </ResponsiveContainer>

@@ -73,10 +73,10 @@ export function ThemeSwitch() {
       onClick={() => applyTheme(isLight ? 'dark' : 'light')}
       aria-label={label}
       title={label}
-      className="flex shrink-0 items-center justify-center gap-0 sm:gap-2 min-h-10 min-w-10 sm:min-w-0 sm:px-2 sm:py-1 rounded-md border border-(--color-border) bg-(--color-bg-card)/70 hover:bg-(--color-bg-hover) cursor-pointer touch-manipulation"
+      className="flex h-10 min-w-10 shrink-0 items-center justify-center gap-2 rounded-(--radius-md) border border-(--color-border) bg-(--color-bg-card) px-0 text-(--color-text-muted) transition-colors hover:bg-(--color-bg-hover) hover:text-(--color-text) cursor-pointer touch-manipulation sm:px-3"
     >
-      {isLight ? <Sun size={16} /> : <Moon size={16} />}
-      <span className="hidden sm:inline text-xs text-(--color-text-muted)">{isLight ? 'Claro' : 'Escuro'}</span>
+      {isLight ? <Moon size={16} aria-hidden /> : <Sun size={16} aria-hidden />}
+      <span className="hidden text-xs font-medium sm:inline">{isLight ? 'Tema escuro' : 'Tema claro'}</span>
     </button>
   )
 }

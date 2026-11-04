@@ -4,19 +4,24 @@ import { useRouter } from 'next/navigation'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 import { CATEGORY_COLORS, getColor } from '@/lib/chart-colors'
 import { formatNumber } from '@/lib/utils'
+import type { ChartTooltipProps } from '@/components/charts/chart-tooltip'
 
 interface Props {
   data: { categoria: string; total: number }[]
   enableDrillDown?: boolean
 }
 
-const CustomTooltip = ({ active, payload }: any) => {
+const CustomTooltip = ({ active, payload }: ChartTooltipProps) => {
   if (!active || !payload?.length) return null
+  const item = payload[0]
+  const percent = item.payload?.percent
   return (
     <div className="bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-[var(--radius-md)] px-3 py-2 text-sm shadow-xl">
-      <p className="text-[var(--color-text)] font-semibold">{payload[0].name}</p>
-      <p className="text-[var(--color-text-muted)]">{formatNumber(payload[0].value)} atividades</p>
-      <p className="text-[var(--color-text-subtle)]">{payload[0].payload.percent}%</p>
+      <p className="text-[var(--color-text)] font-semibold">{item.name}</p>
+      <p className="text-[var(--color-text-muted)]">{formatNumber(Number(item.value ?? 0))} atividades</p>
+      {typeof percent === 'number' && (
+        <p className="text-[var(--color-text-subtle)]">{percent}%</p>
+      )}
     </div>
   )
 }

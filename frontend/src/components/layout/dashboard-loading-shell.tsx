@@ -1,3 +1,5 @@
+import { CtiLogo, CtiSymbol } from '@/components/brand/cti-brand'
+
 function SkeletonBlock({ className = '' }: { className?: string }) {
   return (
     <div
@@ -10,16 +12,14 @@ function SkeletonBlock({ className = '' }: { className?: string }) {
 function SidebarSkeleton() {
   return (
     <aside
-      className="hidden lg:flex fixed left-0 top-0 z-30 h-screen w-60 flex-col border-r border-(--color-border) bg-(--color-bg-sidebar)"
+      className="hidden lg:flex fixed left-0 top-0 z-30 h-screen w-(--sidebar-width) flex-col border-r border-(--color-border) bg-(--color-bg-sidebar)"
       aria-hidden
     >
-      <div className="border-b border-(--color-border) px-5 py-4">
-        <div className="flex items-center gap-3">
-          <SkeletonBlock className="h-8 w-8 shrink-0" />
-          <div className="flex-1 space-y-2">
-            <SkeletonBlock className="h-3.5 w-28" />
-            <SkeletonBlock className="h-2.5 w-24" />
-          </div>
+      <div className="px-5 pt-6 pb-4">
+        <CtiLogo className="h-10 w-auto" priority />
+        <div className="mt-4 flex items-center gap-2.5">
+          <span className="arpe-tricolor w-8 shrink-0 opacity-60" />
+          <SkeletonBlock className="h-2.5 w-28" />
         </div>
       </div>
 
@@ -42,14 +42,17 @@ function SidebarSkeleton() {
 function HeaderSkeleton() {
   return (
     <header
-      className="sticky top-0 z-50 flex h-(--dashboard-header-offset) shrink-0 items-center overflow-hidden border-b border-(--color-border) bg-(--color-bg-sidebar)/80 px-2.5 pt-(--safe-area-inset-top) backdrop-blur-sm sm:px-4 md:px-6"
+      className="sticky top-0 z-50 flex h-(--dashboard-header-offset) shrink-0 items-center overflow-hidden border-b border-(--color-border) bg-(--color-bg-sidebar)/85 px-3 pt-(--safe-area-inset-top) backdrop-blur-md sm:px-5 lg:px-8"
       aria-hidden
     >
-      <div className="grid h-full w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-1.5 sm:gap-3">
-        <div className="hidden w-10 shrink-0 lg:block" />
-        <SkeletonBlock className="h-11 w-11 shrink-0 lg:hidden" />
+      <div className="grid h-full w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-2 lg:hidden">
+          <SkeletonBlock className="h-10 w-10 shrink-0" />
+          <CtiSymbol size={30} decorative />
+        </div>
+        <span className="hidden lg:block" />
 
-        <div className="flex min-w-0 flex-col items-center justify-center gap-1 px-1">
+        <div className="flex min-w-0 flex-col items-start justify-center gap-1 px-1">
           <SkeletonBlock className="h-2.5 w-28 max-w-full" />
           <SkeletonBlock className="h-4 w-44 max-w-[70vw] sm:w-56" />
           <SkeletonBlock className="h-2.5 w-36 max-w-[65vw] sm:w-64" />
@@ -84,7 +87,7 @@ export function DashboardContentSkeleton() {
         {Array.from({ length: 4 }).map((_, index) => (
           <div
             key={index}
-            className="rounded-lg border border-(--color-border) bg-(--color-bg-card) p-4"
+            className="rounded-(--radius-lg) border border-(--color-border) bg-(--color-bg-card) p-4"
           >
             <div className="mb-5 flex items-start justify-between gap-3">
               <div className="space-y-2">
@@ -98,7 +101,7 @@ export function DashboardContentSkeleton() {
         ))}
       </section>
 
-      <section className="rounded-lg border border-(--color-border) bg-(--color-bg-card) p-4 sm:p-5">
+      <section className="rounded-(--radius-lg) border border-(--color-border) bg-(--color-bg-card) p-4 sm:p-5">
         <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-2">
             <SkeletonBlock className="h-4 w-48" />
@@ -129,9 +132,9 @@ export function DashboardLoadingShell() {
     >
       <SidebarSkeleton />
 
-      <div className="flex min-h-screen w-full min-w-0 max-w-[100vw] flex-col overflow-x-clip lg:pl-60">
+      <div className="flex min-h-screen w-full min-w-0 max-w-[100vw] flex-col overflow-x-clip lg:pl-(--sidebar-width)">
         <HeaderSkeleton />
-        <main className="flex-1 p-3 sm:p-6 lg:p-8">
+        <main className="mx-auto w-full max-w-[1600px] flex-1 p-3 sm:p-6 lg:p-8">
           <DashboardContentSkeleton />
         </main>
       </div>

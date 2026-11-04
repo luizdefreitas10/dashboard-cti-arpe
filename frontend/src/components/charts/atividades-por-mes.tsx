@@ -4,16 +4,18 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts'
 import { formatMonth } from '@/lib/utils'
+import type { ChartTooltipProps } from '@/components/charts/chart-tooltip'
+import { CHART_MUTED } from '@/lib/chart-colors'
 
 interface Props {
   data: { mes: string; total: number }[]
 }
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload, label }: ChartTooltipProps) => {
   if (!active || !payload?.length) return null
   return (
     <div className="bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-[var(--radius-md)] px-3 py-2 text-sm shadow-xl">
-      <p className="text-[var(--color-text-muted)] mb-1">{formatMonth(label)}</p>
+      <p className="text-[var(--color-text-muted)] mb-1">{formatMonth(label ?? '')}</p>
       <p className="text-[var(--color-text)] font-semibold">{payload[0].value} atividades</p>
     </div>
   )
@@ -45,7 +47,7 @@ export function AtividadesPorMesChart({ data }: Props) {
           {data.map((entry) => (
             <Cell
               key={entry.mes}
-              fill={entry.total === max ? 'var(--color-primary)' : '#3b82f630'}
+              fill={entry.total === max ? 'var(--color-primary)' : CHART_MUTED}
             />
           ))}
         </Bar>
